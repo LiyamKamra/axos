@@ -24,11 +24,17 @@
 //                             int64 m, x[n], y[m] as float64; for
 //                             `qpbench.py score`)
 //
+// Built with -DAXOS_ENABLE_MPI (bash benchmarks/qp/build.sh mpi) and started
+// with mpiexec -n K, HPR-QP runs distributed over the K ranks (qp_dist.h):
+// rank r uses GPU (r mod GPUs) of its machine, rank 0 prints and writes the
+// files, and the solver column reads axos-hpr-qp-mpiK.
+//
 // Times: `seconds` is the solve time after the file is read (preconditioning,
 // upload, spectral estimates and iterations), `setup` the part before the
 // first iteration. GPU kernels are compiled (NVRTC) once, before the first
 // solve, and that time is excluded and reported separately.
 #include "solver/io/qps.h"
+#include "solver/qp/qp_dist.h"
 #include "solver/qp/solve_qp.h"
 
 #include <algorithm>
@@ -145,9 +151,34 @@ read_problem(const fs::path &f)
     return read_qps_file(f.string());
 }
 
+static int run(int argc, char **argv, const QpComm &comm);
+
 int
 main(int argc, char **argv)
 {
+#if defined(AXOS_ENABLE_MPI)
+    MPI_Init(&argc, &argv);
+    int rc = 0;
+    {
+        const QpComm comm(MPI_COMM_WORLD);
+        try {
+            rc = run(argc, argv, comm);
+        } catch (const std::exception &e) {
+            std::fprintf(stderr, "rank %d: %s\n", comm.rank(), e.what());
+            MPI_Abort(MPI_COMM_WORLD, 5); // the other ranks would wait forever
+        }
+    }
+    MPI_Finalize();
+    return rc;
+#else
+    return run(argc, argv, QpComm());
+#endif
+}
+
+static int
+run(int argc, char **argv, const QpComm &comm)
+{
+    const bool root = comm.rank() == 0; // prints and writes files
     if (argc < 2) {
         std::fprintf(stderr, "usage: %s <file.qps|dir> [--device cpu|gpu] [--method hprqp|pdhcg] "
                              "[--tol e] [--time-limit s] [--max-iter n] [--check-every k] "
@@ -160,6 +191,7 @@ main(int argc, char **argv)
     QpOptions opt;
     opt.use_gpu = qp_gpu_available();
     opt.time_limit = 600;
+    if (comm.distributed()) opt.comm = &comm;
     std::string out_path, export_dir, sol_dir;
     std::set<std::string> only;
     for (int i = 2; i < argc; ++i) {
@@ -228,22 +260,29 @@ main(int argc, char **argv)
 
 #if defined(AXOS_ENABLE_CUDA)
     if (opt.use_gpu) {
+        int count = 0;
+        if (comm.distributed() && cudaGetDeviceCount(&count) == cudaSuccess && count > 0)
+            cudaSetDevice(comm.local_rank() % count); // before any other CUDA call
         const auto t0 = std::chrono::steady_clock::now();
         qp::CudaBackend warm; // compiles the kernels (NVRTC) once
-        std::fprintf(stderr, "# %s, kernels compiled in %.2f s\n", warm.name().c_str(),
-            std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
+        if (root || opt.verbose)
+            std::fprintf(stderr, "# rank %d of %d: %s, kernels compiled in %.2f s\n", comm.rank(),
+                comm.size(), warm.name().c_str(),
+                std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
     }
 #endif
-    const char *method = opt.method == QpMethod::Pdhcg ? "pdhcg"
-                         : opt.method == QpMethod::Ipm  ? "ipm"
-                         : opt.method == QpMethod::Auto ? "auto"
-                                                        : "hpr-qp";
+    std::string method_s = opt.method == QpMethod::Pdhcg ? "pdhcg"
+                           : opt.method == QpMethod::Ipm  ? "ipm"
+                           : opt.method == QpMethod::Auto ? "auto"
+                                                          : "hpr-qp";
+    if (comm.distributed()) method_s = "hpr-qp-mpi" + std::to_string(comm.size());
+    const char *method = method_s.c_str();
     const std::string header =
         "problem,n,m,nnzA,nnzQ,solver,device,tol,status,iterations,seconds,setup_seconds,"
         "objective,rel_primal,rel_dual,rel_gap,read_seconds";
-    std::printf("%s\n", header.c_str());
+    if (root) std::printf("%s\n", header.c_str());
     std::ofstream out;
-    if (!out_path.empty()) {
+    if (!out_path.empty() && root) {
         const bool fresh = !fs::exists(out_path);
         out.open(out_path, std::ios::app);
         if (fresh) out << header << "\n";
@@ -257,7 +296,7 @@ main(int argc, char **argv)
             const double read_s =
                 std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
             QpSolution s = solve_qp(p, opt);
-            if (!sol_dir.empty()) {
+            if (!sol_dir.empty() && root) {
                 fs::create_directories(sol_dir);
                 std::ofstream f((fs::path(sol_dir) / (name + ".sol")).string(), std::ios::binary);
                 const int64_t dims[2] = {int64_t(s.x.size()), int64_t(s.y.size())};
@@ -275,6 +314,7 @@ main(int argc, char **argv)
                 p.lp.maximize ? -s.primal_objective : s.primal_objective, s.rel_primal,
                 s.rel_dual, s.rel_gap, read_s);
         } catch (const std::exception &e) {
+            if (comm.distributed()) throw; // the other ranks may be waiting: MPI_Abort
             std::string msg = e.what();
             std::replace(msg.begin(), msg.end(), ',', ';');
             std::replace(msg.begin(), msg.end(), '\n', ' ');
@@ -282,6 +322,7 @@ main(int argc, char **argv)
                 name.c_str(), method, opt.use_gpu ? "gpu" : "cpu", opt.tol,
                 msg.substr(0, 400).c_str());
         }
+        if (!root) continue;
         std::printf("%s\n", line);
         std::fflush(stdout);
         if (out) {

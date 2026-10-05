@@ -112,3 +112,77 @@ reports as optimal on Maros–Meszaros meets the strict 1e-6 check. All AXOS
 HPR-QP entries and AXOS auto were measured with the final build (free-variable
 sweep order, final auto rule; re-runs on 5 October); AXOS IPM with the build
 just before it (its code path is unchanged), AXOS PDHCG with the first build.
+
+## Several GPUs: HPR-QP over MPI
+
+`src/solver/qp/qp_dist.h` runs HPR-QP (and HPR for LPs) over MPI ranks, one
+GPU each. The constraint rows are split into contiguous blocks with about
+equal nonzeros. Each rank keeps its rows of A and Aᵀ and their duals, plus a
+copy of the n-sized state and of Q. Per iteration:
+
+* the products with A need no communication, because their input is
+  replicated;
+* the products with Aᵀ are summed over the ranks: each GPU forms its partial
+  product, one `MPI_Allreduce` (n doubles) adds them up, and the fused
+  update runs on the sum (`k_<op>_vec` kernels).
+
+At the checks, the row terms (a few numbers) are combined and rank 0's
+values decide termination, restarts and the penalty, so all ranks take the
+same path and return the same solution. Without a CUDA-aware MPI the
+exchange goes through pinned host memory; `-DAXOS_MPI_CUDA_AWARE` passes
+device pointers to MPI instead. The Q products are repeated on every rank,
+so the work that is divided is the work in A.
+
+```bash
+bash benchmarks/qp/build.sh mpi       # build/run_qp_mpi (MS-MPI SDK on Windows, mpicxx on Linux)
+mpiexec -n 4 build/run_qp_mpi benchmarks/qp/data/large_axqp/HUBER_L.axqp --verbose 1
+bash benchmarks/qp/run_mpi.sh 2       # large problems on 2 ranks against the 1-GPU CSV
+bash benchmarks/qp/run_mpi.sh 2 benchmarks/qp/data/maros_meszaros benchmarks/qp/data/mm_axqp \
+    benchmarks/qp/results/mm/axos-hprqp-gpu.csv mm_n2
+```
+
+`run_mpi.sh` solves each problem on K ranks, re-scores the solutions with
+the common metric and compares them with the single-GPU run
+(`compare_mpi.py`; output in `results/mpi/`).
+
+Checks on the laptop (5 October 2026, tolerance 1e-6), against the
+single-GPU runs of the table above. The laptop has one GPU, so all ranks
+share it: these runs test the distributed algorithm, not multi-GPU speed.
+
+| problems | ranks | optimal, 1 GPU | optimal, MPI | both | same iterations | largest objective difference |
+|---|---|---|---|---|---|---|
+| 14 large | 2 | 13 | 13 | 13 | 13 | 0 (13 digits) |
+| 14 large | 4 | 13 | 13 | 13 | 13 | 0 (13 digits) |
+| 138 Maros–Meszaros (60 s) | 2 | 123 | 114 | 114 | 103 | 1.6e-6 |
+
+All large problems solved by both take the same number of iterations and
+give the same objective to 13 digits. So do 103 of the 114
+Maros–Meszaros problems solved by both. The other 11 are ill-conditioned
+problems of the Q* family: QBORE3D, QFORPLAN, QGFRDXPN, QGROW7, QGROW22,
+QSCFXM1–3, QSCORPIO, QSCRS8 and QSHARE2B. There, summing Aᵀy in another
+order changes the iteration count by up to 28%. Both runs still meet the
+tolerance, with objectives within 1.6e-6. The same happens between the CPU
+and GPU builds in one process: QSHARE2B takes 204,301 iterations on the
+CPU and 87,501 on the GPU.
+
+After 2,000 iterations, one GPU and 2 ranks agree in the objective to 2e-7
+or better (`run_mpi_fixed.sh`) on all 20 problems: these 11 and the 9
+below. Every MPI answer reported optimal passes the common check.
+In all 166 runs, the ranks' copies of x stay bit-identical. The CPU build
+(`bash benchmarks/qp/build.sh mpi-cpu`) also agrees over 3 and 4 ranks,
+even with more ranks than constraint rows.
+
+The 9 Maros–Meszaros problems that only the single GPU solved ran out of
+time with 2 ranks: CONT-101, CONT-200, EXDATA, LISWET3–6, STADAT2 and
+STADAT3. On the shared GPU an MPI iteration of a small problem costs about
+15x a single-GPU one. Every iteration waits for a host exchange, and there
+are no CUDA graphs.
+
+On the shared GPU the distributed runs are slower than one GPU. On the
+large problems they take 2.2x the single-GPU time with 2 ranks and 3.1x
+with 4 (geometric means): the ranks take turns on the one GPU, and every Q
+product runs once per rank. With one GPU per rank, each holds 1/K of the
+nonzeros of A, so larger models fit. Problems whose cost is in Q gain
+nothing from more ranks (EQ_L has 3.5 M nonzeros in Q and 0.3 M in A). The
+next step is a 2-D partition that also splits Q and the n-sized vectors,
+as in D-PDLP and PDHCG-CQP.

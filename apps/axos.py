@@ -8,6 +8,7 @@
 
     r = axos.solve("model.qps", method="hprqp", device="gpu", tol=1e-6)
     r = axos.solve("model.mps", type="lp")               # LP relaxation of a MILP
+    r = axos.solve("big.mps", ranks=4, device="gpu")     # LP / QP over 4 MPI ranks
 
 Every keyword maps to a command-line option (see `axos --help`): type,
 method, device, time_limit, tol, gap, presolve, cuts, heuristics, verbose.
@@ -18,6 +19,9 @@ without proof of optimality, 2 infeasible, 3 unbounded, 4 no solution, 5
 error).
 
 The executable is found from AXOS_EXE, else next to this file in ../build.
+With ranks=K (K > 1) an LP or QP is solved by HPR over K MPI processes, one
+GPU each: `mpiexec -n K axos_mpi ...` (the MPI build, apps/build.sh mpi
+axos_mpi; AXOS_MPI_EXE and MPIEXEC override where they are found).
 """
 import json
 import os
@@ -31,16 +35,27 @@ class AxosError(RuntimeError):
     pass
 
 
-def _exe():
-    env = os.environ.get("AXOS_EXE")
+def _exe(mpi=False):
+    env = os.environ.get("AXOS_MPI_EXE" if mpi else "AXOS_EXE")
     if env:
         return env
     here = os.path.dirname(os.path.abspath(__file__))
-    for name in ("axos.exe", "axos"):
+    base = "axos_mpi" if mpi else "axos"
+    for name in (base + ".exe", base):
         p = os.path.join(here, "..", "build", name)
         if os.path.exists(p):
             return os.path.normpath(p)
+    if mpi:
+        raise AxosError("axos_mpi not found: build it (apps/build.sh mpi axos_mpi) or set AXOS_MPI_EXE")
     raise AxosError("axos executable not found: build it (apps/build.sh) or set AXOS_EXE")
+
+
+def _mpiexec():
+    env = os.environ.get("MPIEXEC")
+    if env:
+        return env
+    ms = r"C:\Program Files\Microsoft MPI\Bin\mpiexec.exe"  # MS-MPI runtime
+    return ms if os.path.exists(ms) else "mpiexec"
 
 
 def _args(type=None, method=None, device=None, time_limit=None, tol=None, gap=None, presolve=True, cuts=True,
@@ -59,9 +74,13 @@ def _args(type=None, method=None, device=None, time_limit=None, tol=None, gap=No
     return a
 
 
-def solve(model, **options):
-    """Solves the model file (MPS or QPS); returns the result dict."""
-    cmd = [_exe(), str(model)] + _args(**options) + ["--json", "-", "--quiet"]
+def solve(model, ranks=None, **options):
+    """Solves the model file (MPS or QPS); returns the result dict. ranks=K
+    (K > 1): an LP or QP over K MPI processes (HPR, one GPU each)."""
+    cmd = [_exe(), str(model)]
+    if ranks and int(ranks) > 1:
+        cmd = [_mpiexec(), "-n", str(int(ranks)), _exe(mpi=True), str(model)]
+    cmd += _args(**options) + ["--json", "-", "--quiet"]
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode in (5, 64) and not p.stdout.strip():
         raise AxosError(p.stderr.strip() or "axos failed with status %d" % p.returncode)

@@ -15,7 +15,9 @@
 //                               the same, deferred: results()[slot + k]
 //   results_dev()               the slots where device ops can read them
 //   run_block(key, fn)          fn() (the GPU backend replays it as a graph),
-//   forget(key)                 drops that graph
+//   forget(key)                 drops that graph; use_graphs(false): no graphs
+//   epi(name, n, s, args, f)    f(i, s[i], args): an epilogue on given row sums
+//   through_host(v, n, fn)      fn(h) on a host copy h of v[0..n), copied back
 #pragma once
 
 #include "solver/qp/qp_ops.h"
@@ -91,6 +93,15 @@ class CpuBackend {
 
     template <class Args, class F>
     void
+    epi(const char *, size_t n, const double *s, const Args &a, F f) const
+    {
+        detail::parallel_for(n, kGrain, [&](size_t b, size_t e) {
+            for (size_t i = b; i < e; ++i) f(static_cast<axos_qp::idx>(i), s[i], a);
+        });
+    }
+
+    template <class Args, class F>
+    void
     map(const char *, size_t n, const Args &a, F f) const
     {
         detail::parallel_for(n, kGrain, [&](size_t b, size_t e) {
@@ -141,6 +152,14 @@ class CpuBackend {
         fn();
     }
     void forget(long) const {}
+    void use_graphs(bool) const {}
+
+    template <class F>
+    void
+    through_host(double *v, size_t n, F &&fn) const
+    {
+        if (n) fn(v);
+    }
 
     void sync() const {}
 

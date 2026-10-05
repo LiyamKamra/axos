@@ -23,6 +23,12 @@
 // Exit status: 0 optimal, 1 solution without proof of optimality, 2
 // infeasible, 3 unbounded, 4 no solution within the limits, 5 error, 64
 // usage.
+//
+// MPI build (-DAXOS_ENABLE_MPI, bash apps/build.sh mpi axos_mpi):
+//   mpiexec -n K axos_mpi model.mps --device gpu
+// solves an LP or QP by HPR with the constraint rows split over the K
+// ranks, rank r on GPU (r mod GPUs) of its machine (qp_dist.h); rank 0
+// prints and writes the files. A MILP needs a single process.
 #include "solver/api.h"
 
 #include <cstdio>
@@ -57,22 +63,58 @@ exit_code(const Result &r)
     }
 }
 
+static int run(int argc, char **argv, const QpComm &comm);
+
 int
 main(int argc, char **argv)
 {
-    if (argc >= 2 && std::strcmp(argv[1], "--version") == 0) {
-        std::printf("AXOS %s (LP: dual simplex, IPM, PDLP, HPR; QP: HPR-QP, PDHCG, IPM; MILP: branch and cut)%s\n",
-            kAxosVersion,
-#if defined(AXOS_ENABLE_CUDA)
-            ", CUDA build"
+#if defined(AXOS_ENABLE_MPI)
+    MPI_Init(&argc, &argv);
+    int rc = 5;
+    {
+        const QpComm comm(MPI_COMM_WORLD);
+        try {
+            rc = run(argc, argv, comm);
+        } catch (const std::exception &e) {
+            std::fprintf(stderr, "axos: rank %d: %s\n", comm.rank(), e.what());
+            if (comm.distributed()) MPI_Abort(MPI_COMM_WORLD, 5); // the others may be waiting
+        }
+    }
+    MPI_Finalize();
+    return rc;
 #else
-            ", CPU build"
+    try {
+        return run(argc, argv, QpComm());
+    } catch (const std::exception &e) {
+        std::fprintf(stderr, "axos: %s\n", e.what());
+        return 5;
+    }
 #endif
-        );
+}
+
+static int
+run(int argc, char **argv, const QpComm &comm)
+{
+    const bool root = comm.rank() == 0; // prints and writes the files
+    if (argc >= 2 && std::strcmp(argv[1], "--version") == 0) {
+        if (root)
+            std::printf("AXOS %s (LP: dual simplex, IPM, PDLP, HPR; QP: HPR-QP, PDHCG, IPM; MILP: branch and cut)%s%s\n",
+                kAxosVersion,
+#if defined(AXOS_ENABLE_CUDA)
+                ", CUDA build",
+#else
+                ", CPU build",
+#endif
+#if defined(AXOS_ENABLE_MPI)
+                ", MPI (LP / QP by HPR over ranks)"
+#else
+                ""
+#endif
+            );
         return 0;
     }
     if (argc < 2 || argv[1][0] == '-') {
-        usage();
+        if (root) usage();
         return 64;
     }
     const std::string path = argv[1];
@@ -110,9 +152,20 @@ main(int argc, char **argv)
             else throw std::invalid_argument("unknown option " + a);
         }
     } catch (const std::exception &e) {
-        std::fprintf(stderr, "axos: %s\n", e.what());
-        usage();
+        if (root) {
+            std::fprintf(stderr, "axos: %s\n", e.what());
+            usage();
+        }
         return 64;
+    }
+    if (!root) quiet = true;
+    if (comm.distributed()) {
+        o.comm = &comm;
+#if defined(AXOS_ENABLE_CUDA)
+        int count = 0; // before any other CUDA call of this process
+        if (o.device != Device::Cpu && cudaGetDeviceCount(&count) == cudaSuccess && count > 0)
+            cudaSetDevice(comm.local_rank() % count);
+#endif
     }
 
     Model m;
@@ -124,7 +177,7 @@ main(int argc, char **argv)
         return 5;
     }
     const double read_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
-    if (!quiet || info)
+    if (!quiet || (info && root))
         std::printf("AXOS %s  model %s (%s%s): %zu columns (%zu integer), %zu rows, %zu nonzeros%s, read in %.2f s\n",
             kAxosVersion, m.name().c_str(), to_string(m.type()), m.maximize() ? ", maximize" : "", m.cols(),
             m.integers(), m.rows(), m.nnz(),
@@ -134,8 +187,8 @@ main(int argc, char **argv)
     Result r;
     try {
         r = solve(m, o);
-    } catch (const std::exception &e) {
-        std::fprintf(stderr, "axos: %s\n", e.what());
+    } catch (const std::invalid_argument &e) { // the same on every rank
+        if (root) std::fprintf(stderr, "axos: %s\n", e.what());
         return 64;
     }
     if (!quiet) {
@@ -152,8 +205,12 @@ main(int argc, char **argv)
         }
         std::printf("time         %.3f s, %ld iterations%s\n", r.seconds, r.iterations,
             r.type == ProblemType::MILP ? (", " + std::to_string(r.nodes) + " nodes").c_str() : "");
+        if (comm.distributed())
+            std::printf("mpi          %d ranks, %.3f s in %ld MPI calls on rank 0\n", comm.size(),
+                comm.seconds(), comm.calls());
         if (!r.message.empty()) std::printf("note         %s\n", r.message.c_str());
     }
+    if (!root) return exit_code(r);
     if (!sol_path.empty()) {
         std::ofstream f(sol_path);
         if (!f) {
