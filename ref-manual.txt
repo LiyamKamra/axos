@@ -1,0 +1,194 @@
+AXOS reference manual
+
+Last updated: 2026/09/25
+
+This branch contains the sparse linear algebra and LP solver layers only. The
+dense tensor layer they are built on (tensorET, its storage policies and the GPU
+memory pool) has been removed and is specified in docs/TENSOR_SPEC.md; until it
+is reimplemented the code here does not compile. The solver roadmap is
+src/solver/ROADMAP.md, benchmark results are in benchmarks/*/RESULTS.md.
+
+0. Building
+
+Requirements: GNU Make, g++ with C++17 and OpenMP, Eigen 3 (tests and
+reference benchmarks). Optional: CUDA toolkit (nvcc, cuSPARSE, cuDSS, cuBLAS,
+cuSolver) with a host gcc that nvcc accepts (detected by `make configure`,
+override with NVCC_CCBIN=...).
+
+make test_sparse_cpu / make test_sparse     # sparse matrices, CPU / CPU+CUDA
+make test_solver_cpu / make test_solver     # LP solvers, CPU / CPU+CUDA
+make benchmark_sparse, make benchmark_lp, build/run_mps  (see 2)
+make reference_benchmarks                   # Eigen harnesses for TENSOR_SPEC.md
+
+Pass --headless (or set HEADLESS=1, or pipe stdout) to the tests for plain text
+output.
+
+-------------------------------------------------------
+
+1. Sparse Matrices & Direct Solves (src/sparse/)
+
+AXOS::Sparse::Csr<T, Idx = int32_t, Store = Cpu::HostStorage> is a
+compressed-sparse-row matrix (0-based, columns sorted within each row, no
+duplicates, fixed sparsity pattern with changeable values). It is not a
+tensorET, since almost every tensorET operation assumes dense layout;
+conversion and mixed products are explicit. T is float, double or
+std::complex of those; Idx is int32_t or int64_t. CsrCuda<T, Idx> is the
+CUDA version (device arrays from the GPU pool). Copying between storages is
+a plain conversion: CsrCuda<double> d = host_csr;
+
+#include "sparse/sparse.h"   // (CUDA: include tensorCuda.h first if used)
+using namespace AXOS::Sparse;
+
+CooBuilder<double> b(rows, cols);
+b.add(i, j, v);                     // duplicates are summed
+Csr<double> A = b.build();          // sorted CSR on the host
+CsrCuda<double> dA = A;             // upload
+std::string bad = A.validate();     // "" when the invariants hold
+
+tensorETCuda<1, double> x(...), y({rows}, 0.0);
+spmv(dA, x, y, /*alpha=*/1.0, /*beta=*/0.0);    // y = alpha*A*x + beta*y
+spmv_t(dA, y, x);                               // A^T y, via cached A^T
+spmm(dA, X, Y);                                 // sparse * dense (row-major)
+scale_rows_cols(dA, row_scale_ptr, col_scale_ptr);   // either may be null
+row_norms(dA, out_ptr, Norm::L2);  col_norms(...);   // L1, L2, Linf
+auto C = spgemm(dA, dB);            // sparse * sparse
+auto N = AdAt(dA, d_ptr);           // A diag(d) A^T (normal equations)
+auto At = dA.transpose();           // A.transposed() is the cached one
+auto A2 = A.append_rows(cuts);      // stack rows (rebuilds the pattern)
+auto v = A.values_view();           // dense 1-D view of the nonzeros
+Csr<double>::from_dense(D, tol);    A.to_dense();
+
+Mutable access to the values (values_mut(), values_view(), scaling)
+discards the cached transpose; call values_changed() if you keep a raw
+pointer across calls. Vector arguments must be in the same storage as the
+matrix.
+
+AXOS::Sparse::SparseLdlt<T, Idx, Store> factorizes A = P^T L D L^T P for
+symmetric A stored with both triangles:
+
+SparseLdlt<double, int32_t, Cuda::CudaStorage> ldl(Symmetry::Symmetric);
+ldl.analyze(K);            // ordering + symbolic; once per sparsity pattern
+bool ok = ldl.factorize(K);// numeric; call again whenever the values change
+ldl.solve(rhs, sol);       // tensorET<1> vectors in the matrix's storage
+size_t pos, neg, zero;  ldl.inertia(pos, neg, zero);
+
+Symmetry::SPD requires positive pivots (factorize returns false otherwise);
+Symmetry::Symmetric only requires nonzero pivots and does no numerical
+pivoting, which suits quasi-definite systems such as interior-point KKT
+matrices. On the CPU it is an up-looking LDL^T with a minimum-degree
+ordering; on CUDA it uses NVIDIA cuDSS (build with -DCUDSS_WITH -lcudss,
+-DCUSPARSE_WITH -lcusparse). The CPU ordering is an exact minimum-degree
+implementation meant as a fallback: it can be slow on matrices with large
+dense blocks.
+
+CPU factorization: SparseLdlt picks between a scalar up-looking LDL^T and a
+multifrontal LDL^T on relaxed supernodes (Factorization::Auto switches at
+200k entries in the factor; Simplicial / Supernodal force one). The ordering
+is approximate minimum degree (Ordering::MinDegree). The multifrontal code
+factors independent subtrees in parallel and uses OpenMP inside large dense
+fronts; because those kernels are floating-point bound, set OMP_NUM_THREADS to
+the number of physical cores (16 hyperthreads were about 30% slower than 8).
+set_pivot_regularization(signs, eps) enables dynamic per-pivot
+regularization for quasi-definite systems.
+
+Tests: make test_sparse_cpu / make test_sparse (CUDA + cuDSS).
+The planned LP/MILP/QP solvers built on this are in src/solver/ROADMAP.md.
+
+-------------------------------------------------------
+
+2. Linear Programming (src/solver/)
+
+AXOS::Solver solves
+    minimize c^T x + offset   subject to  row_lb <= A x <= row_ub,
+                                          col_lb <=  x  <= col_ub
+with A a host Csr (see 1). Any bound may be +-Solver::kInf; equalities have
+row_lb == row_ub. A maximization problem is stored negated (maximize = true).
+
+#include "solver/solver.h"     // (CUDA: include tensorCuda.h first)
+using namespace AXOS::Solver;
+
+LpProblem p = read_mps_file("model.mps");      // or fill LpProblem by hand
+SolverOptions opt;
+opt.set_tolerance(1e-6);       // relative, PDLP convention (see model.h)
+opt.time_limit = 60;           // seconds
+LpSolution s = solve_lp<Cpu::HostStorage>(p, opt);       // CPU
+LpSolution g = solve_lp<Cuda::CudaStorage>(p, opt);      // GPU
+// s.status: Optimal, Infeasible, Unbounded (dual infeasible), IterationLimit,
+//           TimeLimit, NumericalError
+// s.x primal, s.y row duals, s.z reduced costs, s.primal_objective,
+// s.dual_objective, s.primal_residual, s.dual_residual, s.iterations
+
+solve_lp runs presolve, then the chosen algorithm on the reduced problem, then postsolve, so
+s.x, s.y and s.z are for the problem you passed in and the reported residuals
+are computed on it in double precision. Duals follow z = c - A^T y, with
+y_i >= 0 only at a row's lower bound and y_i <= 0 only at its upper bound.
+opt.presolve = false skips presolve; opt.scaling = false skips the Ruiz and
+Pock-Chambolle scaling.
+
+Four methods, chosen with opt.method:
+
+- LpMethod::Pdlp (default): a restarted primal-dual hybrid gradient method.
+  It needs only sparse matrix-vector products, so it maps well to the GPU
+  and to very large problems, it reaches moderate accuracy (1e-4 to 1e-6)
+  quickly, and it detects infeasibility and unboundedness from iterate
+  differences (the certificate needs a clear margin, about 10x the
+  tolerance, so a barely infeasible problem ends at the iteration or time
+  limit instead). Tight tolerances on hard or badly scaled models can take
+  very many iterations. The default variant is reflected Halpern PDHG with a
+  fixed step size (opt.pdlp_halpern = true; 1.3-1.8x fewer iterations than the
+  adaptive-step PDHG with averaging on most models, slower on some packing LPs).
+  opt.pdlp_polish = true reaches a tight tolerance by running to 1e-4 and then
+  solving a primal and a dual feasibility problem from that point (helps some
+  models, hurts others; off by default).
+- LpMethod::Simplex: a CPU dual simplex (sparse LU basis with hypersparse
+  FTRAN/BTRAN, dual steepest edge, bound flipping ratio test, artificial-bound
+  phase 1, Devex primal cleanup). Gives a basic solution, detects infeasibility
+  and unboundedness, and solves all 25 netlib models. It is the method MILP will
+  warm start (SimplexBasis).
+- LpMethod::Ipm: a primal-dual interior-point method (Mehrotra
+  predictor-corrector) on a regularized augmented KKT system, factorized by
+  SparseLdlt (cuDSS on CUDA, AMD-ordered LDL^T on the CPU; see 1). It gives
+  high accuracy (1e-8 and better) in few iterations. It has no infeasibility
+  or unboundedness certificates: a failed run reports NumericalError or
+  IterationLimit. Its cost is dominated by the sparse factorization, so it is
+  fast on structured LPs and slow when the KKT factors fill in almost
+  completely (random sparse graphs, large packing LPs). On the CPU it solves
+  the m x m normal equations instead of the augmented system when A has no
+  free or dense columns (opt.ipm_normal: 0 choose, 1 force, -1 never).
+  opt.ipm_max_iterations and opt.ipm_ordering (0: AMD, 1: nested dissection on
+  the GPU) tune it. opt.crossover = true follows an optimal IPM run with a
+  simplex started from the interior point, to return a basic solution.
+- LpMethod::Auto: if the predicted interior-point factorization is cheap, the
+  interior-point method, then the dual simplex, then PDLP. If it is expensive
+  (CPU only; predicted from the symbolic analysis), the dual simplex first for
+  a slice of the predicted interior-point time, then the interior-point method,
+  then PDLP. The time limit is shared. (Everything except PDLP alone runs
+  after presolve.)
+
+"Optimal" means the tolerances in opt hold on the ORIGINAL problem and,
+additionally, LpSolution::error_bound <= 10 * eps_gap * (1 + |objective|),
+where error_bound = gap + ||dual residual|| ||x|| + ||primal residual|| ||y||.
+This is what stops a badly scaled model from being reported as optimal just
+because its residuals are small relative to ||c||.
+
+On the 25 netlib LPs shipped with the HiGHS repository: the dual simplex
+and Auto solve all 25 (19 optimal to 1e-7..1e-9 relative objective error,
+6 infeasible detected; greenbea, optimal variables near 3e8, needs the simplex);
+the interior-point method solves 18 of the 19 feasible ones in 0.1 ms to 0.2 s;
+PDLP at 1e-6 solves 17 of them. Compared with HiGHS' dual simplex the times are
+within 1.2x to 2.4x on the larger models (greenbea 5.6x). See
+benchmarks/solver/RESULTS.md.
+
+Other pieces: write_mps() (round-trips read_mps), Presolve (class; reduced()
+and postsolve()), compute_scaling/apply_scaling/unscale_solution, and
+evaluate_solution(p, x, y) to check any candidate (x, y) on the host.
+MPS support: NAME, OBJSENSE, ROWS (extra N rows are dropped), COLUMNS with
+MARKER INTORG/INTEND, RHS, RANGES, and the bound types UP LO FX FR MI PL BV
+LI UI. Integer markers are read into LpProblem::is_integer but the LP solver
+ignores them (MILP is planned, see src/solver/ROADMAP.md).
+
+Tests: make test_solver_cpu / make test_solver (includes real netlib models
+from tests/data). Benchmarks: make benchmark_lp; real instances:
+benchmarks/solver/fetch_netlib.sh, then build/run_mps --method ipm|pdlp|simplex|auto
+build/netlib/*.mps (compare with benchmarks/solver/netlib_reference.py, which
+needs highspy).

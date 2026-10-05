@@ -1,0 +1,32 @@
+$ axos tests/data/afiro.mps
+AXOS 1.0  model AFIRO (LP): 32 columns (0 integer), 27 rows, 83 nonzeros, read in 0.01 s
+method       simplex on cpu (LP)
+status       optimal
+objective    -464.753142857
+bound        -464.753142857
+violation    7.11e-14 (largest relative bound / row violation)
+time         0.003 s, 13 iterations
+(exit status 0)
+
+$ axos benchmarks/qp/data/maros_meszaros_mps/QSHARE1B.mps
+AXOS 1.0  model QSHARE1B (QP): 225 columns (0 integer), 117 rows, 1151 nonzeros, 60 in Q, read in 0.00 s
+method       ipm on cpu (QP)
+status       optimal
+objective    720078.46181
+bound        720078.153832
+violation    9.01e-11 (largest relative bound / row violation)
+time         0.101 s, 227 iterations
+(exit status 0)
+
+$ axos benchmarks/milp/data/mps/exp-1-500-5-5.mps --time-limit 60 --solution exp.sol
+AXOS 1.0  model exp-1-500-5-5 (MILP): 990 columns (250 integer), 550 rows, 1980 nonzeros, read in 0.01 s
+method       branch-and-cut on cpu+gpu (MILP)
+status       optimal
+objective    65887
+bound        65887
+gap          0%
+violation    1.59e-13 (largest relative bound / row / integrality violation)
+time         11.277 s, 17873 iterations, 211 nodes
+note         probing_gpu=500/0/0;gpu_sb_batches=0;gpu_fj_moves=980
+(exit status 0)
+
