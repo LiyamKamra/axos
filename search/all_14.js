@@ -26,8 +26,9 @@ var searchData=
   ['urp_5f_23',['urp_',['../classAXOS_1_1Solver_1_1BasisFactor.html#a70444a471eeda45a3dd42a44fa7e75b3',1,'AXOS::Solver::BasisFactor']]],
   ['urx_5f_24',['urx_',['../classAXOS_1_1Solver_1_1BasisFactor.html#a5230dfe194328fc8993708a3b1a45ddb',1,'AXOS::Solver::BasisFactor']]],
   ['use_5fgpu_25',['use_gpu',['../structAXOS_1_1Solver_1_1QpOptions.html#a88d3d76ab4b0dcbf8a0b96e420f8b0bd',1,'AXOS::Solver::QpOptions']]],
-  ['use_5fmf_5f_26',['use_mf_',['../classAXOS_1_1Sparse_1_1SparseLdlt_3_01T_00_01Idx_00_01Cpu_1_1HostStorage_01_4.html#a9f1ef12fa29e4d0a142e1317e686dda1',1,'AXOS::Sparse::SparseLdlt&lt; T, Idx, Cpu::HostStorage &gt;']]],
-  ['used_5f_27',['used_',['../classAXOS_1_1Solver_1_1milp_1_1CmirSeparator.html#a07660d76b9cce0f41564a81a016dc81f',1,'AXOS::Solver::milp::CmirSeparator::used_()'],['../classAXOS_1_1GPUMemoryPool.html#afc249dceff1aeae9b304f18fb9c692c7',1,'AXOS::GPUMemoryPool::used_()']]],
-  ['used_5flist_5f_28',['used_list_',['../classAXOS_1_1Solver_1_1milp_1_1CmirSeparator.html#a850783af9beca95b0af48bd41d20fbab',1,'AXOS::Solver::milp::CmirSeparator']]],
-  ['ux_5f_29',['ux_',['../classAXOS_1_1Solver_1_1BasisFactor.html#a5301626a2e4c37a4384ff56a73357c53',1,'AXOS::Solver::BasisFactor']]]
+  ['use_5fgraphs_26',['use_graphs',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a2e54d7a3ff946578476065dd55c643fb',1,'AXOS::Solver::qp::CudaBackend::use_graphs()'],['../classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#ab32a52cfb0c238993151e7698fcef9fa',1,'AXOS::Solver::qp::CpuBackend::use_graphs()']]],
+  ['use_5fmf_5f_27',['use_mf_',['../classAXOS_1_1Sparse_1_1SparseLdlt_3_01T_00_01Idx_00_01Cpu_1_1HostStorage_01_4.html#a9f1ef12fa29e4d0a142e1317e686dda1',1,'AXOS::Sparse::SparseLdlt&lt; T, Idx, Cpu::HostStorage &gt;']]],
+  ['used_5f_28',['used_',['../classAXOS_1_1Solver_1_1milp_1_1CmirSeparator.html#a07660d76b9cce0f41564a81a016dc81f',1,'AXOS::Solver::milp::CmirSeparator::used_()'],['../classAXOS_1_1GPUMemoryPool.html#afc249dceff1aeae9b304f18fb9c692c7',1,'AXOS::GPUMemoryPool::used_()']]],
+  ['used_5flist_5f_29',['used_list_',['../classAXOS_1_1Solver_1_1milp_1_1CmirSeparator.html#a850783af9beca95b0af48bd41d20fbab',1,'AXOS::Solver::milp::CmirSeparator']]],
+  ['ux_5f_30',['ux_',['../classAXOS_1_1Solver_1_1BasisFactor.html#a5301626a2e4c37a4384ff56a73357c53',1,'AXOS::Solver::BasisFactor']]]
 ];

@@ -9,5 +9,6 @@ var namespaceAXOS_1_1Solver_1_1qp =
     [ "Pdhcg", "classAXOS_1_1Solver_1_1qp_1_1Pdhcg.html", "classAXOS_1_1Solver_1_1qp_1_1Pdhcg" ],
     [ "QpIpm", "classAXOS_1_1Solver_1_1qp_1_1QpIpm.html", "classAXOS_1_1Solver_1_1qp_1_1QpIpm" ],
     [ "QpReduction", "structAXOS_1_1Solver_1_1qp_1_1QpReduction.html", "structAXOS_1_1Solver_1_1qp_1_1QpReduction" ],
-    [ "power_method", "namespaceAXOS_1_1Solver_1_1qp.html#a516ae14250ae9920c8751fc3947479d2", null ]
+    [ "allreduce_sum", "namespaceAXOS_1_1Solver_1_1qp.html#a947850fe8e7e615bfa1f6a250fef6326", null ],
+    [ "power_method", "namespaceAXOS_1_1Solver_1_1qp.html#ae48a1be1192b14231b4a5f228a62629a", null ]
 ];

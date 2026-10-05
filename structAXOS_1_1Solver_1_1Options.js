@@ -1,5 +1,6 @@
 var structAXOS_1_1Solver_1_1Options =
 [
+    [ "comm", "structAXOS_1_1Solver_1_1Options.html#a3300d91ebdbc87e173746d96df654907", null ],
     [ "cuts", "structAXOS_1_1Solver_1_1Options.html#a2d6577086f1d710e672bc31ac121081b", null ],
     [ "device", "structAXOS_1_1Solver_1_1Options.html#a9a2693045efddfbeea23889b83df19ed", null ],
     [ "gap", "structAXOS_1_1Solver_1_1Options.html#a0edfc4b6fcf5ee7d43cb2e759e751782", null ],

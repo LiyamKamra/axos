@@ -17,5 +17,6 @@ var searchData=
   ['gpu_5fmin_5fwork_5fhard_14',['gpu_min_work_hard',['../structAXOS_1_1Solver_1_1QpOptions.html#a9bf4b25e82b6936cd1f5eebd95542941',1,'AXOS::Solver::QpOptions']]],
   ['gpu_5fsb_5fiters_15',['gpu_sb_iters',['../structAXOS_1_1Solver_1_1MilpOptions.html#a01978bec3795d8b589ffc4dfb04e21b7',1,'AXOS::Solver::MilpOptions']]],
   ['graphs_5f_16',['graphs_',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a13d244168586d145d816eeed4a601d25',1,'AXOS::Solver::qp::CudaBackend']]],
-  ['gub_5f_17',['gub_',['../classAXOS_1_1Solver_1_1milp_1_1BranchAndBound.html#a59055bb0c6a7949e5881db34dd87856f',1,'AXOS::Solver::milp::BranchAndBound']]]
+  ['graphs_5fon_5f_17',['graphs_on_',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a7a9f43cbdf1e8613971992d6ba53dc10',1,'AXOS::Solver::qp::CudaBackend']]],
+  ['gub_5f_18',['gub_',['../classAXOS_1_1Solver_1_1milp_1_1BranchAndBound.html#a59055bb0c6a7949e5881db34dd87856f',1,'AXOS::Solver::milp::BranchAndBound']]]
 ];

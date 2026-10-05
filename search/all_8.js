@@ -75,6 +75,6 @@ var searchData=
   ['iterationlimit_72',['IterationLimit',['../namespaceAXOS_1_1Solver.html#a9b110faeab755c409f0b65f2ab724872acd3b6ae6163e0d9229f14e2c17cc0509',1,'AXOS::Solver']]],
   ['iterations_73',['iterations',['../classAXOS_1_1Solver_1_1DualSimplex.html#a8023ff0e3037069f9581ae67994c34a8',1,'AXOS::Solver::DualSimplex::iterations()'],['../structAXOS_1_1Solver_1_1QpSolution.html#add3b5aacca758ccb39f7fbdad17c481c',1,'AXOS::Solver::QpSolution::iterations()'],['../structAXOS_1_1Solver_1_1LpSolution.html#af4183ca51f1cbe59a02900acd05abbd2',1,'AXOS::Solver::LpSolution::iterations()'],['../structAXOS_1_1Solver_1_1Result.html#a17314f28d575cf7c44872322b6479900',1,'AXOS::Solver::Result::iterations()']]],
   ['iters_5f_74',['iters_',['../classAXOS_1_1Solver_1_1DualSimplex.html#a030e19de0797ffef84e117054d014551',1,'AXOS::Solver::DualSimplex']]],
-  ['ivec_75',['IVec',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#aa51291ac4b71645fee140a94539deb8c',1,'AXOS::Solver::qp::CudaBackend']]],
-  ['ivec_76',['ivec',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#ae5d51cd42f4cb040f9a36bbf65d6b9bf',1,'AXOS::Solver::qp::CudaBackend']]]
+  ['ivec_75',['ivec',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#ae5d51cd42f4cb040f9a36bbf65d6b9bf',1,'AXOS::Solver::qp::CudaBackend']]],
+  ['ivec_76',['IVec',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#aa51291ac4b71645fee140a94539deb8c',1,'AXOS::Solver::qp::CudaBackend']]]
 ];

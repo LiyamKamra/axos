@@ -2,6 +2,7 @@ var structAXOS_1_1Solver_1_1QpOptions =
 [
     [ "auto_device", "structAXOS_1_1Solver_1_1QpOptions.html#a74f0f4f8256c2d88c9b934c1d63a467b", null ],
     [ "check_every", "structAXOS_1_1Solver_1_1QpOptions.html#a330c1adcbaddc8a073fdbbbd3bed755c", null ],
+    [ "comm", "structAXOS_1_1Solver_1_1QpOptions.html#af62f5bc5d8e5ab04b3bff5abb40df7d5", null ],
     [ "gpu_min_work", "structAXOS_1_1Solver_1_1QpOptions.html#af044c0ebec27e368627ca45b8f8a4552", null ],
     [ "gpu_min_work_hard", "structAXOS_1_1Solver_1_1QpOptions.html#a9bf4b25e82b6936cd1f5eebd95542941", null ],
     [ "hpr_free_variant", "structAXOS_1_1Solver_1_1QpOptions.html#aec4ab76b087622b11e7261dfc51d89e3", null ],

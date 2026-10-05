@@ -183,6 +183,7 @@ var hierarchy =
     [ "AXOS::Solver::milp::ProbingStats", "structAXOS_1_1Solver_1_1milp_1_1ProbingStats.html", null ],
     [ "AXOS::Sparse::MultifrontalLdl< T, Idx >::Profile", "structAXOS_1_1Sparse_1_1MultifrontalLdl_1_1Profile.html", null ],
     [ "AXOS::Solver::milp::Propagator", "classAXOS_1_1Solver_1_1milp_1_1Propagator.html", null ],
+    [ "AXOS::Solver::QpComm", "classAXOS_1_1Solver_1_1QpComm.html", null ],
     [ "AXOS::Solver::qp::QpIpm", "classAXOS_1_1Solver_1_1qp_1_1QpIpm.html", null ],
     [ "AXOS::Solver::QpOptions", "structAXOS_1_1Solver_1_1QpOptions.html", null ],
     [ "AXOS::Solver::QpProblem", "structAXOS_1_1Solver_1_1QpProblem.html", null ],

@@ -123,13 +123,64 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a516ae14250ae9920c8751fc3947479d2"><td class="memTemplParams" colspan="2">template&lt;class B &gt; </td></tr>
-<tr class="memitem:a516ae14250ae9920c8751fc3947479d2"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceAXOS_1_1Solver_1_1qp.html#a516ae14250ae9920c8751fc3947479d2">power_method</a> (B &amp;be, const typename B::Mat &amp;M, const typename B::Mat *MT, size_t n, size_t m, int max_iter)</td></tr>
-<tr class="separator:a516ae14250ae9920c8751fc3947479d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae48a1be1192b14231b4a5f228a62629a"><td class="memTemplParams" colspan="2">template&lt;class B &gt; </td></tr>
+<tr class="memitem:ae48a1be1192b14231b4a5f228a62629a"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceAXOS_1_1Solver_1_1qp.html#ae48a1be1192b14231b4a5f228a62629a">power_method</a> (B &amp;be, const typename B::Mat &amp;M, const typename B::Mat *MT, size_t n, size_t m, int max_iter, const <a class="el" href="classAXOS_1_1Solver_1_1QpComm.html">QpComm</a> *cm=nullptr)</td></tr>
+<tr class="separator:ae48a1be1192b14231b4a5f228a62629a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a947850fe8e7e615bfa1f6a250fef6326"><td class="memTemplParams" colspan="2">template&lt;class B &gt; </td></tr>
+<tr class="memitem:a947850fe8e7e615bfa1f6a250fef6326"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceAXOS_1_1Solver_1_1qp.html#a947850fe8e7e615bfa1f6a250fef6326">allreduce_sum</a> (B &amp;be, double *v, size_t n, const <a class="el" href="classAXOS_1_1Solver_1_1QpComm.html">QpComm</a> &amp;c)</td></tr>
+<tr class="separator:a947850fe8e7e615bfa1f6a250fef6326"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a516ae14250ae9920c8751fc3947479d2" name="a516ae14250ae9920c8751fc3947479d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a516ae14250ae9920c8751fc3947479d2">&#9670;&#160;</a></span>power_method()</h2>
+<a id="a947850fe8e7e615bfa1f6a250fef6326" name="a947850fe8e7e615bfa1f6a250fef6326"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a947850fe8e7e615bfa1f6a250fef6326">&#9670;&#160;</a></span>allreduce_sum()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class B &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void AXOS::Solver::qp::allreduce_sum </td>
+          <td>(</td>
+          <td class="paramtype">B &amp;&#160;</td>
+          <td class="paramname"><em>be</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classAXOS_1_1Solver_1_1QpComm.html">QpComm</a> &amp;&#160;</td>
+          <td class="paramname"><em>c</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__dist_8h_source.html#l00188">188</a> of file <a class="el" href="qp__dist_8h_source.html">qp_dist.h</a>.</p>
+
+<p class="reference">References <a class="el" href="qp__dist_8h_source.html#l00065">AXOS::Solver::QpComm::distributed()</a>, and <a class="el" href="qp__dist_8h_source.html#l00092">AXOS::Solver::QpComm::sum()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="hpr__qp_8h_source.html#l00122">power_method()</a>, and <a class="el" href="hpr__qp_8h_source.html#l00174">AXOS::Solver::qp::HprQp&lt; B &gt;::solve()</a>.</p>
+
+</div>
+</div>
+<a id="ae48a1be1192b14231b4a5f228a62629a" name="ae48a1be1192b14231b4a5f228a62629a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae48a1be1192b14231b4a5f228a62629a">&#9670;&#160;</a></span>power_method()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -170,7 +221,13 @@ template&lt;class B &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>max_iter</em>&#160;</td>
+          <td class="paramname"><em>max_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classAXOS_1_1Solver_1_1QpComm.html">QpComm</a> *&#160;</td>
+          <td class="paramname"><em>cm</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -180,11 +237,11 @@ template&lt;class B &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00094">94</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00122">122</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
 
-<p class="reference">References <a class="el" href="hpr__qp_8h_source.html#l00069">AXOS_QP_MAP</a>, and <a class="el" href="hpr__qp_8h_source.html#l00075">AXOS_QP_RED_TO</a>.</p>
+<p class="reference">References <a class="el" href="qp__dist_8h_source.html#l00188">allreduce_sum()</a>, <a class="el" href="hpr__qp_8h_source.html#l00078">AXOS_QP_MAP</a>, and <a class="el" href="hpr__qp_8h_source.html#l00084">AXOS_QP_RED_TO</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="hpr__qp_8h_source.html#l00144">AXOS::Solver::qp::HprQp&lt; B &gt;::solve()</a>, and <a class="el" href="pdhcg_8h_source.html#l00053">AXOS::Solver::qp::Pdhcg&lt; B &gt;::solve()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hpr__qp_8h_source.html#l00174">AXOS::Solver::qp::HprQp&lt; B &gt;::solve()</a>, and <a class="el" href="pdhcg_8h_source.html#l00053">AXOS::Solver::qp::Pdhcg&lt; B &gt;::solve()</a>.</p>
 
 </div>
 </div>

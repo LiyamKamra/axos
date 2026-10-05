@@ -143,6 +143,9 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a37c12a10d30b5351e41895d440367216"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08629afa4da70596ec3e973a83f1341f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a08629afa4da70596ec3e973a83f1341f">spmv</a> (const <a class="el" href="structAXOS_1_1Solver_1_1qp_1_1CudaBackend_1_1Mat.html">Mat</a> &amp;M, const double *x, double *y)</td></tr>
 <tr class="separator:a08629afa4da70596ec3e973a83f1341f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb9e3f7c06780609b0cc1b6ed9156d46"><td class="memTemplParams" colspan="2">template&lt;class Args , class F &gt; </td></tr>
+<tr class="memitem:acb9e3f7c06780609b0cc1b6ed9156d46"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#acb9e3f7c06780609b0cc1b6ed9156d46">epi</a> (const char *<a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#ac1eb56a69298c0c30472cdadf7078c37">name</a>, size_t n, const double *s, const Args &amp;a, F)</td></tr>
+<tr class="separator:acb9e3f7c06780609b0cc1b6ed9156d46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addc89d35c4b0e4d4a193110f1a642131"><td class="memTemplParams" colspan="2">template&lt;class Args , class F &gt; </td></tr>
 <tr class="memitem:addc89d35c4b0e4d4a193110f1a642131"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#addc89d35c4b0e4d4a193110f1a642131">map</a> (const char *<a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#ac1eb56a69298c0c30472cdadf7078c37">name</a>, size_t n, const Args &amp;a, F)</td></tr>
 <tr class="separator:addc89d35c4b0e4d4a193110f1a642131"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,6 +168,11 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:adc9e931fb402f1a2a5605f5da1c873e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81d76d475bead01b0700d85d62c20439"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a81d76d475bead01b0700d85d62c20439">sync</a> () const</td></tr>
 <tr class="separator:a81d76d475bead01b0700d85d62c20439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e54d7a3ff946578476065dd55c643fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a2e54d7a3ff946578476065dd55c643fb">use_graphs</a> (bool on)</td></tr>
+<tr class="separator:a2e54d7a3ff946578476065dd55c643fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a761bc27bc355906704376600cbf31cc6"><td class="memTemplParams" colspan="2">template&lt;class F &gt; </td></tr>
+<tr class="memitem:a761bc27bc355906704376600cbf31cc6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a761bc27bc355906704376600cbf31cc6">through_host</a> (double *v, size_t n, F &amp;&amp;<a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#ace66420d054339e09fc22f4949c50671">fn</a>)</td></tr>
+<tr class="separator:a761bc27bc355906704376600cbf31cc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e481dafcc9a6072b3d7d9b32b168056"><td class="memTemplParams" colspan="2">template&lt;class F &gt; </td></tr>
 <tr class="memitem:a5e481dafcc9a6072b3d7d9b32b168056"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a5e481dafcc9a6072b3d7d9b32b168056">time_us</a> (int reps, F &amp;&amp;<a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#ace66420d054339e09fc22f4949c50671">fn</a>)</td></tr>
 <tr class="separator:a5e481dafcc9a6072b3d7d9b32b168056"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -213,6 +221,12 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a41fced9c0d7e5ba53d56c784330ee8a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa90e097d97416a404dad23ba2bd1ca73"><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#aa90e097d97416a404dad23ba2bd1ca73">host_</a> = nullptr</td></tr>
 <tr class="separator:aa90e097d97416a404dad23ba2bd1ca73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d473d9390f11d10eaeb5201d01faea2"><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a5d473d9390f11d10eaeb5201d01faea2">stage_</a> = nullptr</td></tr>
+<tr class="separator:a5d473d9390f11d10eaeb5201d01faea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b1072facde558e5717a5c3e06b8f6b8"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a9b1072facde558e5717a5c3e06b8f6b8">stage_n_</a> = 0</td></tr>
+<tr class="separator:a9b1072facde558e5717a5c3e06b8f6b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a9f43cbdf1e8613971992d6ba53dc10"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a7a9f43cbdf1e8613971992d6ba53dc10">graphs_on_</a> = true</td></tr>
+<tr class="separator:a7a9f43cbdf1e8613971992d6ba53dc10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a161c0c502baec9913c377375cf5dafb7"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a161c0c502baec9913c377375cf5dafb7">name_</a></td></tr>
 <tr class="separator:a161c0c502baec9913c377375cf5dafb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13d244168586d145d816eeed4a601d25"><td class="memItemLeft" align="right" valign="top">std::map&lt; long, CUgraphExec &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a13d244168586d145d816eeed4a601d25">graphs_</a></td></tr>
@@ -291,7 +305,7 @@ Static Private Attributes</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00264">264</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00549">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00502">kMaxBlocks</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00503">kSlots</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00550">name_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00548">out_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00548">part_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00599">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00552">kMaxBlocks</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00553">kSlots</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00603">name_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00598">out_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00598">part_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
 </div>
 </div>
@@ -318,9 +332,9 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00276">276</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00278">278</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00551">graphs_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00549">host_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00604">graphs_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00599">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00600">stage_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
 </div>
 </div>
@@ -375,11 +389,11 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00528">528</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00578">578</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00523">grid()</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00573">grid()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00352">spmv_epi()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00355">spmv_epi()</a>.</p>
 
 </div>
 </div>
@@ -406,7 +420,7 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00287">287</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00290">290</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 <p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00188">AXOS::Solver::qp::cuda_rt::Module::compile_seconds()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00167">AXOS::Solver::qp::cuda_rt::Module::get()</a>.</p>
 
@@ -436,11 +450,11 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00418">418</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00434">434</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00549">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00548">out_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00599">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00598">out_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00429">reduce()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00445">reduce()</a>.</p>
 
 </div>
 </div>
@@ -478,9 +492,69 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00304">304</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00307">307</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 <p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, and <a class="el" href="tensorET_8h_source.html#l00297">AXOS::tensorET&lt; DIM, T, Storage &gt;::size()</a>.</p>
+
+</div>
+</div>
+<a id="acb9e3f7c06780609b0cc1b6ed9156d46" name="acb9e3f7c06780609b0cc1b6ed9156d46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb9e3f7c06780609b0cc1b6ed9156d46">&#9670;&#160;</a></span>epi()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Args , class F &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AXOS::Solver::qp::CudaBackend::epi </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Args &amp;&#160;</td>
+          <td class="paramname"><em>a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">F&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00388">388</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00573">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00590">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00596">mod_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>.</p>
 
 </div>
 </div>
@@ -518,11 +592,11 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00532">532</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00582">582</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00546">mod_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00286">name()</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00596">mod_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00444">run_block()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00352">spmv_epi()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00484">time_us()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00460">run_block()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00355">spmv_epi()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00508">through_host()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00534">time_us()</a>.</p>
 
 </div>
 </div>
@@ -550,9 +624,9 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00470">470</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00490">490</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00551">graphs_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00604">graphs_</a>.</p>
 
 </div>
 </div>
@@ -590,11 +664,11 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00523">523</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00573">573</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00502">kBlock</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00552">kBlock</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00528">blocks()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00383">map()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00352">spmv_epi()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00578">blocks()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00388">epi()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00399">map()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00355">spmv_epi()</a>.</p>
 
 </div>
 </div>
@@ -632,9 +706,9 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00515">515</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00565">565</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00316">upload()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00319">upload()</a>.</p>
 
 </div>
 </div>
@@ -678,11 +752,11 @@ Static Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00540">540</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00590">590</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00502">kBlock</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00552">kBlock</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00383">map()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00352">spmv_epi()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00388">epi()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00399">map()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00355">spmv_epi()</a>.</p>
 
 </div>
 </div>
@@ -734,9 +808,9 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00383">383</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00399">399</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00523">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00540">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00546">mod_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00286">name()</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00573">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00590">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00596">mod_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>.</p>
 
 </div>
 </div>
@@ -763,11 +837,11 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00286">286</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00289">289</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00550">name_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00603">name_</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00532">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00383">map()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00429">reduce()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00352">spmv_epi()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00388">epi()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00582">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00399">map()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00445">reduce()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00355">spmv_epi()</a>.</p>
 
 </div>
 </div>
@@ -821,7 +895,7 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00313">313</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00316">316</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 <p class="reference">References <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>.</p>
 
@@ -851,7 +925,7 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00312">312</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00315">315</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 <p class="reference">References <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>.</p>
 
@@ -905,9 +979,9 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00429">429</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00445">445</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00418">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00549">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00286">name()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00478">sync()</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00434">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00599">host_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00498">sync()</a>.</p>
 
 </div>
 </div>
@@ -965,11 +1039,11 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00396">396</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00412">412</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00523">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00502">kMaxBlocks</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00540">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00546">mod_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00286">name()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00548">out_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00548">part_</a>.</p>
+<p class="reference">References <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00176">AXOS::Solver::qp::cuda_rt::Module::fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00573">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00552">kMaxBlocks</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00590">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00596">mod_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00598">out_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00598">part_</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00429">reduce()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00445">reduce()</a>.</p>
 
 </div>
 </div>
@@ -996,9 +1070,9 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00423">423</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00439">439</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00549">host_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00599">host_</a>.</p>
 
 </div>
 </div>
@@ -1025,9 +1099,9 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00425">425</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00441">441</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00548">out_</a>.</p>
+<p class="reference">References <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00598">out_</a>.</p>
 
 </div>
 </div>
@@ -1067,9 +1141,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00444">444</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00460">460</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00532">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00551">graphs_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00582">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00604">graphs_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00602">graphs_on_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
 </div>
 </div>
@@ -1113,9 +1187,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00376">376</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00379">379</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00352">spmv_epi()</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00355">spmv_epi()</a>.</p>
 
 </div>
 </div>
@@ -1173,11 +1247,11 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00352">352</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00355">355</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00528">blocks()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::ci</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::cp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00259">AXOS::Solver::qp::CudaBackend::Mat::ctpr</a>, <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00532">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00523">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00540">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00286">name()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00258">AXOS::Solver::qp::CudaBackend::Mat::nchunks</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00253">AXOS::Solver::qp::CudaBackend::Mat::nrows</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00257">AXOS::Solver::qp::CudaBackend::Mat::part</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::rcp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::rp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00255">AXOS::Solver::qp::CudaBackend::Mat::split</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00254">AXOS::Solver::qp::CudaBackend::Mat::tpr</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00252">AXOS::Solver::qp::CudaBackend::Mat::v</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00578">blocks()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::ci</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::cp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00259">AXOS::Solver::qp::CudaBackend::Mat::ctpr</a>, <a class="el" href="tensorET_8h_source.html#l00120">AXOS::tensorET&lt; DIM, T, Storage &gt;::data</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00582">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00573">grid()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00590">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00258">AXOS::Solver::qp::CudaBackend::Mat::nchunks</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00253">AXOS::Solver::qp::CudaBackend::Mat::nrows</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00257">AXOS::Solver::qp::CudaBackend::Mat::part</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::rcp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::rp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00255">AXOS::Solver::qp::CudaBackend::Mat::split</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00254">AXOS::Solver::qp::CudaBackend::Mat::tpr</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00252">AXOS::Solver::qp::CudaBackend::Mat::v</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00376">spmv()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00379">spmv()</a>.</p>
 
 </div>
 </div>
@@ -1204,11 +1278,11 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00478">478</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00498">498</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00429">reduce()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00445">reduce()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00508">through_host()</a>.</p>
 
 </div>
 </div>
@@ -1236,9 +1310,57 @@ template&lt;class Args , class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00507">507</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00557">557</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00316">upload()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00319">upload()</a>.</p>
+
+</div>
+</div>
+<a id="a761bc27bc355906704376600cbf31cc6" name="a761bc27bc355906704376600cbf31cc6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a761bc27bc355906704376600cbf31cc6">&#9670;&#160;</a></span>through_host()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class F &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AXOS::Solver::qp::CudaBackend::through_host </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">F &amp;&amp;&#160;</td>
+          <td class="paramname"><em>fn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00508">508</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00582">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00600">stage_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00601">stage_n_</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00498">sync()</a>.</p>
 
 </div>
 </div>
@@ -1278,9 +1400,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00484">484</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00534">534</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00532">fn()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00547">stream_</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00582">fn()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00597">stream_</a>.</p>
 
 </div>
 </div>
@@ -1308,9 +1430,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00316">316</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00319">319</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::ci</a>, <a class="el" href="csr_8h_source.html#l00234">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::col_ind()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::cp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00259">AXOS::Solver::qp::CudaBackend::Mat::ctpr</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00515">ivec()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00504">kThreads</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00258">AXOS::Solver::qp::CudaBackend::Mat::nchunks</a>, <a class="el" href="csr_8h_source.html#l00231">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::nnz()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00253">AXOS::Solver::qp::CudaBackend::Mat::nnzs</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00253">AXOS::Solver::qp::CudaBackend::Mat::nrows</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00257">AXOS::Solver::qp::CudaBackend::Mat::part</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::rcp</a>, <a class="el" href="csr_8h_source.html#l00233">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::row_ptr()</a>, <a class="el" href="csr_8h_source.html#l00229">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::rows()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::rp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00255">AXOS::Solver::qp::CudaBackend::Mat::split</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00507">threads_for()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00254">AXOS::Solver::qp::CudaBackend::Mat::tpr</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00252">AXOS::Solver::qp::CudaBackend::Mat::v</a>, and <a class="el" href="csr_8h_source.html#l00235">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::values()</a>.</p>
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::ci</a>, <a class="el" href="csr_8h_source.html#l00234">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::col_ind()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::cp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00259">AXOS::Solver::qp::CudaBackend::Mat::ctpr</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00565">ivec()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00554">kThreads</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00258">AXOS::Solver::qp::CudaBackend::Mat::nchunks</a>, <a class="el" href="csr_8h_source.html#l00231">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::nnz()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00253">AXOS::Solver::qp::CudaBackend::Mat::nnzs</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00253">AXOS::Solver::qp::CudaBackend::Mat::nrows</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00257">AXOS::Solver::qp::CudaBackend::Mat::part</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00256">AXOS::Solver::qp::CudaBackend::Mat::rcp</a>, <a class="el" href="csr_8h_source.html#l00233">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::row_ptr()</a>, <a class="el" href="csr_8h_source.html#l00229">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::rows()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00251">AXOS::Solver::qp::CudaBackend::Mat::rp</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00255">AXOS::Solver::qp::CudaBackend::Mat::split</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00557">threads_for()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00254">AXOS::Solver::qp::CudaBackend::Mat::tpr</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00252">AXOS::Solver::qp::CudaBackend::Mat::v</a>, and <a class="el" href="csr_8h_source.html#l00235">AXOS::Sparse::Csr&lt; T, Idx, Store &gt;::values()</a>.</p>
 
 </div>
 </div>
@@ -1338,9 +1460,39 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00294">294</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00297">297</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 <p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00060">AXOS::Solver::qp::cuda_rt::check()</a>.</p>
+
+</div>
+</div>
+<a id="a2e54d7a3ff946578476065dd55c643fb" name="a2e54d7a3ff946578476065dd55c643fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e54d7a3ff946578476065dd55c643fb">&#9670;&#160;</a></span>use_graphs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AXOS::Solver::qp::CudaBackend::use_graphs </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>on</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00501">501</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+
+<p class="reference">References <a class="el" href="qp__backend__cuda_8h_source.html#l00602">graphs_on_</a>.</p>
 
 </div>
 </div>
@@ -1378,7 +1530,7 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00291">291</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00294">294</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 </div>
 </div>
@@ -1403,9 +1555,35 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00551">551</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00604">604</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00470">forget()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00444">run_block()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00276">~CudaBackend()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00490">forget()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00460">run_block()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00278">~CudaBackend()</a>.</p>
+
+</div>
+</div>
+<a id="a7a9f43cbdf1e8613971992d6ba53dc10" name="a7a9f43cbdf1e8613971992d6ba53dc10"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a9f43cbdf1e8613971992d6ba53dc10">&#9670;&#160;</a></span>graphs_on_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AXOS::Solver::qp::CudaBackend::graphs_on_ = true</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00602">602</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00460">run_block()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00501">use_graphs()</a>.</p>
 
 </div>
 </div>
@@ -1429,9 +1607,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00549">549</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00599">599</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00418">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00429">reduce()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00423">results()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00276">~CudaBackend()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00434">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00445">reduce()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00439">results()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00278">~CudaBackend()</a>.</p>
 
 </div>
 </div>
@@ -1479,9 +1657,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00502">502</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00552">552</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00523">grid()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00540">launch()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00573">grid()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00590">launch()</a>.</p>
 
 </div>
 </div>
@@ -1505,9 +1683,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00502">502</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00552">552</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>.</p>
 
 </div>
 </div>
@@ -1531,7 +1709,7 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00503">503</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00553">553</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
 <p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>.</p>
 
@@ -1557,9 +1735,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00504">504</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00554">554</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00316">upload()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00319">upload()</a>.</p>
 
 </div>
 </div>
@@ -1583,9 +1761,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00546">546</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00596">596</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00532">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00383">map()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00388">epi()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00582">fn()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00399">map()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>.</p>
 
 </div>
 </div>
@@ -1609,9 +1787,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00550">550</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00603">603</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00286">name()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00289">name()</a>.</p>
 
 </div>
 </div>
@@ -1635,9 +1813,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00548">548</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00598">598</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00418">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00425">results_dev()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00434">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00441">results_dev()</a>.</p>
 
 </div>
 </div>
@@ -1661,9 +1839,61 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00548">548</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00598">598</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00396">reduce_to()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00412">reduce_to()</a>.</p>
+
+</div>
+</div>
+<a id="a5d473d9390f11d10eaeb5201d01faea2" name="a5d473d9390f11d10eaeb5201d01faea2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d473d9390f11d10eaeb5201d01faea2">&#9670;&#160;</a></span>stage_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double* AXOS::Solver::qp::CudaBackend::stage_ = nullptr</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00600">600</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00508">through_host()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00278">~CudaBackend()</a>.</p>
+
+</div>
+</div>
+<a id="a9b1072facde558e5717a5c3e06b8f6b8" name="a9b1072facde558e5717a5c3e06b8f6b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b1072facde558e5717a5c3e06b8f6b8">&#9670;&#160;</a></span>stage_n_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t AXOS::Solver::qp::CudaBackend::stage_n_ = 0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00601">601</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00508">through_host()</a>.</p>
 
 </div>
 </div>
@@ -1687,9 +1917,9 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00547">547</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qp__backend__cuda_8h_source.html#l00597">597</a> of file <a class="el" href="qp__backend__cuda_8h_source.html">qp_backend_cuda.h</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00418">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00540">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00444">run_block()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00478">sync()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00484">time_us()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00276">~CudaBackend()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="qp__backend__cuda_8h_source.html#l00434">copy_results()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00264">CudaBackend()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00590">launch()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00460">run_block()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00498">sync()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00508">through_host()</a>, <a class="el" href="qp__backend__cuda_8h_source.html#l00534">time_us()</a>, and <a class="el" href="qp__backend__cuda_8h_source.html#l00278">~CudaBackend()</a>.</p>
 
 </div>
 </div>

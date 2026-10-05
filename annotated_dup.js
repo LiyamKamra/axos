@@ -164,6 +164,7 @@ var annotated_dup =
         [ "Pdlp", "classAXOS_1_1Solver_1_1Pdlp.html", "classAXOS_1_1Solver_1_1Pdlp" ],
         [ "Presolve", "classAXOS_1_1Solver_1_1Presolve.html", "classAXOS_1_1Solver_1_1Presolve" ],
         [ "PresolveOptions", "structAXOS_1_1Solver_1_1PresolveOptions.html", "structAXOS_1_1Solver_1_1PresolveOptions" ],
+        [ "QpComm", "classAXOS_1_1Solver_1_1QpComm.html", "classAXOS_1_1Solver_1_1QpComm" ],
         [ "QpOptions", "structAXOS_1_1Solver_1_1QpOptions.html", "structAXOS_1_1Solver_1_1QpOptions" ],
         [ "QpProblem", "structAXOS_1_1Solver_1_1QpProblem.html", "structAXOS_1_1Solver_1_1QpProblem" ],
         [ "QpScaling", "structAXOS_1_1Solver_1_1QpScaling.html", "structAXOS_1_1Solver_1_1QpScaling" ],

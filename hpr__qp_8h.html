@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('hpr__qp_8h.html',''); initResizable();
   <div class="headertitle"><div class="title">hpr_qp.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="qp__model_8h_source.html">solver/qp/qp_model.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="qp__dist_8h_source.html">solver/qp/qp_dist.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="qp__model_8h_source.html">solver/qp/qp_model.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="qp__ops_8h_source.html">solver/qp/qp_ops.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="qp__scaling_8h_source.html">solver/qp/qp_scaling.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
@@ -132,14 +133,69 @@ Macros</h2></td></tr>
 <tr class="separator:a72ede801733f3d11d73499b11c0b5da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb80c55f0e73be99ab161d2165479807"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hpr__qp_8h.html#acb80c55f0e73be99ab161d2165479807">AXOS_QP_SPMV</a>(be,  f,  M,  x,  args)</td></tr>
 <tr class="separator:acb80c55f0e73be99ab161d2165479807"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a95ad00d0c0b2e798b7b4a37499a21f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hpr__qp_8h.html#a9a95ad00d0c0b2e798b7b4a37499a21f">AXOS_QP_EPI</a>(be,  f,  n,  s,  args)</td></tr>
+<tr class="separator:a9a95ad00d0c0b2e798b7b4a37499a21f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55af32edc1aa61230f6801399022914b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hpr__qp_8h.html#a55af32edc1aa61230f6801399022914b">AXOS_QP_SPMV_AT</a>(be,  cm,  f,  M,  x,  part,  args)</td></tr>
+<tr class="separator:a55af32edc1aa61230f6801399022914b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a516ae14250ae9920c8751fc3947479d2"><td class="memTemplParams" colspan="2">template&lt;class B &gt; </td></tr>
-<tr class="memitem:a516ae14250ae9920c8751fc3947479d2"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceAXOS_1_1Solver_1_1qp.html#a516ae14250ae9920c8751fc3947479d2">AXOS::Solver::qp::power_method</a> (B &amp;be, const typename B::Mat &amp;M, const typename B::Mat *MT, size_t n, size_t m, int max_iter)</td></tr>
-<tr class="separator:a516ae14250ae9920c8751fc3947479d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae48a1be1192b14231b4a5f228a62629a"><td class="memTemplParams" colspan="2">template&lt;class B &gt; </td></tr>
+<tr class="memitem:ae48a1be1192b14231b4a5f228a62629a"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceAXOS_1_1Solver_1_1qp.html#ae48a1be1192b14231b4a5f228a62629a">AXOS::Solver::qp::power_method</a> (B &amp;be, const typename B::Mat &amp;M, const typename B::Mat *MT, size_t n, size_t m, int max_iter, const QpComm *cm=nullptr)</td></tr>
+<tr class="separator:ae48a1be1192b14231b4a5f228a62629a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a9a95ad00d0c0b2e798b7b4a37499a21f" name="a9a95ad00d0c0b2e798b7b4a37499a21f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a95ad00d0c0b2e798b7b4a37499a21f">&#9670;&#160;</a></span>AXOS_QP_EPI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define AXOS_QP_EPI</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">be, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">f, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">n, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">s, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">args&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    (be).epi(<span class="stringliteral">&quot;k_&quot;</span> #f, (n), (s), (args),                                        \</div>
+<div class="line">        [](<a class="code hl_typedef" href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a> i_, <span class="keywordtype">double</span> s_, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;a_) { axos_qp::f(i_, s_, a_); })</div>
+<div class="ttc" id="anamespaceaxos__qp_html_a922cb252fb16564ab0a950cae44d9989"><div class="ttname"><a href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a></div><div class="ttdeci">long long idx</div><div class="ttdef"><b>Definition:</b> <a href="qp__ops_8h_source.html#l00032">qp_ops.h:32</a></div></div>
+</div><!-- fragment -->
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00092">92</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+
+</div>
+</div>
 <a id="a0da8fbd0bf3e521bfaeab3ff0cdaf25b" name="a0da8fbd0bf3e521bfaeab3ff0cdaf25b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0da8fbd0bf3e521bfaeab3ff0cdaf25b">&#9670;&#160;</a></span>AXOS_QP_MAP</h2>
 
@@ -179,9 +235,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">    (be).map(<span class="stringliteral">&quot;k_&quot;</span> #f, (n), (args),                                             \</div>
 <div class="line">        [](<a class="code hl_typedef" href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a> i_, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;a_) { axos_qp::f(i_, a_); })</div>
-<div class="ttc" id="anamespaceaxos__qp_html_a922cb252fb16564ab0a950cae44d9989"><div class="ttname"><a href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a></div><div class="ttdeci">long long idx</div><div class="ttdef"><b>Definition:</b> <a href="qp__ops_8h_source.html#l00032">qp_ops.h:32</a></div></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00069">69</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00078">78</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
 
 </div>
 </div>
@@ -225,7 +280,7 @@ Functions</h2></td></tr>
 <b>Value:</b><div class="fragment"><div class="line">    (be).reduce(<span class="stringliteral">&quot;k_&quot;</span> #f, (n), (args),                                          \</div>
 <div class="line">        [](<a class="code hl_typedef" href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a> i_, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;a_, <span class="keywordtype">double</span> *acc_) { axos_qp::f(i_, a_, acc_); })</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00072">72</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00081">81</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
 
 </div>
 </div>
@@ -276,7 +331,7 @@ Functions</h2></td></tr>
 <div class="line">        [](<a class="code hl_typedef" href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a> i_, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;a_, <span class="keywordtype">double</span> *acc_) { axos_qp::f(i_, a_, acc_); }, \</div>
 <div class="line">        (slot))</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00075">75</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00084">84</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
 
 </div>
 </div>
@@ -326,7 +381,76 @@ Functions</h2></td></tr>
 <b>Value:</b><div class="fragment"><div class="line">    (be).spmv_epi(<span class="stringliteral">&quot;k_&quot;</span> #f, (M), (x), (args),                                   \</div>
 <div class="line">        [](<a class="code hl_typedef" href="namespaceaxos__qp.html#a922cb252fb16564ab0a950cae44d9989">axos_qp::idx</a> i_, <span class="keywordtype">double</span> s_, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;a_) { axos_qp::f(i_, s_, a_); })</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00079">79</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00088">88</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
+
+</div>
+</div>
+<a id="a55af32edc1aa61230f6801399022914b" name="a55af32edc1aa61230f6801399022914b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55af32edc1aa61230f6801399022914b">&#9670;&#160;</a></span>AXOS_QP_SPMV_AT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define AXOS_QP_SPMV_AT</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">be, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">cm, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">f, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">M, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">x, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">part, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">args&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">do</span> {                                                                       \</div>
+<div class="line">        if ((cm).distributed()) {                                              \</div>
+<div class="line">            (be).spmv((M), (x), (part));                                       \</div>
+<div class="line">            ::AXOS::Solver::qp::allreduce_sum((be), (part), (M).rows(), (cm)); \</div>
+<div class="line">            AXOS_QP_EPI(be, f, (M).rows(), (part), args);                      \</div>
+<div class="line">        } <span class="keywordflow">else</span> {                                                               \</div>
+<div class="line">            AXOS_QP_SPMV(be, f, M, x, args);                                   \</div>
+<div class="line">        }                                                                      \</div>
+<div class="line">    } <span class="keywordflow">while</span> (0)</div>
+</div><!-- fragment -->
+<p class="definition">Definition at line <a class="el" href="hpr__qp_8h_source.html#l00098">98</a> of file <a class="el" href="hpr__qp_8h_source.html">hpr_qp.h</a>.</p>
 
 </div>
 </div>
