@@ -1,0 +1,26 @@
+var element_8h =
+[
+    [ "AXOS::half_fallback", "structAXOS_1_1half__fallback.html", "structAXOS_1_1half__fallback" ],
+    [ "AXOS::is_half< T >", "structAXOS_1_1is__half.html", null ],
+    [ "AXOS::is_half< half_fallback >", "structAXOS_1_1is__half_3_01half__fallback_01_4.html", null ],
+    [ "AXOS::is_complex< T >", "structAXOS_1_1is__complex.html", null ],
+    [ "AXOS::is_complex< std::complex< R > >", "structAXOS_1_1is__complex_3_01std_1_1complex_3_01R_01_4_01_4.html", null ],
+    [ "AXOS::is_tensor_element< T >", "structAXOS_1_1is__tensor__element.html", null ],
+    [ "AXOS::is_tensor_element< float >", "structAXOS_1_1is__tensor__element_3_01float_01_4.html", null ],
+    [ "AXOS::is_tensor_element< double >", "structAXOS_1_1is__tensor__element_3_01double_01_4.html", null ],
+    [ "AXOS::is_tensor_element< std::int32_t >", "structAXOS_1_1is__tensor__element_3_01std_1_1int32__t_01_4.html", null ],
+    [ "AXOS::is_tensor_element< std::int64_t >", "structAXOS_1_1is__tensor__element_3_01std_1_1int64__t_01_4.html", null ],
+    [ "AXOS::is_tensor_element< std::complex< float > >", "structAXOS_1_1is__tensor__element_3_01std_1_1complex_3_01float_01_4_01_4.html", null ],
+    [ "AXOS::is_tensor_element< std::complex< double > >", "structAXOS_1_1is__tensor__element_3_01std_1_1complex_3_01double_01_4_01_4.html", null ],
+    [ "AXOS::is_tensor_element< half_fallback >", "structAXOS_1_1is__tensor__element_3_01half__fallback_01_4.html", null ],
+    [ "AXOS::real_type< T >", "structAXOS_1_1real__type.html", "structAXOS_1_1real__type" ],
+    [ "AXOS::real_type< std::complex< R > >", "structAXOS_1_1real__type_3_01std_1_1complex_3_01R_01_4_01_4.html", "structAXOS_1_1real__type_3_01std_1_1complex_3_01R_01_4_01_4" ],
+    [ "AXOS_HALF_CMP", "element_8h.html#a045712ff88e3a18c1065dd2a10750ee1", null ],
+    [ "AXOS_HALF_OP", "element_8h.html#aba4d9f9abdc97595318b24fb4c040994", null ],
+    [ "half", "element_8h.html#ab74107ec458db1328f37bfc47ce1f9dc", null ],
+    [ "real_type_t", "element_8h.html#a6e2cd8e44dd2b86ffb2618547357f7a4", null ],
+    [ "is_complex_v", "element_8h.html#aaa091ccfdbe119dba0c5ddbb181da124", null ],
+    [ "is_half_v", "element_8h.html#a9280c6f8cf5c4c669fc99765e3c8cb85", null ],
+    [ "is_la_scalar_v", "element_8h.html#a6e455d67c6b0a832c6f80fbc9542e22e", null ],
+    [ "is_tensor_element_v", "element_8h.html#a873b521ffde394fcf5ff0241c32faec2", null ]
+];

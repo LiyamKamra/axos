@@ -1,0 +1,25 @@
+var structaxos__qp_1_1HprHalpernRed =
+[
+    [ "aty", "structaxos__qp_1_1HprHalpernRed.html#a82af8f52b81b8635a79703f5c31525bf", null ],
+    [ "aty0", "structaxos__qp_1_1HprHalpernRed.html#a4a4a8de2385b84e433630ba7cb1153fd", null ],
+    [ "atybar", "structaxos__qp_1_1HprHalpernRed.html#a38d6b1307d63433c32049695c33814ed", null ],
+    [ "d", "structaxos__qp_1_1HprHalpernRed.html#a063f147e9c8198a86d4a327b7b5f5bae", null ],
+    [ "j", "structaxos__qp_1_1HprHalpernRed.html#ae2d7fbb32cc8830edf30e43948433a38", null ],
+    [ "K", "structaxos__qp_1_1HprHalpernRed.html#a13d19d782b1606c9fdf0974c4c3cd8fc", null ],
+    [ "kMax", "structaxos__qp_1_1HprHalpernRed.html#adb7e2500ccc481c74a0b2faeff4ddf17", null ],
+    [ "qb", "structaxos__qp_1_1HprHalpernRed.html#a9feea405ae89ce6fa0e9b4ca877f60e8", null ],
+    [ "qd", "structaxos__qp_1_1HprHalpernRed.html#a7949a99f1690fd0819e5baa009120783", null ],
+    [ "qw", "structaxos__qp_1_1HprHalpernRed.html#a38305eed52e6f24245905ad98ee085ed", null ],
+    [ "qw0", "structaxos__qp_1_1HprHalpernRed.html#aad98e912a1de9eb1c37efcd090e824c3", null ],
+    [ "qwbar", "structaxos__qp_1_1HprHalpernRed.html#a34c867ef84e9a91f85036cd2d48df377", null ],
+    [ "qwhalf", "structaxos__qp_1_1HprHalpernRed.html#a0d1ef6a0648778977e338e3742eeae70", null ],
+    [ "sc", "structaxos__qp_1_1HprHalpernRed.html#abe6f078163aebbe0a1fe5ea9b512cede", null ],
+    [ "second_half", "structaxos__qp_1_1HprHalpernRed.html#a4418810ffeeeb87528b2e416529a126e", null ],
+    [ "w", "structaxos__qp_1_1HprHalpernRed.html#aace22fb1e9078d2661f543e05407fd3e", null ],
+    [ "w0", "structaxos__qp_1_1HprHalpernRed.html#a87aa5055bc4ee356977e62b3e4b7f8aa", null ],
+    [ "wbar", "structaxos__qp_1_1HprHalpernRed.html#a7148117886a713af5203f3ca450b26a0", null ],
+    [ "whalf", "structaxos__qp_1_1HprHalpernRed.html#aee9ded86b7778df0f8590a209ea72b50", null ],
+    [ "x", "structaxos__qp_1_1HprHalpernRed.html#a4e8e13c4bae806161407b2977a766b8e", null ],
+    [ "x0", "structaxos__qp_1_1HprHalpernRed.html#a013e572a91620b72c56f00835667aab3", null ],
+    [ "xbar", "structaxos__qp_1_1HprHalpernRed.html#af6a0da51e6cb8a1a3f522a438573c7f0", null ]
+];

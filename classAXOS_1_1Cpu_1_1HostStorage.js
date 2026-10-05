@@ -1,0 +1,26 @@
+var classAXOS_1_1Cpu_1_1HostStorage =
+[
+    [ "backend_type", "classAXOS_1_1Cpu_1_1HostStorage.html#a48c58e30621b5ec1223fa9ceb4fc3ffb", null ],
+    [ "value_type", "classAXOS_1_1Cpu_1_1HostStorage.html#a46ca2cb9d19f6496acf74c2d8e3cbe3c", null ],
+    [ "HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#aa54f550db7102a84fb615e1d930052b4", null ],
+    [ "HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#abb28eda9c0386ee49bc27a057b872038", null ],
+    [ "HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#af2803fb68de84c39e108075d0c566a84", null ],
+    [ "HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#a895cdd408d8d8570ca8f03d94bd737b8", null ],
+    [ "HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#af63e4152b725e0d95c18cc32099cb362", null ],
+    [ "HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#a04f6aa9eea5db0e0155edd65cbda659c", null ],
+    [ "~HostStorage", "classAXOS_1_1Cpu_1_1HostStorage.html#af90a7ecbdb90bc22879b5e4e200d0afb", null ],
+    [ "allocate", "classAXOS_1_1Cpu_1_1HostStorage.html#ad87bc58053d5263c522564d12e91c633", null ],
+    [ "allocate_raw", "classAXOS_1_1Cpu_1_1HostStorage.html#ac55d6a70e9f0ac71dcaf27b274e0ba25", null ],
+    [ "data", "classAXOS_1_1Cpu_1_1HostStorage.html#a55ec241e622d342ddcbf58b663d6f9d0", null ],
+    [ "data", "classAXOS_1_1Cpu_1_1HostStorage.html#a22fff755aad3bf8e427cc412510c86a1", null ],
+    [ "free_raw", "classAXOS_1_1Cpu_1_1HostStorage.html#aca3b0f2012bdd1401597da7fa4f26d28", null ],
+    [ "operator=", "classAXOS_1_1Cpu_1_1HostStorage.html#a30fa8e3b0cf0633b0a7ddd7d3fbf6bb0", null ],
+    [ "operator=", "classAXOS_1_1Cpu_1_1HostStorage.html#a4c0dc01915764583f5c006b95b5656e1", null ],
+    [ "owns", "classAXOS_1_1Cpu_1_1HostStorage.html#af3f5c6f16ebb4653127bfc4bbc8ae65b", null ],
+    [ "release", "classAXOS_1_1Cpu_1_1HostStorage.html#ac40ce964e310b57e52463bae3c3d2a74", null ],
+    [ "size", "classAXOS_1_1Cpu_1_1HostStorage.html#af27e81ed3e2e0d22e195c298c5fc61ef", null ],
+    [ "swap", "classAXOS_1_1Cpu_1_1HostStorage.html#a245981782eec48b203a83a2387bfcbc9", null ],
+    [ "n_", "classAXOS_1_1Cpu_1_1HostStorage.html#ae4c316a0eccf6f1644289a65d866d5bb", null ],
+    [ "own_", "classAXOS_1_1Cpu_1_1HostStorage.html#aa5935f6d511f993599ed9af5ee77e8ce", null ],
+    [ "ptr_", "classAXOS_1_1Cpu_1_1HostStorage.html#a63c72aed620f9a4f2ec1950f7e812e81", null ]
+];

@@ -1,0 +1,27 @@
+var classAXOS_1_1Solver_1_1qp_1_1CpuBackend =
+[
+    [ "Mat", "structAXOS_1_1Solver_1_1qp_1_1CpuBackend_1_1Mat.html", "structAXOS_1_1Solver_1_1qp_1_1CpuBackend_1_1Mat" ],
+    [ "Vec", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a4a131af6097c1b339301df0afe7ba6fa", null ],
+    [ "copy_results", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a00c36470b572df1cde6ea116ed47c06a", null ],
+    [ "download", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a6e3c42b00b58fcd2730fc6ef6a9cdfc7", null ],
+    [ "forget", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a2793610ad67a78b562545bbbcecc7532", null ],
+    [ "map", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a030f7105d2c6e4ebbfcb93f200299b5a", null ],
+    [ "name", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a789f7c6a430469e60ef08aca21dd7bf2", null ],
+    [ "ptr", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a1eb5d3341aa3849df63f14ab4cdcd139", null ],
+    [ "ptr", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a67005cb0eecdf5ee73cc36ba49e6aac7", null ],
+    [ "reduce", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a370fa1beba713c26a5120f67c64f27da", null ],
+    [ "reduce_to", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#abf09ea05d28ecef478efe62b9bd30372", null ],
+    [ "results", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#af687f06916500440b4a70d339faa5a1d", null ],
+    [ "results_dev", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#ae696dbd37d35796d75e094d05cbf0546", null ],
+    [ "run_block", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a8097d1b609cf7f6a27fcc4355ea068a2", null ],
+    [ "spmv", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#abd3d5fffc1b107fb38d65ef29e35df52", null ],
+    [ "spmv_epi", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#abaa0d76bc1f47dfa341af45b01d7c9a6", null ],
+    [ "sync", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a69fe1902015d31809c7b16619f6a9a80", null ],
+    [ "time_us", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a4eacd58f4cf01e794ced64b22d5013ef", null ],
+    [ "upload", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a83e2fbcaff316b50cda2dd8a4b784522", null ],
+    [ "upload", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#adbdd32b5c2384cc549d79e38425252c8", null ],
+    [ "vec", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#aa121be00284043af97c3f212fb902973", null ],
+    [ "is_gpu", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a0c6c2444125831705cec349d152c0e2c", null ],
+    [ "kGrain", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a6f0a38b5723673d6341b3aeaa492cb97", null ],
+    [ "res_", "classAXOS_1_1Solver_1_1qp_1_1CpuBackend.html#a4accb60ddf9e0342d946e9d491661480", null ]
+];

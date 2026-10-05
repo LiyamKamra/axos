@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['g_0',['g',['../structAXOS_1_1Solver_1_1ipm_1_1PackRhs.html#a4b4c85ae6facb615e02fef73ce8f2a55',1,'AXOS::Solver::ipm::PackRhs::g()'],['../structAXOS_1_1Solver_1_1ipm_1_1Unpack.html#a7950c858393300d759ca29f74c008281',1,'AXOS::Solver::ipm::Unpack::g()'],['../structaxos__qp_1_1PdStart.html#a67d99a6ecf1e9c4caa3191a4d746db98',1,'axos_qp::PdStart::g()'],['../structaxos__qp_1_1PdPgStep.html#a5bb5766fc75fd50b1ffe6cc34aa46cc1',1,'axos_qp::PdPgStep::g()'],['../structaxos__qp_1_1PdPgUpdate.html#a4461c118597f23f76975ca5fc17ed8d2',1,'axos_qp::PdPgUpdate::g()'],['../structAXOS_1_1Solver_1_1ipm_1_1BuildG.html#a74390bccde485c77550d6b1de8ad8eb0',1,'AXOS::Solver::ipm::BuildG::g()']]],
+  ['g_5f_1',['g_',['../classAXOS_1_1Solver_1_1milp_1_1CmirSeparator.html#a999923aaf77b7a6043375c46628ceabb',1,'AXOS::Solver::milp::CmirSeparator']]],
+  ['gap_2',['gap',['../structAXOS_1_1Solver_1_1Options.html#a0edfc4b6fcf5ee7d43cb2e759e751782',1,'AXOS::Solver::Options::gap()'],['../structAXOS_1_1Solver_1_1Pdlp_1_1Kkt.html#a6d5e5d1166dc4e115aba351ebbea474d',1,'AXOS::Solver::Pdlp::Kkt::gap()'],['../structAXOS_1_1Solver_1_1LpSolution.html#aeb71592bf7a9410154356b302efc82e9',1,'AXOS::Solver::LpSolution::gap()']]],
+  ['gap_5fabs_3',['gap_abs',['../structAXOS_1_1Solver_1_1MilpOptions.html#a6525de98c23a42fc3a065c861ba3a1cd',1,'AXOS::Solver::MilpOptions']]],
+  ['gap_5frel_4',['gap_rel',['../structAXOS_1_1Solver_1_1MilpOptions.html#a7b0062db55508c023d60d540b344ee13',1,'AXOS::Solver::MilpOptions']]],
+  ['glb_5f_5',['glb_',['../classAXOS_1_1Solver_1_1milp_1_1BranchAndBound.html#a1f8c31011fa8daa1cef898e84d699029',1,'AXOS::Solver::milp::BranchAndBound']]],
+  ['gnz_5f_6',['gnz_',['../classAXOS_1_1Solver_1_1milp_1_1CmirSeparator.html#ab4010157c49de9899e57411d92e3205c',1,'AXOS::Solver::milp::CmirSeparator']]],
+  ['gpu_7',['gpu',['../structAXOS_1_1Solver_1_1MilpOptions.html#acfae19fc5c223ce75c87ca903341ca55',1,'AXOS::Solver::MilpOptions']]],
+  ['gpu_5f_8',['gpu_',['../classAXOS_1_1Solver_1_1milp_1_1BranchAndBound.html#ac0fd3bb6220e977debca939b39b0aad7',1,'AXOS::Solver::milp::BranchAndBound']]],
+  ['gpu_5ffj_5fwalkers_9',['gpu_fj_walkers',['../structAXOS_1_1Solver_1_1MilpOptions.html#ae536c76443fa85de17c5f70b1bfe5d33',1,'AXOS::Solver::MilpOptions']]],
+  ['gpu_5flp_5fcrossover_10',['gpu_lp_crossover',['../structAXOS_1_1Solver_1_1MilpOptions.html#ae7558fae01e8ea4e2e891edcbf326c9e',1,'AXOS::Solver::MilpOptions']]],
+  ['gpu_5flp_5fmin_5fnnz_11',['gpu_lp_min_nnz',['../structAXOS_1_1Solver_1_1MilpOptions.html#af5a0ddfa21ebb60d2074cf63615134e9',1,'AXOS::Solver::MilpOptions']]],
+  ['gpu_5fmin_5fnnz_12',['gpu_min_nnz',['../structAXOS_1_1Solver_1_1MilpOptions.html#a0fba340f45228ba88c855123aa58cbe8',1,'AXOS::Solver::MilpOptions']]],
+  ['gpu_5fmin_5fwork_13',['gpu_min_work',['../structAXOS_1_1Solver_1_1QpOptions.html#af044c0ebec27e368627ca45b8f8a4552',1,'AXOS::Solver::QpOptions']]],
+  ['gpu_5fmin_5fwork_5fhard_14',['gpu_min_work_hard',['../structAXOS_1_1Solver_1_1QpOptions.html#a9bf4b25e82b6936cd1f5eebd95542941',1,'AXOS::Solver::QpOptions']]],
+  ['gpu_5fsb_5fiters_15',['gpu_sb_iters',['../structAXOS_1_1Solver_1_1MilpOptions.html#a01978bec3795d8b589ffc4dfb04e21b7',1,'AXOS::Solver::MilpOptions']]],
+  ['graphs_5f_16',['graphs_',['../classAXOS_1_1Solver_1_1qp_1_1CudaBackend.html#a13d244168586d145d816eeed4a601d25',1,'AXOS::Solver::qp::CudaBackend']]],
+  ['gub_5f_17',['gub_',['../classAXOS_1_1Solver_1_1milp_1_1BranchAndBound.html#a59055bb0c6a7949e5881db34dd87856f',1,'AXOS::Solver::milp::BranchAndBound']]]
+];

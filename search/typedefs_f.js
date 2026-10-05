@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['tensor_5fbase_5ft_0',['tensor_base_t',['../namespaceAXOS_1_1detail.html#ae7b4f18dead95f75583bdecb32294d4a',1,'AXOS::detail']]],
+  ['tensoretcuda_1',['tensorETCuda',['../namespaceAXOS.html#a5c49dca9ee8adb584addc96cb0fc0981',1,'AXOS']]],
+  ['type_2',['type',['../structAXOS_1_1Sparse_1_1real__of.html#afea5c033ba67591bdb527f1a04604490',1,'AXOS::Sparse::real_of::type()'],['../structAXOS_1_1Sparse_1_1real__of_3_01std_1_1complex_3_01R_01_4_01_4.html#a81046fc3255deba1bd101372d168a8a7',1,'AXOS::Sparse::real_of&lt; std::complex&lt; R &gt; &gt;::type()'],['../structAXOS_1_1backend__of.html#aaf0bbbf6e64bd15f6e4cf96dd3d72d95',1,'AXOS::backend_of::type()'],['../structAXOS_1_1backend__of_3_01X_00_01std_1_1void__t_3_01typename_01X_1_1backend__type_01_4_01_4.html#a802252bde58a8db7eb771546fd74959e',1,'AXOS::backend_of&lt; X, std::void_t&lt; typename X::backend_type &gt; &gt;::type()'],['../structAXOS_1_1real__type.html#ae480c998da27e6965e606d18062fc6b6',1,'AXOS::real_type::type()'],['../structAXOS_1_1real__type_3_01std_1_1complex_3_01R_01_4_01_4.html#a2fdba029e4af4ef9db65c58d6721594e',1,'AXOS::real_type&lt; std::complex&lt; R &gt; &gt;::type()'],['../structAXOS_1_1detail_1_1type__identity.html#a60fed9daf024937cd1ab3af417c34b17',1,'AXOS::detail::type_identity::type()']]]
+];

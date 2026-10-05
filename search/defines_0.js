@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['axos_5fbinary_5foperator_0',['AXOS_BINARY_OPERATOR',['../tensorMath_8h.html#a81dde861128d0a00ce370d4b7dbfcdaf',1,'tensorMath.h']]],
+  ['axos_5fdecl2_1',['AXOS_DECL2',['../blas_8h.html#a5b90cd410eafa9bc463b118696619c90',1,'blas.h']]],
+  ['axos_5fdecl3_2',['AXOS_DECL3',['../blas_8h.html#a27486f59d2b701c038de82de50a00bfe',1,'blas.h']]],
+  ['axos_5fgpu_5falloc_5fmode_3',['AXOS_GPU_ALLOC_MODE',['../gpu__pool_8h.html#a0dbf6c20150985913bf8da76e13704b5',1,'gpu_pool.h']]],
+  ['axos_5fhalf_5fcmp_4',['AXOS_HALF_CMP',['../element_8h.html#a045712ff88e3a18c1065dd2a10750ee1',1,'element.h']]],
+  ['axos_5fhalf_5fop_5',['AXOS_HALF_OP',['../element_8h.html#aba4d9f9abdc97595318b24fb4c040994',1,'element.h']]],
+  ['axos_5fhd_6',['AXOS_HD',['../pdlp__kernels_8h.html#a19b3df1473855c4580c868188bec7be1',1,'pdlp_kernels.h']]],
+  ['axos_5finline_7',['AXOS_INLINE',['../simd_8h.html#a8593ff09bc7bca527476b19b17647ef7',1,'simd.h']]],
+  ['axos_5fomp_5fsimd_8',['AXOS_OMP_SIMD',['../dense__ldl_8h.html#aa0229616a0ae04515c31430f4353c778',1,'dense_ldl.h']]],
+  ['axos_5fout2_9',['AXOS_OUT2',['../blas_8h.html#a52f88f5c5a87efb35fb434208716bd1d',1,'blas.h']]],
+  ['axos_5fout3_10',['AXOS_OUT3',['../blas_8h.html#aab3ce3ae3d421f45525e51b33e0dfbf0',1,'blas.h']]],
+  ['axos_5fprefetch_11',['AXOS_PREFETCH',['../simd_8h.html#aee6ae6f2a2b2490362fc87365c42fc42',1,'simd.h']]],
+  ['axos_5fprefetch_5fl2_12',['AXOS_PREFETCH_L2',['../simd_8h.html#acf6a0e1156e5bf1730cb381d8257343a',1,'simd.h']]],
+  ['axos_5fqp_5fmap_13',['AXOS_QP_MAP',['../hpr__qp_8h.html#a0da8fbd0bf3e521bfaeab3ff0cdaf25b',1,'hpr_qp.h']]],
+  ['axos_5fqp_5fred_14',['AXOS_QP_RED',['../hpr__qp_8h.html#ab3bf148fc490b1c745e9ab6a95167f24',1,'hpr_qp.h']]],
+  ['axos_5fqp_5fred_5fto_15',['AXOS_QP_RED_TO',['../hpr__qp_8h.html#a72ede801733f3d11d73499b11c0b5da1',1,'hpr_qp.h']]],
+  ['axos_5fqp_5fspmv_16',['AXOS_QP_SPMV',['../hpr__qp_8h.html#acb80c55f0e73be99ab161d2165479807',1,'hpr_qp.h']]],
+  ['axos_5frestrict_17',['AXOS_RESTRICT',['../simd_8h.html#a21ad587afa23814d0a0cb2d4c7bb9f3f',1,'simd.h']]],
+  ['axos_5frow2_18',['AXOS_ROW2',['../blas_8h.html#af7b6fb87b6ff24528fca5e5f3400f55f',1,'blas.h']]],
+  ['axos_5frow3_19',['AXOS_ROW3',['../blas_8h.html#a515e36cf5bbcf71c189db28987dc69f3',1,'blas.h']]],
+  ['axos_5funary_5ffn_20',['AXOS_UNARY_FN',['../tensorMath_8h.html#ac4fa83e3b289266504024c7749c034d0',1,'tensorMath.h']]],
+  ['axos_5funary_5ffunction_21',['AXOS_UNARY_FUNCTION',['../tensorMath_8h.html#a3960567cdc87f7de54d068d77d520972',1,'tensorMath.h']]]
+];

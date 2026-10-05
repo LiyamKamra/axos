@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['half_5ffallback_0',['half_fallback',['../structAXOS_1_1half__fallback.html#a1a1fbfe276a0cae8583ef7ce48cdfab9',1,'AXOS::half_fallback::half_fallback(float f)'],['../structAXOS_1_1half__fallback.html#aa8ecd8de14e2f6ef8c3dea4579c12dae',1,'AXOS::half_fallback::half_fallback(S v)'],['../structAXOS_1_1half__fallback.html#aa513b6ea084afdc9c99a154a33d41674',1,'AXOS::half_fallback::half_fallback()=default']]],
+  ['halpern_1',['halpern',['../namespaceaxos__qp.html#a666d5bd6edbd98ff7356e90d5f33626a',1,'axos_qp']]],
+  ['halpern_5fweights_2',['halpern_weights',['../namespaceaxos__qp.html#a6c538c73463ef651579705ab7c2c4d3f',1,'axos_qp']]],
+  ['handle_3',['handle',['../namespaceAXOS_1_1Sparse_1_1cuda__detail.html#a1f8f7cfcaf143b22f28110f808de2208',1,'AXOS::Sparse::cuda_detail::handle()'],['../classAXOS_1_1Sparse_1_1SparseLdlt_3_01T_00_01Idx_00_01Cuda_1_1CudaStorage_01_4.html#a8152da9a0b7c278d3d91b2cb105994d1',1,'AXOS::Sparse::SparseLdlt&lt; T, Idx, Cuda::CudaStorage &gt;::handle()']]],
+  ['has_5fintegers_4',['has_integers',['../structAXOS_1_1Solver_1_1LpProblem.html#a467910419872c092de62b2bef69a964c',1,'AXOS::Solver::LpProblem']]],
+  ['has_5fquadratic_5',['has_quadratic',['../structAXOS_1_1Solver_1_1QpProblem.html#a3e4bed431522f87e92bdeccb65d066ff',1,'AXOS::Solver::QpProblem']]],
+  ['has_5fsolution_6',['has_solution',['../structAXOS_1_1Solver_1_1MilpSolution.html#aeac0342e54fcf97b6c79444b8f9628bd',1,'AXOS::Solver::MilpSolution::has_solution()'],['../structAXOS_1_1Solver_1_1Result.html#a86144e289c138ee51916f49f3c374181',1,'AXOS::Solver::Result::has_solution()']]],
+  ['host_5fto_5fstore_7',['host_to_store',['../namespaceAXOS_1_1Sparse_1_1detail.html#a3e0a73964f43d7b36ba17a24320a321e',1,'AXOS::Sparse::detail']]],
+  ['hoststorage_8',['HostStorage',['../classAXOS_1_1Cpu_1_1HostStorage.html#aa54f550db7102a84fb615e1d930052b4',1,'AXOS::Cpu::HostStorage::HostStorage() noexcept=default'],['../classAXOS_1_1Cpu_1_1HostStorage.html#abb28eda9c0386ee49bc27a057b872038',1,'AXOS::Cpu::HostStorage::HostStorage(size_t n)'],['../classAXOS_1_1Cpu_1_1HostStorage.html#af2803fb68de84c39e108075d0c566a84',1,'AXOS::Cpu::HostStorage::HostStorage(size_t n, T x)'],['../classAXOS_1_1Cpu_1_1HostStorage.html#a895cdd408d8d8570ca8f03d94bd737b8',1,'AXOS::Cpu::HostStorage::HostStorage(T *raw, size_t n, bool own=false) noexcept'],['../classAXOS_1_1Cpu_1_1HostStorage.html#af63e4152b725e0d95c18cc32099cb362',1,'AXOS::Cpu::HostStorage::HostStorage(const HostStorage &amp;o)'],['../classAXOS_1_1Cpu_1_1HostStorage.html#a04f6aa9eea5db0e0155edd65cbda659c',1,'AXOS::Cpu::HostStorage::HostStorage(HostStorage &amp;&amp;o) noexcept']]],
+  ['householder_9',['householder',['../namespaceAXOS_1_1la__detail.html#a4e09ccb2b74df5d11cfeab424894d8d4',1,'AXOS::la_detail']]],
+  ['hpr_5faty_10',['hpr_aty',['../namespaceaxos__qp.html#a984acb59de7a88fb575bab783ee90abd',1,'axos_qp']]],
+  ['hpr_5fdual_11',['hpr_dual',['../namespaceaxos__qp.html#a46be003e39e7a419696fdfed1216d214',1,'axos_qp']]],
+  ['hpr_5ffactors_12',['hpr_factors',['../namespaceaxos__qp.html#a1afb2fb8ac7dd55a061fb3e6d79f593b',1,'axos_qp']]],
+  ['hpr_5ffree_5fq_13',['hpr_free_q',['../namespaceaxos__qp.html#ab8352872802c64db71a2c073fd5aa427',1,'axos_qp']]],
+  ['hpr_5ffree_5fxw_14',['hpr_free_xw',['../namespaceaxos__qp.html#ae8dd7ac6048f6591bbcab4ef076e0195',1,'axos_qp']]],
+  ['hpr_5fhalpern_15',['hpr_halpern',['../namespaceaxos__qp.html#a1242bcf5fbb6314b3345e81d765a6bfb',1,'axos_qp']]],
+  ['hpr_5fhalpern_5fred_16',['hpr_halpern_red',['../namespaceaxos__qp.html#a7fca387c3d9e7237096f13af0d9339f2',1,'axos_qp']]],
+  ['hpr_5fhalpern_5fy_5fred_17',['hpr_halpern_y_red',['../namespaceaxos__qp.html#ada8f42a530da80e2362def2a74c1e61e',1,'axos_qp']]],
+  ['hpr_5fprimal_18',['hpr_primal',['../namespaceaxos__qp.html#a88a8817ecc367e3d4b38468f7dd0768f',1,'axos_qp']]],
+  ['hpr_5fprimal_5fat_19',['hpr_primal_at',['../namespaceaxos__qp.html#aee2fd631b20ee974fadceeb181e8b316',1,'axos_qp']]],
+  ['hpr_5fqb_20',['hpr_qb',['../namespaceaxos__qp.html#aa366be2989d8e02ef01229af8a1459eb',1,'axos_qp']]],
+  ['hpr_5fscalars_21',['hpr_scalars',['../namespaceaxos__qp.html#a47e52a862216be00e90aa552a2cdddb1',1,'axos_qp']]],
+  ['hpr_5ftheta_5fn_22',['hpr_theta_n',['../namespaceaxos__qp.html#a73b7b151b642c672364d4e9a83c9cd95',1,'axos_qp']]],
+  ['hpr_5fwhalf_23',['hpr_whalf',['../namespaceaxos__qp.html#ab12d6eef8b49fab39e36e17f46ed7fa5',1,'axos_qp']]],
+  ['hsum_24',['hsum',['../structAXOS_1_1simd_1_1Pack.html#a886866e7d9ce3a95f11e48121301ece4',1,'AXOS::simd::Pack']]]
+];

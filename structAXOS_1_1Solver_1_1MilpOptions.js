@@ -1,0 +1,28 @@
+var structAXOS_1_1Solver_1_1MilpOptions =
+[
+    [ "cut_rounds", "structAXOS_1_1Solver_1_1MilpOptions.html#ad9a6fde835a693b76052f5297635d096", null ],
+    [ "cut_time_frac", "structAXOS_1_1Solver_1_1MilpOptions.html#a1281a979a35fcd83b4c5484a537cd956", null ],
+    [ "cuts", "structAXOS_1_1Solver_1_1MilpOptions.html#a0e67cef5a643f413ab63e466bdc22a0c", null ],
+    [ "feas_tol", "structAXOS_1_1Solver_1_1MilpOptions.html#a9e8188115d99b336b456d3980c669353", null ],
+    [ "fj_effort", "structAXOS_1_1Solver_1_1MilpOptions.html#a2b9eb186f163d0fb6723fcf574b1e338", null ],
+    [ "gap_abs", "structAXOS_1_1Solver_1_1MilpOptions.html#a6525de98c23a42fc3a065c861ba3a1cd", null ],
+    [ "gap_rel", "structAXOS_1_1Solver_1_1MilpOptions.html#a7b0062db55508c023d60d540b344ee13", null ],
+    [ "gpu", "structAXOS_1_1Solver_1_1MilpOptions.html#acfae19fc5c223ce75c87ca903341ca55", null ],
+    [ "gpu_fj_walkers", "structAXOS_1_1Solver_1_1MilpOptions.html#ae536c76443fa85de17c5f70b1bfe5d33", null ],
+    [ "gpu_lp_crossover", "structAXOS_1_1Solver_1_1MilpOptions.html#ae7558fae01e8ea4e2e891edcbf326c9e", null ],
+    [ "gpu_lp_min_nnz", "structAXOS_1_1Solver_1_1MilpOptions.html#af5a0ddfa21ebb60d2074cf63615134e9", null ],
+    [ "gpu_min_nnz", "structAXOS_1_1Solver_1_1MilpOptions.html#a0fba340f45228ba88c855123aa58cbe8", null ],
+    [ "gpu_sb_iters", "structAXOS_1_1Solver_1_1MilpOptions.html#a01978bec3795d8b589ffc4dfb04e21b7", null ],
+    [ "heuristics", "structAXOS_1_1Solver_1_1MilpOptions.html#a4884a59c6afdc27ab8b937353fff56d1", null ],
+    [ "int_tol", "structAXOS_1_1Solver_1_1MilpOptions.html#aaf26a97293edf9c1e100ad3d1497e881", null ],
+    [ "node_limit", "structAXOS_1_1Solver_1_1MilpOptions.html#a0985a88cdc4708879fc443ddebfc5415", null ],
+    [ "presolve", "structAXOS_1_1Solver_1_1MilpOptions.html#ac3dbf9b0419ed5aa71e62a088b484108", null ],
+    [ "probing", "structAXOS_1_1Solver_1_1MilpOptions.html#ae11dbda6f75970491b913fab15517546", null ],
+    [ "probing_time_frac", "structAXOS_1_1Solver_1_1MilpOptions.html#a6c9c91dd639fe9866cbe37c53ac6967f", null ],
+    [ "propagation", "structAXOS_1_1Solver_1_1MilpOptions.html#ad0908b3f6ffb93c0a750a33657051c66", null ],
+    [ "reliability", "structAXOS_1_1Solver_1_1MilpOptions.html#ac83f4ffc4b6535c8819d4ef6cbe45c23", null ],
+    [ "rins", "structAXOS_1_1Solver_1_1MilpOptions.html#ad38cd2f57eeb0b193ba296134baf3213", null ],
+    [ "strong_branch_iters", "structAXOS_1_1Solver_1_1MilpOptions.html#adef3c3102f88ecde466863dfe9bde826", null ],
+    [ "time_limit", "structAXOS_1_1Solver_1_1MilpOptions.html#aafc9c6fff4838091ce6796545d7e89b2", null ],
+    [ "verbose", "structAXOS_1_1Solver_1_1MilpOptions.html#adf8d8f29763a2f9928a68b6e8fbde4c0", null ]
+];

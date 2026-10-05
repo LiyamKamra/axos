@@ -1,0 +1,25 @@
+var structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData =
+[
+    [ "act", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a7edbf4720d532eaa6740a713d7a13a13", null ],
+    [ "ci", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a558bbf6ef21048f06118a7e1ac3139ec", null ],
+    [ "cp", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a2cc894d54f3ef9f7fe3051c6602a5028", null ],
+    [ "cv", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a00d5678cc034dc55f15fa5523f351ef5", null ],
+    [ "isint", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#ab3d148bce7ce1a868aaf55c5bdb7f03d", null ],
+    [ "lb", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a95b1f9fcc6d6c04efb7545e1c7cbec91", null ],
+    [ "m", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a97270a57012349180afde88dca2595ea", null ],
+    [ "moves", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a23dc46ad73a40f1b1c21bec78b54415e", null ],
+    [ "n", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a3d4a054ae5fd8c808e0fc8e847bba287", null ],
+    [ "ri", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a3396235306b0beca5871a66bfafc2228", null ],
+    [ "rlb", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a833b73f43e406e49413e1d0fec4111f4", null ],
+    [ "rng", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a11de323d3baaa22a021093b2f3f388f2", null ],
+    [ "rp", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#aa232e8df120cf837841a35cf7dab5449", null ],
+    [ "rub", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a2b097fef1621660b6bde906e965b3275", null ],
+    [ "status", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a6dcea984a8248d1f86ba665d7fcd672c", null ],
+    [ "ub", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#ae454447ebbc6ed8d4f338a1b83752a75", null ],
+    [ "va", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a8aa75d5f0cd43c5f11f704ed14081ac4", null ],
+    [ "vcnt", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#ab710d6e9e1faa2b391972d314a595f93", null ],
+    [ "vl", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#ae3ec7beb637100b0e5033450d6959755", null ],
+    [ "vpos", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a42bccbe508379ceb0819f89562715767", null ],
+    [ "wt", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a7da6f1427dde93c67ade249717bf44db", null ],
+    [ "x", "structAXOS_1_1Solver_1_1milp_1_1gpu_1_1FjData.html#a655f8f83ebcfd85a854cd397bde33acb", null ]
+];
