@@ -30,14 +30,18 @@ inline constexpr int kSlots = 24;
 // Below this many elements OpenMP thread launch costs more than it saves.
 inline constexpr size_t kParallelMin = 16384;
 
-AXOS_HD inline double dmin(double a, double b) { return a < b ? a : b; }
-AXOS_HD inline double dmax(double a, double b) { return a > b ? a : b; }
-AXOS_HD inline bool fin(double v) { return v > -1e300 && v < 1e300; }
+AXOS_HD inline double
+dmin(double a, double b)
+{ return a < b ? a : b; }
+AXOS_HD inline double
+dmax(double a, double b)
+{ return a > b ? a : b; }
+AXOS_HD inline bool
+fin(double v)
+{ return v > -1e300 && v < 1e300; }
 AXOS_HD inline double
 clampd(double v, double lo, double hi)
-{
-    return v < lo ? lo : (v > hi ? hi : v);
-}
+{ return v < lo ? lo : (v > hi ? hi : v); }
 
 // x+ = proj_[lb,ub](x - tau (c - A^T y))
 struct XUpdate {
@@ -46,9 +50,7 @@ struct XUpdate {
     double tau;
     AXOS_HD void
     operator()(size_t i) const
-    {
-        xn[i] = clampd(x[i] - tau * (c[i] - aty[i]), lb[i], ub[i]);
-    }
+    { xn[i] = clampd(x[i] - tau * (c[i] - aty[i]), lb[i], ub[i]); }
 };
 
 // y+ = max(0, y + s (l - t)) + min(0, y + s (u - t)),  t = 2 A x+ - A x
@@ -111,9 +113,7 @@ struct HalpernMix {
     double w1, w0;
     AXOS_HD void
     operator()(size_t i) const
-    {
-        z[i] = w1 * (2.0 * image[i] - z[i]) + w0 * anchor[i];
-    }
+    { z[i] = w1 * (2.0 * image[i] - z[i]) + w0 * anchor[i]; }
 };
 
 // ||dx||^2
@@ -215,10 +215,10 @@ struct PrimalRayN {
         acc[0] += dx * dx;
         acc[1] += c[i] * dx;
         const bool lf = fin(lb[i]), uf = fin(ub[i]);
-        const double v = (lf && !uf) ? dmin(dx, 0.0)
+        const double v = (lf && !uf)   ? dmin(dx, 0.0)
                          : (!lf && uf) ? dmax(dx, 0.0)
-                         : (lf && uf) ? dx
-                                      : 0.0;
+                         : (lf && uf)  ? dx
+                                       : 0.0;
         acc[2] += v * v;
     }
 };
@@ -232,10 +232,10 @@ struct PrimalRayM {
     {
         const double d = ax[i] - axr[i];
         const bool lf = fin(l[i]), uf = fin(u[i]);
-        const double v = (lf && !uf) ? dmin(d, 0.0)
+        const double v = (lf && !uf)   ? dmin(d, 0.0)
                          : (!lf && uf) ? dmax(d, 0.0)
-                         : (lf && uf) ? d
-                                      : 0.0;
+                         : (lf && uf)  ? d
+                                       : 0.0;
         acc[0] += v * v;
     }
 };
@@ -251,15 +251,15 @@ struct DualRayM {
         const double dy = y[i] - yr[i];
         acc[0] += dy * dy;
         const bool lf = fin(l[i]), uf = fin(u[i]);
-        const double v = (lf && !uf) ? dmin(dy, 0.0)
-                         : (!lf && uf) ? dmax(dy, 0.0)
+        const double v = (lf && !uf)    ? dmin(dy, 0.0)
+                         : (!lf && uf)  ? dmax(dy, 0.0)
                          : (!lf && !uf) ? dy
                                         : 0.0;
         acc[1] += v * v;
-        const double p = (lf && !uf) ? dmax(dy, 0.0)
+        const double p = (lf && !uf)   ? dmax(dy, 0.0)
                          : (!lf && uf) ? dmin(dy, 0.0)
-                         : (lf && uf) ? dy
-                                      : 0.0;
+                         : (lf && uf)  ? dy
+                                       : 0.0;
         acc[2] += p > 0 ? l[i] * p : (p < 0 ? u[i] * p : 0.0);
     }
 };
@@ -309,28 +309,32 @@ struct SqNormN {
     static constexpr int K = 1;
     AXOS_HD void
     operator()(size_t i, double *acc) const
-    {
-        acc[0] += a[i] * a[i];
-    }
+    { acc[0] += a[i] * a[i]; }
 };
 
 struct Copy {
     double *dst;
     const double *src;
-    AXOS_HD void operator()(size_t i) const { dst[i] = src[i]; }
+    AXOS_HD void
+    operator()(size_t i) const
+    { dst[i] = src[i]; }
 };
 
 struct ScaleCopy {
     double *dst;
     const double *src;
     double alpha;
-    AXOS_HD void operator()(size_t i) const { dst[i] = alpha * src[i]; }
+    AXOS_HD void
+    operator()(size_t i) const
+    { dst[i] = alpha * src[i]; }
 };
 
 struct Fill {
     double *dst;
     double v;
-    AXOS_HD void operator()(size_t i) const { dst[i] = v; }
+    AXOS_HD void
+    operator()(size_t i) const
+    { dst[i] = v; }
 };
 
 } // namespace pdlp
@@ -350,7 +354,9 @@ template <> struct Parallel<Cpu::Backend> {
             f(static_cast<size_t>(i));
     }
 
-    void zero() { std::memset(slots, 0, sizeof(slots)); }
+    void
+    zero()
+    { std::memset(slots, 0, sizeof(slots)); }
 
     // Adds the K sums of f over [0, n) into slots[slot .. slot+K).
     template <typename F>
@@ -370,7 +376,9 @@ template <> struct Parallel<Cpu::Backend> {
         }
     }
 
-    void set_slot(int slot, double v) { slots[slot] = v; }
+    void
+    set_slot(int slot, double v)
+    { slots[slot] = v; }
 
     // slots[slot] = min(slots[slot], min over i of f(i)).
     template <typename F>
@@ -393,13 +401,13 @@ template <> struct Parallel<Cpu::Backend> {
         slots[slot] = m;
     }
 
-    const double *fetch() { return slots; }
+    const double *
+    fetch()
+    { return slots; }
 
     void
     copy(double *dst, const double *src, size_t n)
-    {
-        std::memcpy(dst, src, n * sizeof(double));
-    }
+    { std::memcpy(dst, src, n * sizeof(double)); }
 };
 
 } // namespace Solver

@@ -1,12 +1,11 @@
 AXOS reference manual
 
-Last updated: 2026/09/25
+Last updated: 2026/10/05
 
-This branch contains the sparse linear algebra and LP solver layers only. The
-dense tensor layer they are built on (tensorET, its storage policies and the GPU
-memory pool) has been removed and is specified in docs/TENSOR_SPEC.md; until it
-is reimplemented the code here does not compile. The solver roadmap is
-src/solver/ROADMAP.md, benchmark results are in benchmarks/*/RESULTS.md.
+This is the whole AXOS tree: the dense tensor layer (tensorET and friends,
+docs/TENSOR_SPEC.md), the sparse layer, and the LP, QP and MILP solvers.
+The solver roadmap is src/solver/ROADMAP.md; benchmark results are in
+benchmarks/*/RESULTS.md.
 
 0. Building
 
@@ -15,13 +14,16 @@ reference benchmarks). Optional: CUDA toolkit (nvcc, cuSPARSE, cuDSS, cuBLAS,
 cuSolver) with a host gcc that nvcc accepts (detected by `make configure`,
 override with NVCC_CCBIN=...).
 
-make test_sparse_cpu / make test_sparse     # sparse matrices, CPU / CPU+CUDA
-make test_solver_cpu / make test_solver     # LP solvers, CPU / CPU+CUDA
-make benchmark_sparse, make benchmark_lp, build/run_mps  (see 2)
-make reference_benchmarks                   # Eigen harnesses for TENSOR_SPEC.md
+make test_tensor_cpu                          # dense layer, CPU only
+make test_sparse_cpu / make test_sparse        # sparse matrices, CPU / CPU+CUDA
+make test_solver_cpu / make test_solver        # LP + QP + MILP solvers
+make axos / make axos_mpi / make test_cli      # command line, MPI, CLI test
+make benchmark_dense, make benchmark_sparse, make benchmark_lp,
+make benchmark_qp, make benchmark_milp
+make reference_benchmarks                      # Eigen harnesses for TENSOR_SPEC.md
 
 Pass --headless (or set HEADLESS=1, or pipe stdout) to the tests for plain text
-output.
+output. The QP and MILP benchmarks live in benchmarks/qp/ and benchmarks/milp/.
 
 -------------------------------------------------------
 
@@ -75,36 +77,81 @@ size_t pos, neg, zero;  ldl.inertia(pos, neg, zero);
 Symmetry::SPD requires positive pivots (factorize returns false otherwise);
 Symmetry::Symmetric only requires nonzero pivots and does no numerical
 pivoting, which suits quasi-definite systems such as interior-point KKT
-matrices. On the CPU it is an up-looking LDL^T with a minimum-degree
-ordering; on CUDA it uses NVIDIA cuDSS (build with -DCUDSS_WITH -lcudss,
--DCUSPARSE_WITH -lcusparse). The CPU ordering is an exact minimum-degree
-implementation meant as a fallback: it can be slow on matrices with large
-dense blocks.
-
-CPU factorization: SparseLdlt picks between a scalar up-looking LDL^T and a
-multifrontal LDL^T on relaxed supernodes (Factorization::Auto switches at
-200k entries in the factor; Simplicial / Supernodal force one). The ordering
-is approximate minimum degree (Ordering::MinDegree). The multifrontal code
-factors independent subtrees in parallel and uses OpenMP inside large dense
-fronts; because those kernels are floating-point bound, set OMP_NUM_THREADS to
-the number of physical cores (16 hyperthreads were about 30% slower than 8).
+matrices. On the CPU it is a simplicial LDL^T (dense_ldl.h) or a
+multifrontal LDL^T on relaxed supernodes (multifrontal_ldl.h;
+Factorization::Auto switches at 200k entries in the factor, Simplicial /
+Supernodal force one), with the ordering chosen by Ordering::MinDegree
+(approximate minimum degree, amd_order.h; Natural / ExactMinDegree /
+NestedDissection are also available). The multifrontal code factors
+independent subtrees in parallel and uses OpenMP inside large dense fronts;
+because those kernels are floating-point bound, set OMP_NUM_THREADS to the
+number of physical cores (16 hyperthreads were about 30% slower than 8).
 set_pivot_regularization(signs, eps) enables dynamic per-pivot
-regularization for quasi-definite systems.
+regularization for quasi-definite systems. On CUDA it uses NVIDIA cuDSS
+(cudss_solver.h; build with -DCUDSS_WITH -lcudss, -DCUSPARSE_WITH
+-lcusparse).
 
 Tests: make test_sparse_cpu / make test_sparse (CUDA + cuDSS).
-The planned LP/MILP/QP solvers built on this are in src/solver/ROADMAP.md.
+The LP, QP and MILP solvers built on this are in src/solver/ (see 2).
 
 -------------------------------------------------------
 
-2. Linear Programming (src/solver/)
+2. Optimization: LP, QP and MILP (src/solver/)
 
-AXOS::Solver solves
-    minimize c^T x + offset   subject to  row_lb <= A x <= row_ub,
-                                          col_lb <=  x  <= col_ub
-with A a host Csr (see 1). Any bound may be +-Solver::kInf; equalities have
-row_lb == row_ub. A maximization problem is stored negated (maximize = true).
+One entry point for all three problem types (header only, src/solver/api.h):
 
-#include "solver/solver.h"     // (CUDA: include tensorCuda.h first)
+#include "solver/api.h"
+using namespace AXOS::Solver;
+
+Model m = read_model("model.mps");   // MPS, or QPS (QUADOBJ / QMATRIX)
+Options o;
+o.time_limit = 60;        // also type, method, device, tol, gap, verbose
+Result r = solve(m, o);   // ProblemType from the model: MILP / QP / LP
+// r.status, r.objective, r.bound, r.x, r.y, r.gap(), r.max_violation, r.nodes
+std::cout << result_json(m, r);        // or write_solution(std::cout, m, r)
+
+Methods (Options::method):
+  LP    auto     dual simplex; HPR on the GPU (or CPU) if it fails or the
+                 problem is very large
+        simplex  bounded dual simplex (exact vertex solution)
+        ipm      Mehrotra interior point
+        pdlp     restarted PDHG (first order, CPU)
+        hpr      Halpern Peaceman-Rachford (first order, GPU when available)
+  QP    auto     interior point when its factorization is cheap, else HPR-QP
+        hprqp    HPR-QP (GPU or CPU); "hpr" is a synonym
+        pdhcg    PDHCG (GPU or CPU)
+        ipm      interior point (CPU)
+  MILP  auto     branch and cut (presolve, probing, cuts, heuristics; with
+        /bnb     Device::Gpu / Auto the GPU probes, runs feasibility-jump
+                 walkers and batched strong branching)
+
+The problem type follows from the model: MILP when a column is integer, QP
+when the objective has a quadratic part, else LP. Options::type forces one
+(e.g. the LP relaxation of a MILP). Objective values are in the model's own
+sense (a MAX model reports its maximum), and every returned solution is
+checked against the model: Result::max_violation is its largest bound / row
+violation (relative to 1 + |side|), integrality included for a MILP.
+
+Command line (build/axos; apps/axos.cpp, wrapped by apps/axos.py), the same
+API behind a CLI:
+
+    build/axos [options] file.mps|file.qps
+      --method auto|simplex|ipm|pdlp|hpr|hprqp|pdhcg|bnb
+      --device auto|cpu|gpu, --time-limit S, --tol E, --gap G
+      --no-presolve, --no-cuts, --no-heuristics, --solution FILE
+      --json FILE|-, --quiet, --verbose N, --version
+
+The exit status is 0 for optimal, 1 for a solution without proof of optimality,
+2 infeasible, 3 unbounded, 4 no solution within the limits, 5 error, 64 bad
+usage. make test_cli (python tests/test_cli.py) checks the command line and
+the Python wrapper on LP, QP and MILP models with known answers.
+
+2.1 LP (src/solver/lp/)
+
+The LP-only API is in src/solver/solver.h (include tensorCuda.h first when
+using the GPU):
+
+#include "solver/solver.h"
 using namespace AXOS::Solver;
 
 LpProblem p = read_mps_file("model.mps");      // or fill LpProblem by hand
@@ -118,10 +165,17 @@ LpSolution g = solve_lp<Cuda::CudaStorage>(p, opt);      // GPU
 // s.x primal, s.y row duals, s.z reduced costs, s.primal_objective,
 // s.dual_objective, s.primal_residual, s.dual_residual, s.iterations
 
-solve_lp runs presolve, then the chosen algorithm on the reduced problem, then postsolve, so
-s.x, s.y and s.z are for the problem you passed in and the reported residuals
-are computed on it in double precision. Duals follow z = c - A^T y, with
-y_i >= 0 only at a row's lower bound and y_i <= 0 only at its upper bound.
+AXOS::Solver solves
+    minimize c^T x + offset   subject to  row_lb <= A x <= row_ub,
+                                          col_lb <=  x  <= col_ub
+with A a host Csr (see 1). Any bound may be +-Solver::kInf; equalities have
+row_lb == row_ub. A maximization problem is stored negated (maximize = true).
+Duals follow z = c - A^T y, with y_i >= 0 only at a row's lower bound and
+y_i <= 0 only at its upper bound.
+
+solve_lp runs presolve, then the chosen algorithm on the reduced problem, then
+postsolve, so s.x, s.y and s.z are for the problem you passed in and the
+reported residuals are computed on it in double precision.
 opt.presolve = false skips presolve; opt.scaling = false skips the Ruiz and
 Pock-Chambolle scaling.
 
@@ -143,8 +197,8 @@ Four methods, chosen with opt.method:
 - LpMethod::Simplex: a CPU dual simplex (sparse LU basis with hypersparse
   FTRAN/BTRAN, dual steepest edge, bound flipping ratio test, artificial-bound
   phase 1, Devex primal cleanup). Gives a basic solution, detects infeasibility
-  and unboundedness, and solves all 25 netlib models. It is the method MILP will
-  warm start (SimplexBasis).
+  and unboundedness, and solves all 25 netlib models. It is the method MILP
+  warm starts (SimplexBasis).
 - LpMethod::Ipm: a primal-dual interior-point method (Mehrotra
   predictor-corrector) on a regularized augmented KKT system, factorized by
   SparseLdlt (cuDSS on CUDA, AMD-ordered LDL^T on the CPU; see 1). It gives
@@ -184,11 +238,54 @@ and postsolve()), compute_scaling/apply_scaling/unscale_solution, and
 evaluate_solution(p, x, y) to check any candidate (x, y) on the host.
 MPS support: NAME, OBJSENSE, ROWS (extra N rows are dropped), COLUMNS with
 MARKER INTORG/INTEND, RHS, RANGES, and the bound types UP LO FX FR MI PL BV
-LI UI. Integer markers are read into LpProblem::is_integer but the LP solver
-ignores them (MILP is planned, see src/solver/ROADMAP.md).
+LI UI. Integer markers are read into LpProblem::is_integer; the LP solver
+ignores them (they drive the branch-and-cut in 2.3).
 
 Tests: make test_solver_cpu / make test_solver (includes real netlib models
 from tests/data). Benchmarks: make benchmark_lp; real instances:
 benchmarks/solver/fetch_netlib.sh, then build/run_mps --method ipm|pdlp|simplex|auto
 build/netlib/*.mps (compare with benchmarks/solver/netlib_reference.py, which
 needs highspy).
+
+2.2 QP, convex (src/solver/qp/)
+
+#include "solver/qp/solve_qp.h"    // QpProblem, QpOptions, solve_qp
+using namespace AXOS::Solver;
+
+QpProblem q = read_qps_file("model.qps");   // LpProblem + Q (via io/qps.h)
+QpOptions qo;
+qo.method = QpMethod::HprQp;    // HprQp, Pdhcg, Ipm, Auto
+qo.use_gpu = qp_gpu_available(); qo.auto_device = true;
+QpSolution s = solve_qp(q, qo);
+// s.x, s.y, s.z; s.kkt() = max(rel_primal, rel_dual, rel_gap); s.iterations
+
+QpProblem is an LpProblem plus Q (n x n symmetric, both triangles stored,
+empty = LP); the objective is offset + c^T x + 0.5 x^T Q x over the same
+constraints and bounds. QpMethod::Auto uses the interior point (qp_ipm.h, CPU,
+augmented system on the multifrontal LDLT) when the KKT factorization is
+cheap (ipm_auto_flops), else or when it fails HPR-QP (GPU for large problems).
+QpOptions::auto_device / use_gpu pick the device; gravity of the thresholds is
+in gpu_min_work and gpu_min_work_hard. With qo.comm (MPI, qp_dist.h,
+-DAXOS_ENABLE_MPI) HPR-QP holds a block of the constraint rows per rank and
+needs one Allreduce of A^T y per iteration. Benchmarks against HPR-QP.jl,
+PDHCG.jl, OSQP, Clarabel, HiGHS, PIQP and SCS are in benchmarks/qp/README.md.
+
+2.3 MILP (src/solver/milp/)
+
+#include "solver/milp/solve_milp.h"   // MilpOptions, MilpSolution, solve_milp
+using namespace AXOS::Solver;
+
+MilpOptions mo; mo.gap_rel = 1e-4; mo.time_limit = 600;
+MilpSolution s = solve_milp(p, mo);   // p: LpProblem with is_integer set
+// s.status, s.x, s.objective, s.bound, s.gap(), s.nodes, s.lp_iterations
+
+Branch and cut: presolve (LP reductions, MIP coefficient tightening, domain
+propagation, double probing on the binaries), a root that runs the dual
+simplex with Gomory mixed-integer cuts from the tableau and c-MIR cuts from
+the rows, reduced-cost fixing, primal heuristics (feasibility jump, rounding,
+fix-and-propagate, diving, objective feasibility pump, RENS, RINS), and
+reliability-pseudocost branching with strong branching under best-bound search
+with plunging. The tree runs on the CPU; the GPU (MilpOptions::gpu) probes the
+binaries at the root, runs feasibility-jump walkers and batched PDHG strong
+branching, whose Lagrangian duals are valid child bounds. See
+benchmarks/milp/README.md for MIPLIB 2017 results against HiGHS, SCIP and CBC.

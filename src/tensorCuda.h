@@ -33,8 +33,8 @@ using tensorETCuda = tensorET<DIM, T, Cuda::CudaStorage<T>>;
 // the matrix, and returns a non-owning m x m view of buf.
 template <class T>
 tensorETCuda<2, T>
-blockCopyCuda(const tensorETCuda<2, T> &t, size_t i, size_t j, size_t m,
-    T *buf, cudaStream_t stream)
+blockCopyCuda(const tensorETCuda<2, T> &t, size_t i, size_t j, size_t m, T *buf,
+    cudaStream_t stream)
 {
     Cuda::cuda_detail::check(cudaMemsetAsync(buf, 0, m * m * sizeof(T), stream),
         "blockCopyCuda: cudaMemsetAsync");

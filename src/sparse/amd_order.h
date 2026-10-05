@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Approximate minimum degree ordering on the graph of a symmetric sparse
-// matrix, written from the published algorithm (Amestoy, Davis, Duff,
-// "An approximate minimum degree ordering algorithm", SIMAX 1996):
+// matrix (Amestoy, Davis, Duff, SIMAX 1996):
 //
 //   * quotient graph: every variable keeps a list of adjacent variables (A_i)
-//     and adjacent elements (E_i); an eliminated pivot becomes an element
-//     whose variable list L_e replaces the clique it would create
+//     and adjacent elements (E_i); an eliminated pivot becomes an element whose
+//     variable list L_e replaces the clique it would create
 //   * approximate external degree with the |L_e \ L_p| trick
 //   * element absorption (aggressive) and mass elimination of variables that
 //     become indistinguishable from the pivot
 //   * dense variables (degree > 10 sqrt(n)) are ordered last
 //
-// Supervariable detection is not implemented, so matrices with many
-// identical columns order somewhat slower than a full AMD.
+// No supervariable detection, so matrices with many identical columns order
+// somewhat slower than a full AMD.
 #pragma once
 
 #include <algorithm>
@@ -70,7 +69,10 @@ amd_order(size_t n, const Idx *rp, const Idx *ci)
     // Dense variables no longer count as neighbours of the rest.
     if (!dense_vars.empty()) {
         for (size_t i = 0; i < n; ++i) {
-            if (state[i] == Dense) { A[i].clear(); continue; }
+            if (state[i] == Dense) {
+                A[i].clear();
+                continue;
+            }
             auto &a = A[i];
             a.erase(std::remove_if(a.begin(), a.end(),
                         [&](Idx j) { return state[j] == Dense; }),
@@ -90,22 +92,25 @@ amd_order(size_t n, const Idx *rp, const Idx *ci)
     };
     auto bucket_remove = [&](Idx i) {
         Idx d = deg[i];
-        if (prv[i] >= 0) nxt[prv[i]] = nxt[i];
-        else head[d] = nxt[i];
+        if (prv[i] >= 0)
+            nxt[prv[i]] = nxt[i];
+        else
+            head[d] = nxt[i];
         if (nxt[i] >= 0) prv[nxt[i]] = prv[i];
     };
     for (size_t i = 0; i < n; ++i)
         if (state[i] == Live) bucket_insert(static_cast<Idx>(i));
     size_t mindeg = 0;
 
-    std::vector<Idx> mark(n, -1);      // membership in Lp
-    std::vector<long> w(n, 0);         // |L_e \ L_p| workspace (per element)
+    std::vector<Idx> mark(n, -1); // membership in Lp
+    std::vector<long> w(n, 0);    // |L_e \ L_p| workspace (per element)
     std::vector<long> wstamp(n, -1);
-    std::vector<Idx> lp;               // L_p being built
+    std::vector<Idx> lp; // L_p being built
     size_t remaining = nlive;
 
     while (nlive > 0) {
-        while (mindeg <= n && head[mindeg] < 0) ++mindeg;
+        while (mindeg <= n && head[mindeg] < 0)
+            ++mindeg;
         if (mindeg > n) break;
         const Idx p = head[mindeg];
         bucket_remove(p);
@@ -116,7 +121,10 @@ amd_order(size_t n, const Idx *rp, const Idx *ci)
         // ---- form L_p = (A_p U union of L_e, e in E_p) minus p ---------
         lp.clear();
         for (Idx j : A[p])
-            if (state[j] == Live && mark[j] != p) { mark[j] = p; lp.push_back(j); }
+            if (state[j] == Live && mark[j] != p) {
+                mark[j] = p;
+                lp.push_back(j);
+            }
         for (Idx e : E[p]) {
             if (state[e] != Element) continue;
             for (Idx j : L[e])
@@ -162,7 +170,8 @@ amd_order(size_t n, const Idx *rp, const Idx *ci)
                     L[e].shrink_to_fit();
                     continue;
                 }
-                ext += (wstamp[e] == stamp) ? w[e] : static_cast<long>(L[e].size());
+                ext += (wstamp[e] == stamp) ? w[e]
+                                            : static_cast<long>(L[e].size());
                 Ei[out++] = e;
             }
             Ei.resize(out);
@@ -212,7 +221,8 @@ amd_order(size_t n, const Idx *rp, const Idx *ci)
     }
     for (size_t i = 0; i < n; ++i) // safety net: never lose a variable
         if (state[i] == Live) perm.push_back(static_cast<Idx>(i));
-    for (Idx v : dense_vars) perm.push_back(v);
+    for (Idx v : dense_vars)
+        perm.push_back(v);
     return perm;
 }
 

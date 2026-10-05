@@ -3,7 +3,8 @@
 //
 //   make benchmark_lp
 //
-// Output lines: RESULT lp <solver> <instance> <ms> <iterations> <status> <objective>
+// Output lines: RESULT lp <solver> <instance> <ms> <iterations> <status>
+// <objective>
 
 #ifdef AXOS_ENABLE_CUDA
 #include "tensorCuda.h"
@@ -32,15 +33,27 @@ gen_transport(size_t S, size_t D, unsigned seed)
     std::uniform_int_distribution<int> cost(1, 100), amt(10, 60);
     std::vector<double> sup(S), dem(D);
     double tot = 0;
-    for (auto &s : sup) { s = amt(g); tot += s; }
+    for (auto &s : sup) {
+        s = amt(g);
+        tot += s;
+    }
     double dt = 0;
-    for (auto &d : dem) { d = amt(g); dt += d; }
-    for (auto &d : dem) d = std::round(d * tot / dt);
+    for (auto &d : dem) {
+        d = amt(g);
+        dt += d;
+    }
+    for (auto &d : dem)
+        d = std::round(d * tot / dt);
     long diff = static_cast<long>(tot);
-    for (double d : dem) diff -= static_cast<long>(d);
-    for (size_t j = 0; diff != 0; j = (j + 1) % D) { // spread the rounding error
+    for (double d : dem)
+        diff -= static_cast<long>(d);
+    for (size_t j = 0; diff != 0;
+        j = (j + 1) % D) { // spread the rounding error
         const long step = diff > 0 ? 1 : -1;
-        if (dem[j] + step >= 1) { dem[j] += step; diff -= step; }
+        if (dem[j] + step >= 1) {
+            dem[j] += step;
+            diff -= step;
+        }
     }
     LpProblem p;
     const size_t n = S * D, m = S + D;
@@ -57,8 +70,10 @@ gen_transport(size_t S, size_t D, unsigned seed)
     p.col_lb.assign(n, 0);
     p.col_ub.assign(n, kInf);
     p.row_lb.resize(m);
-    for (size_t i = 0; i < S; ++i) p.row_lb[i] = sup[i];
-    for (size_t j = 0; j < D; ++j) p.row_lb[S + j] = dem[j];
+    for (size_t i = 0; i < S; ++i)
+        p.row_lb[i] = sup[i];
+    for (size_t j = 0; j < D; ++j)
+        p.row_lb[S + j] = dem[j];
     p.row_ub = p.row_lb;
     return p;
 }
@@ -78,11 +93,13 @@ gen_mcf(size_t V, size_t E, unsigned seed)
     p.col_ub.resize(E);
     for (size_t e = 0; e < E; ++e) {
         size_t u = node(g), v = node(g);
-        while (v == u) v = node(g);
+        while (v == u)
+            v = node(g);
         int cp = cap(g);
-        double f = std::floor(cp * std::uniform_real_distribution<double>(0, 1)(g));
-        b.add(u, e, 1.0);   // out of u
-        b.add(v, e, -1.0);  // into v
+        double f =
+            std::floor(cp * std::uniform_real_distribution<double>(0, 1)(g));
+        b.add(u, e, 1.0);  // out of u
+        b.add(v, e, -1.0); // into v
         bal[u] += f;
         bal[v] -= f;
         p.c[e] = cost(g);
@@ -108,12 +125,14 @@ gen_packing(size_t m, size_t n, int per_col, unsigned seed)
             b.add(row(g), j, u(g));
     p.A = b.build();
     p.c.resize(n);
-    for (auto &v : p.c) v = -u(g);
+    for (auto &v : p.c)
+        v = -u(g);
     p.col_lb.assign(n, 0);
     p.col_ub.assign(n, kInf);
     p.row_lb.assign(m, -kInf);
     p.row_ub.resize(m);
-    for (auto &v : p.row_ub) v = 10 * per_col * u(g) * n / m / per_col + 1;
+    for (auto &v : p.row_ub)
+        v = 10 * per_col * u(g) * n / m / per_col + 1;
     return p;
 }
 
@@ -148,10 +167,14 @@ run(const char *solver, const Inst &in, double eps, double tlimit,
     auto t0 = std::chrono::steady_clock::now();
     LpSolution s = solve_lp<Store>(in.p, o);
     double ms = std::chrono::duration<double, std::milli>(
-        std::chrono::steady_clock::now() - t0).count();
-    std::string tag = std::string(solver) + "_" + (eps <= 1e-8 ? "1e-8" : eps <= 1e-6 ? "1e-6" : "1e-4");
-    printf("RESULT lp %s %s %.1f %ld %s %.9e\n", tag.c_str(), in.name.c_str(), ms,
-        s.iterations, to_string(s.status), s.primal_objective);
+        std::chrono::steady_clock::now() - t0)
+                    .count();
+    std::string tag = std::string(solver) + "_" +
+                      (eps <= 1e-8      ? "1e-8"
+                          : eps <= 1e-6 ? "1e-6"
+                                        : "1e-4");
+    printf("RESULT lp %s %s %.1f %ld %s %.9e\n", tag.c_str(), in.name.c_str(),
+        ms, s.iterations, to_string(s.status), s.primal_objective);
     fflush(stdout);
 }
 
@@ -184,15 +207,17 @@ main(int argc, char **argv)
     }
     for (auto &in : insts) {
         export_lp(dir, in.name, in.p);
-        printf("# %s: %zu rows, %zu cols, %zu nnz\n", in.name.c_str(), in.p.rows(),
-            in.p.cols(), in.p.A.nnz());
+        printf("# %s: %zu rows, %zu cols, %zu nnz\n", in.name.c_str(),
+            in.p.rows(), in.p.cols(), in.p.A.nnz());
     }
     if (export_only) return 0;
     if (ipm)
         for (auto &in : insts) {
             run<Cpu::HostStorage>("ipm_cpu", in, 1e-8, tlimit, LpMethod::Ipm);
 #ifdef AXOS_ENABLE_CUDA
-            if (cuda) run<Cuda::CudaStorage>("ipm_cuda", in, 1e-8, tlimit, LpMethod::Ipm);
+            if (cuda)
+                run<Cuda::CudaStorage>(
+                    "ipm_cuda", in, 1e-8, tlimit, LpMethod::Ipm);
 #endif
         }
     for (auto &in : insts)

@@ -144,23 +144,24 @@ template <class T, int MR, int NV> struct Accumulate {
     }
 };
 
-#define AXOS_ROW2(r)                                                           \
-    a = P::set1(Ap[r]);                                                        \
-    c##r##0 = P::fmadd(a, b0, c##r##0);                                        \
+#define AXOS_ROW2(r) \
+    a = P::set1(Ap[r]); \
+    c##r##0 = P::fmadd(a, b0, c##r##0); \
     c##r##1 = P::fmadd(a, b1, c##r##1);
-#define AXOS_ROW3(r)                                                           \
-    a = P::set1(Ap[r]);                                                        \
-    c##r##0 = P::fmadd(a, b0, c##r##0);                                        \
-    c##r##1 = P::fmadd(a, b1, c##r##1);                                        \
+#define AXOS_ROW3(r) \
+    a = P::set1(Ap[r]); \
+    c##r##0 = P::fmadd(a, b0, c##r##0); \
+    c##r##1 = P::fmadd(a, b1, c##r##1); \
     c##r##2 = P::fmadd(a, b2, c##r##2);
 #define AXOS_DECL2(r) R c##r##0 = P::zero(), c##r##1 = P::zero();
-#define AXOS_DECL3(r) R c##r##0 = P::zero(), c##r##1 = P::zero(), c##r##2 = P::zero();
-#define AXOS_OUT2(r)                                                           \
-    acc[r][0] = c##r##0;                                                       \
+#define AXOS_DECL3(r) \
+    R c##r##0 = P::zero(), c##r##1 = P::zero(), c##r##2 = P::zero();
+#define AXOS_OUT2(r) \
+    acc[r][0] = c##r##0; \
     acc[r][1] = c##r##1;
-#define AXOS_OUT3(r)                                                           \
-    acc[r][0] = c##r##0;                                                       \
-    acc[r][1] = c##r##1;                                                       \
+#define AXOS_OUT3(r) \
+    acc[r][0] = c##r##0; \
+    acc[r][1] = c##r##1; \
     acc[r][2] = c##r##2;
 
 // 6 x 2 vectors (AVX2): 12 accumulators.
@@ -172,18 +173,19 @@ template <class T> struct Accumulate<T, 6, 2> {
         R (&acc)[6][2])
     {
         constexpr int W = P::W;
-        AXOS_DECL2(0) AXOS_DECL2(1) AXOS_DECL2(2)
-        AXOS_DECL2(3) AXOS_DECL2(4) AXOS_DECL2(5)
-        for (size_t p = 0; p < kc; ++p) {
+        AXOS_DECL2(0)
+        AXOS_DECL2(1) AXOS_DECL2(2) AXOS_DECL2(3) AXOS_DECL2(4)
+            AXOS_DECL2(5) for (size_t p = 0; p < kc; ++p)
+        {
             const R b0 = P::load(Bp), b1 = P::load(Bp + W);
             R a;
-            AXOS_ROW2(0) AXOS_ROW2(1) AXOS_ROW2(2)
-            AXOS_ROW2(3) AXOS_ROW2(4) AXOS_ROW2(5)
-            Ap += 6;
+            AXOS_ROW2(0)
+            AXOS_ROW2(1) AXOS_ROW2(2) AXOS_ROW2(3) AXOS_ROW2(4) AXOS_ROW2(5)
+                Ap += 6;
             Bp += 2 * W;
         }
-        AXOS_OUT2(0) AXOS_OUT2(1) AXOS_OUT2(2)
-        AXOS_OUT2(3) AXOS_OUT2(4) AXOS_OUT2(5)
+        AXOS_OUT2(0)
+        AXOS_OUT2(1) AXOS_OUT2(2) AXOS_OUT2(3) AXOS_OUT2(4) AXOS_OUT2(5)
     }
 };
 
@@ -196,12 +198,13 @@ template <class T> struct Accumulate<T, 4, 2> {
         R (&acc)[4][2])
     {
         constexpr int W = P::W;
-        AXOS_DECL2(0) AXOS_DECL2(1) AXOS_DECL2(2) AXOS_DECL2(3)
-        for (size_t p = 0; p < kc; ++p) {
+        AXOS_DECL2(0)
+        AXOS_DECL2(1) AXOS_DECL2(2)
+            AXOS_DECL2(3) for (size_t p = 0; p < kc; ++p)
+        {
             const R b0 = P::load(Bp), b1 = P::load(Bp + W);
             R a;
-            AXOS_ROW2(0) AXOS_ROW2(1) AXOS_ROW2(2) AXOS_ROW2(3)
-            Ap += 4;
+            AXOS_ROW2(0) AXOS_ROW2(1) AXOS_ROW2(2) AXOS_ROW2(3) Ap += 4;
             Bp += 2 * W;
         }
         AXOS_OUT2(0) AXOS_OUT2(1) AXOS_OUT2(2) AXOS_OUT2(3)
@@ -217,18 +220,21 @@ template <class T> struct Accumulate<T, 8, 3> {
         R (&acc)[8][3])
     {
         constexpr int W = P::W;
-        AXOS_DECL3(0) AXOS_DECL3(1) AXOS_DECL3(2) AXOS_DECL3(3)
-        AXOS_DECL3(4) AXOS_DECL3(5) AXOS_DECL3(6) AXOS_DECL3(7)
-        for (size_t p = 0; p < kc; ++p) {
-            const R b0 = P::load(Bp), b1 = P::load(Bp + W), b2 = P::load(Bp + 2 * W);
+        AXOS_DECL3(0)
+        AXOS_DECL3(1) AXOS_DECL3(2) AXOS_DECL3(3) AXOS_DECL3(4) AXOS_DECL3(5)
+            AXOS_DECL3(6) AXOS_DECL3(7) for (size_t p = 0; p < kc; ++p)
+        {
+            const R b0 = P::load(Bp), b1 = P::load(Bp + W),
+                    b2 = P::load(Bp + 2 * W);
             R a;
-            AXOS_ROW3(0) AXOS_ROW3(1) AXOS_ROW3(2) AXOS_ROW3(3)
-            AXOS_ROW3(4) AXOS_ROW3(5) AXOS_ROW3(6) AXOS_ROW3(7)
-            Ap += 8;
+            AXOS_ROW3(0)
+            AXOS_ROW3(1) AXOS_ROW3(2) AXOS_ROW3(3) AXOS_ROW3(4) AXOS_ROW3(5)
+                AXOS_ROW3(6) AXOS_ROW3(7) Ap += 8;
             Bp += 3 * W;
         }
-        AXOS_OUT3(0) AXOS_OUT3(1) AXOS_OUT3(2) AXOS_OUT3(3)
-        AXOS_OUT3(4) AXOS_OUT3(5) AXOS_OUT3(6) AXOS_OUT3(7)
+        AXOS_OUT3(0)
+        AXOS_OUT3(1) AXOS_OUT3(2) AXOS_OUT3(3) AXOS_OUT3(4) AXOS_OUT3(5)
+            AXOS_OUT3(6) AXOS_OUT3(7)
     }
 };
 
@@ -271,7 +277,8 @@ micro_kernel(size_t kc, const T *AXOS_RESTRICT Ap, const T *AXOS_RESTRICT Bp,
             for (int r = 0; r < MR; ++r)
                 for (int v = 0; v < NV; ++v) {
                     T *c = C + r * ldc + v * W;
-                    P::storeu(c, P::fmadd(acc[r][v], va, P::mul(P::loadu(c), vb)));
+                    P::storeu(
+                        c, P::fmadd(acc[r][v], va, P::mul(P::loadu(c), vb)));
                 }
         }
         return;
@@ -284,9 +291,11 @@ micro_kernel(size_t kc, const T *AXOS_RESTRICT Ap, const T *AXOS_RESTRICT Bp,
         T *c = C + r * ldc;
         const T *t = tmp + r * NR;
         if (beta == T(0))
-            for (int j = 0; j < nr; ++j) c[j] = t[j];
+            for (int j = 0; j < nr; ++j)
+                c[j] = t[j];
         else
-            for (int j = 0; j < nr; ++j) c[j] = t[j] + beta * c[j];
+            for (int j = 0; j < nr; ++j)
+                c[j] = t[j] + beta * c[j];
     }
 }
 
@@ -317,8 +326,10 @@ pack_a(bool trans, const T *A, size_t lda, size_t i0, size_t mc, size_t p0,
             for (size_t p = 0; p < kc; ++p) {
                 const T *a = A + (p0 + p) * lda + i0 + ir;
                 size_t r = 0;
-                for (; r < mr; ++r) d[p * MR + r] = a[r];
-                for (; r < size_t(MR); ++r) d[p * MR + r] = T(0);
+                for (; r < mr; ++r)
+                    d[p * MR + r] = a[r];
+                for (; r < size_t(MR); ++r)
+                    d[p * MR + r] = T(0);
             }
         }
     }
@@ -335,16 +346,20 @@ pack_b(bool trans, const T *B, size_t ldb, size_t p0, size_t kc, size_t j,
         for (size_t p = 0; p < kc; ++p) {
             const T *b = B + (p0 + p) * ldb + j;
             size_t c = 0;
-            for (; c < nr; ++c) d[p * NR + c] = b[c];
-            for (; c < size_t(NR); ++c) d[p * NR + c] = T(0);
+            for (; c < nr; ++c)
+                d[p * NR + c] = b[c];
+            for (; c < size_t(NR); ++c)
+                d[p * NR + c] = T(0);
         }
     } else {
         for (size_t c = 0; c < size_t(NR); ++c) {
             if (c < nr) {
                 const T *b = B + (j + c) * ldb + p0;
-                for (size_t p = 0; p < kc; ++p) d[p * NR + c] = b[p];
+                for (size_t p = 0; p < kc; ++p)
+                    d[p * NR + c] = b[p];
             } else {
-                for (size_t p = 0; p < kc; ++p) d[p * NR + c] = T(0);
+                for (size_t p = 0; p < kc; ++p)
+                    d[p * NR + c] = T(0);
             }
         }
     }
@@ -360,7 +375,8 @@ scale_matrix(size_t m, size_t n, T beta, T *C, size_t ldc)
         if (beta == T(0))
             std::fill(c, c + n, T(0));
         else
-            for (size_t j = 0; j < n; ++j) c[j] *= beta;
+            for (size_t j = 0; j < n; ++j)
+                c[j] *= beta;
     }
 }
 
@@ -391,11 +407,13 @@ gemm(bool transA, bool transB, size_t m, size_t n, size_t k, T alpha,
             if (beta == T(0))
                 std::fill(c, c + n, T(0));
             else if (beta != T(1))
-                for (size_t j = 0; j < n; ++j) c[j] *= beta;
+                for (size_t j = 0; j < n; ++j)
+                    c[j] *= beta;
             for (size_t p = 0; p < k; ++p) {
                 const T a = alpha * A[i * lda + p];
                 const T *b = B + p * ldb;
-                for (size_t j = 0; j < n; ++j) c[j] += a * b[j];
+                for (size_t j = 0; j < n; ++j)
+                    c[j] += a * b[j];
             }
         }
         return;
@@ -405,11 +423,11 @@ gemm(bool transA, bool transB, size_t m, size_t n, size_t k, T alpha,
     const size_t ncmax = std::min(n, NC);
     T *Bp = scratch<T, kScratchB>(KC * ((ncmax + NR - 1) / NR * NR));
 
-    // Task grid over the m x nc region of one (jc, pc) step. A task spans
-    // the whole B panel by default (its A block is packed once and the B
-    // slivers stream from L3). With too few tasks for the threads, split the
-    // columns first (each chunk re-packs the A block, which is cheap), then
-    // the rows (smaller A blocks raise the B traffic per flop).
+    // Task grid over the m x nc region of one (jc, pc) step. A task spans the
+    // whole B panel by default (its A block is packed once, the B slivers
+    // stream from L3). With too few tasks for the threads, split the columns
+    // first (each chunk re-packs the A block, which is cheap), then the rows
+    // (smaller A blocks raise the B traffic per flop).
     auto round_up = [](size_t x, size_t q) { return (x + q - 1) / q * q; };
     size_t mcT = std::min(MC, round_up(m, MR));
     size_t ncT = round_up(ncmax, NR);
@@ -430,7 +448,8 @@ gemm(bool transA, bool transB, size_t m, size_t n, size_t k, T alpha,
             break;
     }
 
-    auto pack_panel = [&](size_t jc, size_t nc, size_t pc, size_t kc, size_t s) {
+    auto pack_panel = [&](size_t jc, size_t nc, size_t pc, size_t kc,
+                          size_t s) {
         const size_t j = s * Cfg::NR;
         pack_b<T, Cfg::NR>(transB, B, ldb, pc, kc, jc + j,
             std::min<size_t>(Cfg::NR, nc - j), Bp + s * kc * Cfg::NR);
@@ -451,17 +470,20 @@ gemm(bool transA, bool transB, size_t m, size_t n, size_t k, T alpha,
         const size_t step = 64 / sizeof(T) > 0 ? 64 / sizeof(T) : 1;
         const size_t per = ((sliver + step - 1) / step + nir - 1) / nir;
         for (size_t jr = 0; jr < ncc; jr += Cfg::NR) {
-            const int nr = static_cast<int>(std::min<size_t>(Cfg::NR, ncc - jr));
+            const int nr =
+                static_cast<int>(std::min<size_t>(Cfg::NR, ncc - jr));
             const T *bs = Bp + ((j0 + jr) / Cfg::NR) * sliver;
             const T *bnext = jr + Cfg::NR < ncc ? bs + sliver : nullptr;
             T *c = C + i0 * ldc + jc + j0 + jr;
             for (size_t ir = 0, q = 0; ir < mc; ir += Cfg::MR, ++q) {
                 if (bnext)
-                    for (size_t l = q * per; l < (q + 1) * per && l * step < sliver; ++l)
+                    for (size_t l = q * per;
+                        l < (q + 1) * per && l * step < sliver; ++l)
                         AXOS_PREFETCH_L2(bnext + l * step);
-                const int mr = static_cast<int>(std::min<size_t>(Cfg::MR, mc - ir));
-                micro_kernel<T, Cfg::MR, Cfg::NV>(kc, Ap + ir * kc, bs, c + ir * ldc,
-                    ldc, alpha, b_eff, mr, nr);
+                const int mr =
+                    static_cast<int>(std::min<size_t>(Cfg::MR, mc - ir));
+                micro_kernel<T, Cfg::MR, Cfg::NV>(kc, Ap + ir * kc, bs,
+                    c + ir * ldc, ldc, alpha, b_eff, mr, nr);
             }
         }
     };
@@ -523,7 +545,8 @@ gemv_rows(size_t i0, size_t i1, size_t n, T alpha, const T *A, size_t lda,
     };
     size_t i = i0;
     for (; i + 4 <= i1; i += 4) {
-        const T *a0 = A + i * lda, *a1 = a0 + lda, *a2 = a1 + lda, *a3 = a2 + lda;
+        const T *a0 = A + i * lda, *a1 = a0 + lda, *a2 = a1 + lda,
+                *a3 = a2 + lda;
         R c00 = P::zero(), c01 = P::zero(), c10 = P::zero(), c11 = P::zero();
         R c20 = P::zero(), c21 = P::zero(), c30 = P::zero(), c31 = P::zero();
         size_t j = 0;
@@ -561,7 +584,8 @@ gemv_rows(size_t i0, size_t i1, size_t n, T alpha, const T *A, size_t lda,
             c1 = P::fmadd(P::loadu(a + j + W), P::loadu(x + j + W), c1);
         }
         T s = P::hsum(P::add(c0, c1));
-        for (; j < n; ++j) s += a[j] * x[j];
+        for (; j < n; ++j)
+            s += a[j] * x[j];
         finish(i, s);
     }
 }
@@ -576,7 +600,8 @@ gemv_t_cols(size_t r0, size_t r1, size_t j0, size_t j1, T alpha, const T *A,
     constexpr size_t W = P::W;
     size_t i = r0;
     for (; i + 4 <= r1; i += 4) {
-        const T *a0 = A + i * lda, *a1 = a0 + lda, *a2 = a1 + lda, *a3 = a2 + lda;
+        const T *a0 = A + i * lda, *a1 = a0 + lda, *a2 = a1 + lda,
+                *a3 = a2 + lda;
         const T s0 = alpha * x[i], s1 = alpha * x[i + 1];
         const T s2 = alpha * x[i + 2], s3 = alpha * x[i + 3];
         const auto v0 = P::set1(s0), v1 = P::set1(s1), v2 = P::set1(s2),
@@ -600,7 +625,8 @@ gemv_t_cols(size_t r0, size_t r1, size_t j0, size_t j1, T alpha, const T *A,
         size_t j = j0;
         for (; j + W <= j1; j += W)
             P::storeu(y + j, P::fmadd(P::loadu(a + j), v, P::loadu(y + j)));
-        for (; j < j1; ++j) y[j] += s * a[j];
+        for (; j < j1; ++j)
+            y[j] += s * a[j];
     }
 }
 
@@ -632,9 +658,12 @@ gemv(bool trans, size_t m, size_t n, T alpha, const T *A, size_t lda,
             gemv_rows(0, m, n, alpha, A, lda, x, beta, y);
             return;
         }
-        detail::parallel_for(m, grain, [&](size_t b, size_t e) {
-            gemv_rows(b, e, n, alpha, A, lda, x, beta, y);
-        }, 4);
+        detail::parallel_for(
+            m, grain,
+            [&](size_t b, size_t e) {
+                gemv_rows(b, e, n, alpha, A, lda, x, beta, y);
+            },
+            4);
         return;
     }
     auto init_y = [&](size_t j0, size_t j1) {
@@ -651,28 +680,37 @@ gemv(bool trans, size_t m, size_t n, T alpha, const T *A, size_t lda,
         return;
     }
     if (n >= size_t(nt) * 256) { // enough columns: split them
-        detail::parallel_for(n, 256, [&](size_t b, size_t e) {
-            for (size_t j0 = b; j0 < e; j0 += kColBlock) {
-                const size_t j1 = std::min(e, j0 + kColBlock);
-                init_y(j0, j1);
-                gemv_t_cols(0, m, j0, j1, alpha, A, lda, x, y);
-            }
-        }, 16);
+        detail::parallel_for(
+            n, 256,
+            [&](size_t b, size_t e) {
+                for (size_t j0 = b; j0 < e; j0 += kColBlock) {
+                    const size_t j1 = std::min(e, j0 + kColBlock);
+                    init_y(j0, j1);
+                    gemv_t_cols(0, m, j0, j1, alpha, A, lda, x, y);
+                }
+            },
+            16);
         return;
     }
     // Few columns, many rows: private partial sums per row chunk.
-    const size_t chunks = std::min<size_t>(size_t(4) * nt, std::max<size_t>(1, m / 64));
+    const size_t chunks =
+        std::min<size_t>(size_t(4) * nt, std::max<size_t>(1, m / 64));
     std::vector<T> part(chunks * n, T(0));
-    detail::parallel_for(chunks, 1, [&](size_t c0, size_t c1) {
-        for (size_t c = c0; c < c1; ++c) {
-            const size_t r0 = detail::chunk_begin(m, chunks, c, 1);
-            const size_t r1 = detail::chunk_begin(m, chunks, c + 1, 1);
-            gemv_t_cols(r0, r1, 0, n, alpha, A, lda, x, part.data() + c * n);
-        }
-    }, 1);
+    detail::parallel_for(
+        chunks, 1,
+        [&](size_t c0, size_t c1) {
+            for (size_t c = c0; c < c1; ++c) {
+                const size_t r0 = detail::chunk_begin(m, chunks, c, 1);
+                const size_t r1 = detail::chunk_begin(m, chunks, c + 1, 1);
+                gemv_t_cols(
+                    r0, r1, 0, n, alpha, A, lda, x, part.data() + c * n);
+            }
+        },
+        1);
     init_y(0, n);
     for (size_t c = 0; c < chunks; ++c)
-        for (size_t j = 0; j < n; ++j) y[j] += part[c * n + j];
+        for (size_t j = 0; j < n; ++j)
+            y[j] += part[c * n + j];
 }
 
 // ---- level 1 --------------------------------------------------------------
@@ -693,7 +731,8 @@ dot(size_t n, const T *x, const T *y)
             c3 = P::fmadd(P::loadu(x + i + 3 * W), P::loadu(y + i + 3 * W), c3);
         }
         T s = P::hsum(P::add(P::add(c0, c1), P::add(c2, c3)));
-        for (; i < e; ++i) s += x[i] * y[i];
+        for (; i < e; ++i)
+            s += x[i] * y[i];
         return s;
     };
     return detail::parallel_sum<T>(n, size_t(1) << 15, kernel);
@@ -711,7 +750,8 @@ axpy(size_t n, T a, const T *x, T *y)
         size_t i = b;
         for (; i + W <= e; i += W)
             P::storeu(y + i, P::fmadd(va, P::loadu(x + i), P::loadu(y + i)));
-        for (; i < e; ++i) y[i] += a * x[i];
+        for (; i < e; ++i)
+            y[i] += a * x[i];
     });
 }
 
@@ -742,8 +782,10 @@ transpose_tile(size_t i0, size_t i1, size_t j0, size_t j1, const T *A,
                 double *b = B + j * ldb + i;
                 _mm256_storeu_pd(b, _mm256_permute2f128_pd(t0, t2, 0x20));
                 _mm256_storeu_pd(b + ldb, _mm256_permute2f128_pd(t1, t3, 0x20));
-                _mm256_storeu_pd(b + 2 * ldb, _mm256_permute2f128_pd(t0, t2, 0x31));
-                _mm256_storeu_pd(b + 3 * ldb, _mm256_permute2f128_pd(t1, t3, 0x31));
+                _mm256_storeu_pd(
+                    b + 2 * ldb, _mm256_permute2f128_pd(t0, t2, 0x31));
+                _mm256_storeu_pd(
+                    b + 3 * ldb, _mm256_permute2f128_pd(t1, t3, 0x31));
             }
             for (; j < j1; ++j)
                 for (size_t r = 0; r < 4; ++r)
@@ -751,14 +793,16 @@ transpose_tile(size_t i0, size_t i1, size_t j0, size_t j1, const T *A,
         }
     }
 #endif
-#if defined(AXOS_SIMD_AVX) || defined(AXOS_SIMD_SSE2) || defined(AXOS_SIMD_AVX2) || defined(AXOS_SIMD_AVX512)
+#if defined(AXOS_SIMD_AVX) || defined(AXOS_SIMD_SSE2) || \
+    defined(AXOS_SIMD_AVX2) || defined(AXOS_SIMD_AVX512)
     if constexpr (std::is_same_v<T, float>) {
         for (; i + 4 <= i1; i += 4) {
             size_t j = j0;
             for (; j + 4 <= j1; j += 4) {
                 const float *a = A + i * lda + j;
                 __m128 r0 = _mm_loadu_ps(a), r1 = _mm_loadu_ps(a + lda);
-                __m128 r2 = _mm_loadu_ps(a + 2 * lda), r3 = _mm_loadu_ps(a + 3 * lda);
+                __m128 r2 = _mm_loadu_ps(a + 2 * lda),
+                       r3 = _mm_loadu_ps(a + 3 * lda);
                 _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
                 float *b = B + j * ldb + i;
                 _mm_storeu_ps(b, r0);
@@ -789,14 +833,17 @@ transpose(size_t m, size_t n, const T *A, size_t lda, T *B, size_t ldb)
     if (m == 0 || n == 0) return;
     const size_t tiles_i = (m + TB - 1) / TB;
     const size_t grain = std::max<size_t>(1, (size_t(1) << 15) / (TB * n));
-    detail::parallel_for(tiles_i, grain, [&](size_t b, size_t e) {
-        for (size_t ti = b; ti < e; ++ti) {
-            const size_t i0 = ti * TB, i1 = std::min(m, i0 + TB);
-            for (size_t j0 = 0; j0 < n; j0 += TB)
-                blas_detail::transpose_tile(i0, i1, j0, std::min(n, j0 + TB),
-                    A, lda, B, ldb);
-        }
-    }, 1);
+    detail::parallel_for(
+        tiles_i, grain,
+        [&](size_t b, size_t e) {
+            for (size_t ti = b; ti < e; ++ti) {
+                const size_t i0 = ti * TB, i1 = std::min(m, i0 + TB);
+                for (size_t j0 = 0; j0 < n; j0 += TB)
+                    blas_detail::transpose_tile(
+                        i0, i1, j0, std::min(n, j0 + TB), A, lda, B, ldb);
+            }
+        },
+        1);
 }
 
 } // namespace kernels

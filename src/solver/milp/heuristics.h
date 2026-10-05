@@ -2,23 +2,21 @@
 //
 // LP-free primal heuristics for MILP.
 //
-// FeasibilityJump: the weighted local search of B. Luteberget, G. Sartor,
-// "Feasibility Jump: an LP-free Lagrangian MIP heuristic", Math. Prog. Comp.
-// (2023). The point x stays within the bounds; a row's violation is its
-// distance to [l, u], weighted by w_i. One variable moves at a time, to its
-// "jump value": the value (integer for integer columns) that minimizes the
-// weighted violation of the rows of its column, the others fixed. That
-// function of one variable is convex and piecewise linear, so its minimum
-// is at a breakpoint (a row becoming satisfied) or a bound. Moves are taken
-// from a violated row; when no variable of it improves, the weight of the
-// row grows (the Lagrangian part), which eventually makes some move pay off.
-// Every step needs only one column and its rows, no LP.
+// FeasibilityJump (B. Luteberget, G. Sartor, Math. Prog. Comp. 2023): the point
+// x stays within the bounds; a row's violation is its distance to [l, u],
+// weighted by w_i. One variable moves at a time, to its "jump value": the value
+// (integer for integer columns) minimizing the weighted violation of the rows
+// of its column, the others fixed. That one-variable function is convex and
+// piecewise linear, so its minimum is at a breakpoint (a row becoming
+// satisfied) or a bound. Moves come from a violated row; when no variable of it
+// improves, the row's weight grows (the Lagrangian part), eventually making
+// some move pay off. Every step needs one column and its rows, no LP.
 //
-// FixAndPropagate: integer columns are fixed one by one in a given order to
-// a preferred value (rounded LP value or a guess), each fix followed by
-// domain propagation (propagate.h); a fix that empties a domain is retried
-// with the other rounding once, then the heuristic gives up. The continuous
-// columns are left to an LP over the fixed integers (the caller's).
+// FixAndPropagate: integer columns are fixed one by one in a given order to a
+// preferred value (rounded LP value or a guess), each fix followed by domain
+// propagation (propagate.h); a fix that empties a domain is retried with the
+// other rounding once, then the heuristic gives up. The continuous columns are
+// left to an LP over the fixed integers (the caller's).
 #pragma once
 
 #include "solver/milp/milp_model.h"
@@ -38,19 +36,23 @@ class FeasibilityJump {
     explicit FeasibilityJump(const LpProblem &p) : p_(p), At_(p.A.transpose())
     {
         isint_.assign(p.cols(), 0);
-        for (size_t j = 0; j < p.cols(); ++j) isint_[j] = is_int(p, j) ? 1 : 0;
+        for (size_t j = 0; j < p.cols(); ++j)
+            isint_[j] = is_int(p, j) ? 1 : 0;
     }
 
     // Looks for a point satisfying all rows within [lb, ub], starting from x0
     // when given (else the bound nearest zero), for at most time_limit
     // seconds. On success x holds the point.
     bool
-    run(const std::vector<double> &lb, const std::vector<double> &ub, const std::vector<double> *x0,
-        double time_limit, std::vector<double> &x, uint64_t seed = 1)
+    run(const std::vector<double> &lb, const std::vector<double> &ub,
+        const std::vector<double> *x0, double time_limit,
+        std::vector<double> &x, uint64_t seed = 1)
     {
         const auto t0 = std::chrono::steady_clock::now();
         auto elapsed = [&] {
-            return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+            return std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - t0)
+                .count();
         };
         const size_t n = p_.cols(), m = p_.rows();
         rng_.seed(seed);
@@ -58,8 +60,13 @@ class FeasibilityJump {
         for (size_t j = 0; j < n; ++j) {
             double v = x0 ? (*x0)[j] : 0.0;
             v = std::min(std::max(v, lb[j]), ub[j]);
-            if (!std::isfinite(v) || std::abs(v) > 1e15) v = std::abs(lb[j]) < 1e15 ? lb[j] : (std::abs(ub[j]) < 1e15 ? ub[j] : 0.0);
-            if (isint_[j]) v = std::min(std::max(std::round(v), std::ceil(lb[j] - 1e-9)), std::floor(ub[j] + 1e-9));
+            if (!std::isfinite(v) || std::abs(v) > 1e15)
+                v = std::abs(lb[j]) < 1e15
+                        ? lb[j]
+                        : (std::abs(ub[j]) < 1e15 ? ub[j] : 0.0);
+            if (isint_[j])
+                v = std::min(std::max(std::round(v), std::ceil(lb[j] - 1e-9)),
+                    std::floor(ub[j] + 1e-9));
             x[j] = v;
         }
         act_.assign(m, 0.0);
@@ -68,11 +75,13 @@ class FeasibilityJump {
         const auto *ci = p_.A.col_ind();
         const double *va = p_.A.values();
         for (size_t i = 0; i < m; ++i)
-            for (auto k = rp[i]; k < rp[i + 1]; ++k) act_[i] += va[k] * x[ci[k]];
+            for (auto k = rp[i]; k < rp[i + 1]; ++k)
+                act_[i] += va[k] * x[ci[k]];
         // violated rows as an indexed set
         pos_.assign(m, -1);
         viol_.clear();
-        for (size_t i = 0; i < m; ++i) update_violated(static_cast<int>(i));
+        for (size_t i = 0; i < m; ++i)
+            update_violated(static_cast<int>(i));
         long steps = 0;
         std::vector<int> cand;
         while (!viol_.empty()) {
@@ -83,9 +92,11 @@ class FeasibilityJump {
             const auto b = rp[r], e = rp[r + 1];
             const long len = static_cast<long>(e - b);
             if (len <= 48) {
-                for (auto k = b; k < e; ++k) cand.push_back(ci[k]);
+                for (auto k = b; k < e; ++k)
+                    cand.push_back(ci[k]);
             } else {
-                for (int s = 0; s < 48; ++s) cand.push_back(ci[b + static_cast<long>(rng_() % len)]);
+                for (int s = 0; s < 48; ++s)
+                    cand.push_back(ci[b + static_cast<long>(rng_() % len)]);
             }
             int best_j = -1;
             double best_v = 0, best_score = 1e-9;
@@ -93,7 +104,8 @@ class FeasibilityJump {
                 if (lb[j] == ub[j]) continue;
                 double v, score;
                 jump(j, lb, ub, x, v, score);
-                if (score > best_score || (score == best_score && best_j >= 0 && (rng_() & 1))) {
+                if (score > best_score ||
+                    (score == best_score && best_j >= 0 && (rng_() & 1))) {
                     best_score = score;
                     best_j = j;
                     best_v = v;
@@ -105,7 +117,8 @@ class FeasibilityJump {
             }
             const double delta = best_v - x[best_j];
             x[best_j] = best_v;
-            for (auto k = At_.row_ptr()[best_j]; k < At_.row_ptr()[best_j + 1]; ++k) {
+            for (auto k = At_.row_ptr()[best_j]; k < At_.row_ptr()[best_j + 1];
+                ++k) {
                 const int i = At_.col_ind()[k];
                 act_[i] += At_.values()[k] * delta;
                 update_violated(i);
@@ -114,7 +127,8 @@ class FeasibilityJump {
         // exact activities (drift) and a final check
         for (size_t i = 0; i < m; ++i) {
             double a = 0;
-            for (auto k = rp[i]; k < rp[i + 1]; ++k) a += va[k] * x[ci[k]];
+            for (auto k = rp[i]; k < rp[i + 1]; ++k)
+                a += va[k] * x[ci[k]];
             if (a < p_.row_lb[i] - 1e-6 * (1 + std::abs(p_.row_lb[i])) ||
                 a > p_.row_ub[i] + 1e-6 * (1 + std::abs(p_.row_ub[i])))
                 return false;
@@ -174,8 +188,8 @@ class FeasibilityJump {
     // weighted violation); the minimum of a convex piecewise-linear
     // function lies at a breakpoint or a bound.
     void
-    jump(int j, const std::vector<double> &lb, const std::vector<double> &ub, const std::vector<double> &x,
-        double &best_v, double &score)
+    jump(int j, const std::vector<double> &lb, const std::vector<double> &ub,
+        const std::vector<double> &x, double &best_v, double &score)
     {
         const double xj = x[j];
         cands_.clear();
@@ -218,13 +232,14 @@ class FeasibilityJump {
 
 // Fixes the integer columns in `order` to `want` (rounded into the current
 // domain), propagating after each fix; a fix that empties a domain is undone
-// (through the trail) and retried with the other rounding once, after which
-// the heuristic gives up. lb/ub hold the final domains: the integers fixed,
-// the continuous columns propagated.
+// (through the trail) and retried with the other rounding once, then the
+// heuristic gives up. lb/ub hold the final domains: the integers fixed, the
+// continuous columns propagated.
 inline bool
-fix_and_propagate(Propagator &prop, const LpProblem &p, const std::vector<int> &order,
-    const std::vector<double> &want, std::vector<double> &lb, std::vector<double> &ub,
-    double deadline_s, const std::chrono::steady_clock::time_point &t0)
+fix_and_propagate(Propagator &prop, const LpProblem &p,
+    const std::vector<int> &order, const std::vector<double> &want,
+    std::vector<double> &lb, std::vector<double> &ub, double deadline_s,
+    const std::chrono::steady_clock::time_point &t0)
 {
     std::vector<int> changed(1);
     Trail trail;
@@ -232,10 +247,12 @@ fix_and_propagate(Propagator &prop, const LpProblem &p, const std::vector<int> &
     for (int j : order) {
         if (!is_int(p, j) || lb[j] == ub[j]) continue;
         if ((++count & 63) == 0 &&
-            std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() > deadline_s)
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - t0)
+                    .count() > deadline_s)
             return false;
         const double v = std::min(std::max(std::round(want[j]), lb[j]), ub[j]);
-        const double alt = want[j] >= v ? std::min(v + 1, ub[j]) : std::max(v - 1, lb[j]);
+        const double alt =
+            want[j] >= v ? std::min(v + 1, ub[j]) : std::max(v - 1, lb[j]);
         bool ok = false;
         for (int attempt = 0; attempt < 2 && !ok; ++attempt) {
             const double val = attempt == 0 ? v : alt;

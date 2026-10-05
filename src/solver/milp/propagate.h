@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// Domain propagation (activity-based bound tightening) for MILP: for a row
-// l <= sum_j a_j x_j <= u, the minimum and maximum activities over the
-// current bounds give, for every x_j in the row,
-//     a_j > 0:  x_j <= (u - minact_{-j}) / a_j,   x_j >= (l - maxact_{-j}) / a_j
-//     a_j < 0:  the same with the inequalities reversed,
-// where minact_{-j} is the minimum activity of the other terms. Integer
-// bounds are rounded. A row whose minimum activity exceeds u (or maximum is
-// below l) proves the domain empty.
+// Domain propagation (activity-based bound tightening): for a row
+// l <= sum_j a_j x_j <= u, the min and max activities over the current bounds
+// give, for every x_j in the row,
+//     a_j > 0:  x_j <= (u - minact_{-j}) / a_j,   x_j >= (l - maxact_{-j}) /
+//     a_j a_j < 0:  the same with the inequalities reversed,
+// where minact_{-j} is the minimum activity of the other terms. Integer bounds
+// are rounded. A row whose minimum activity exceeds u (or maximum is below l)
+// proves the domain empty.
 //
-// Rows are processed from a queue: initially all rows (or the rows of the
-// columns whose bounds changed, the node / probing case), then the rows of
-// every column a row tightened, until nothing changes or the work budget is
-// spent. Activities are recomputed per visit (O(row length)); infinite
-// contributions are counted so a row with one infinite term can still
-// tighten that term's variable.
+// Rows come from a queue: initially all rows (or the rows of the columns whose
+// bounds changed, the node / probing case), then the rows of every column a row
+// tightened, until nothing changes or the work budget is spent. Activities are
+// recomputed per visit (O(row length)); infinite contributions are counted so a
+// row with one infinite term can still tighten that term's variable.
 #pragma once
 
 #include "solver/milp/milp_model.h"
@@ -30,7 +29,9 @@ namespace milp {
 struct Trail {
     std::vector<int> col;
     std::vector<double> old_lb, old_ub;
-    size_t mark() const { return col.size(); }
+    size_t
+    mark() const
+    { return col.size(); }
     void
     record(int j, double l, double u)
     {
@@ -57,7 +58,8 @@ class Propagator {
     {
         const size_t n = p.cols();
         isint_.assign(n, 0);
-        for (size_t j = 0; j < n; ++j) isint_[j] = is_int(p, j) ? 1 : 0;
+        for (size_t j = 0; j < n; ++j)
+            isint_[j] = is_int(p, j) ? 1 : 0;
         inq_.assign(p.rows(), 0);
     }
 
@@ -67,17 +69,21 @@ class Propagator {
     // Returns false when the domain is proven empty (the bounds may then be
     // partly tightened: undo through the trail).
     bool
-    propagate(std::vector<double> &lb, std::vector<double> &ub, const std::vector<int> *changed = nullptr,
-        Trail *trail = nullptr, double work_factor = 10.0)
+    propagate(std::vector<double> &lb, std::vector<double> &ub,
+        const std::vector<int> *changed = nullptr, Trail *trail = nullptr,
+        double work_factor = 10.0)
     {
         const size_t m = p_.rows();
         queue_.clear();
         if (changed) {
-            for (int j : *changed) push_rows_of(j);
+            for (int j : *changed)
+                push_rows_of(j);
         } else {
-            for (size_t i = 0; i < m; ++i) push_row(static_cast<int>(i));
+            for (size_t i = 0; i < m; ++i)
+                push_row(static_cast<int>(i));
         }
-        const double budget = work_factor * static_cast<double>(p_.A.nnz() + m) + 1000;
+        const double budget =
+            work_factor * static_cast<double>(p_.A.nnz() + m) + 1000;
         double work = 0;
         size_t head = 0;
         bool feasible = true;
@@ -92,12 +98,15 @@ class Propagator {
             }
             if (work > budget) break;
         }
-        for (size_t k = head; k < queue_.size(); ++k) inq_[queue_[k]] = 0;
+        for (size_t k = head; k < queue_.size(); ++k)
+            inq_[queue_[k]] = 0;
         queue_.clear();
         return feasible;
     }
 
-    const HostMatrix &transposed() const { return At_; }
+    const HostMatrix &
+    transposed() const
+    { return At_; }
 
   private:
     const LpProblem &p_;
@@ -105,7 +114,9 @@ class Propagator {
     std::vector<uint8_t> isint_, inq_;
     std::vector<int> queue_;
 
-    static bool fin(double v) { return std::abs(v) < 1e20; }
+    static bool
+    fin(double v)
+    { return std::abs(v) < 1e20; }
 
     void
     push_row(int i)
@@ -118,7 +129,8 @@ class Propagator {
     void
     push_rows_of(int j)
     {
-        for (auto k = At_.row_ptr()[j]; k < At_.row_ptr()[j + 1]; ++k) push_row(At_.col_ind()[k]);
+        for (auto k = At_.row_ptr()[j]; k < At_.row_ptr()[j + 1]; ++k)
+            push_row(At_.col_ind()[k]);
     }
 
     // Tightens the bounds of the columns of row i; false if infeasible.
@@ -135,17 +147,31 @@ class Propagator {
             const double a = va[k];
             const int j = ci[k];
             if (a > 0) {
-                if (fin(lb[j])) minact += a * lb[j]; else ++ninf_min;
-                if (fin(ub[j])) maxact += a * ub[j]; else ++ninf_max;
+                if (fin(lb[j]))
+                    minact += a * lb[j];
+                else
+                    ++ninf_min;
+                if (fin(ub[j]))
+                    maxact += a * ub[j];
+                else
+                    ++ninf_max;
             } else if (a < 0) {
-                if (fin(ub[j])) minact += a * ub[j]; else ++ninf_min;
-                if (fin(lb[j])) maxact += a * lb[j]; else ++ninf_max;
+                if (fin(ub[j]))
+                    minact += a * ub[j];
+                else
+                    ++ninf_min;
+                if (fin(lb[j]))
+                    maxact += a * lb[j];
+                else
+                    ++ninf_max;
             }
         }
-        const double tol_u = 1e-6 * (1 + std::abs(u)), tol_l = 1e-6 * (1 + std::abs(l));
+        const double tol_u = 1e-6 * (1 + std::abs(u)),
+                     tol_l = 1e-6 * (1 + std::abs(l));
         if (fin(u) && ninf_min == 0 && minact > u + tol_u) return false;
         if (fin(l) && ninf_max == 0 && maxact < l - tol_l) return false;
-        const bool use_u = fin(u) && ninf_min <= 1, use_l = fin(l) && ninf_max <= 1;
+        const bool use_u = fin(u) && ninf_min <= 1,
+                   use_l = fin(l) && ninf_max <= 1;
         if (!use_u && !use_l) return true;
         for (auto k = b; k < e; ++k) {
             const double a = va[k];
@@ -157,33 +183,50 @@ class Propagator {
                 double rest;
                 bool ok = true;
                 const double own = a > 0 ? lb[j] : ub[j];
-                if (ninf_min == 0) rest = minact - a * own;
-                else if (!fin(own)) rest = minact; // j is the one infinite term
-                else ok = false;
+                if (ninf_min == 0)
+                    rest = minact - a * own;
+                else if (!fin(own))
+                    rest = minact; // j is the one infinite term
+                else
+                    ok = false;
                 if (ok) {
                     const double v = (u - rest) / a;
-                    if (a > 0) nub = std::min(nub, v); else nlb = std::max(nlb, v);
+                    if (a > 0)
+                        nub = std::min(nub, v);
+                    else
+                        nlb = std::max(nlb, v);
                 }
             }
             if (use_l) {
                 double rest;
                 bool ok = true;
                 const double own = a > 0 ? ub[j] : lb[j];
-                if (ninf_max == 0) rest = maxact - a * own;
-                else if (!fin(own)) rest = maxact;
-                else ok = false;
+                if (ninf_max == 0)
+                    rest = maxact - a * own;
+                else if (!fin(own))
+                    rest = maxact;
+                else
+                    ok = false;
                 if (ok) {
                     const double v = (l - rest) / a;
-                    if (a > 0) nlb = std::max(nlb, v); else nub = std::min(nub, v);
+                    if (a > 0)
+                        nlb = std::max(nlb, v);
+                    else
+                        nub = std::min(nub, v);
                 }
             }
             if (isint_[j]) {
                 nlb = std::ceil(nlb - 1e-6);
                 nub = std::floor(nub + 1e-6);
             }
-            const double range = fin(lb[j]) && fin(ub[j]) ? ub[j] - lb[j] : 1e300;
+            const double range =
+                fin(lb[j]) && fin(ub[j]) ? ub[j] - lb[j] : 1e300;
             // continuous bounds move only by a meaningful amount (no creeping)
-            const double step = isint_[j] ? 0.5 : 1e-3 * std::max(1.0, std::min(range, std::abs(nlb) + std::abs(nub)));
+            const double step =
+                isint_[j]
+                    ? 0.5
+                    : 1e-3 * std::max(1.0, std::min(range,
+                                               std::abs(nlb) + std::abs(nub)));
             const bool up_lb = nlb > lb[j] + step && std::abs(nlb) < 1e15;
             const bool up_ub = nub < ub[j] - step && std::abs(nub) < 1e15;
             if (!up_lb && !up_ub) continue;

@@ -14,7 +14,8 @@
 //     --check-every 64
 //     --no-scaling
 //     --profile               HPR-QP: time each step of an iteration and stop
-//     --ipm-max-flops F       IPM: give up when a KKT factorization needs more (1e12)
+//     --ipm-max-flops F       IPM: give up when a KKT factorization needs more
+//     (1e12)
 //     --verbose 0|1|2
 //     --out results.csv       also append the lines to this file
 //     --only NAME[,NAME...]   solve only these problems of a directory
@@ -69,11 +70,12 @@ export_axqp(const QpProblem &p, const std::string &path)
     std::ofstream f(path, std::ios::binary);
     if (!f) throw std::runtime_error("cannot write " + path);
     auto put = [&](const void *d, size_t bytes) {
-        f.write(static_cast<const char *>(d), static_cast<std::streamsize>(bytes));
+        f.write(
+            static_cast<const char *>(d), static_cast<std::streamsize>(bytes));
     };
     const int32_t version = 1, maximize = p.lp.maximize ? 1 : 0;
-    const int64_t dims[4] = {int64_t(p.cols()), int64_t(p.rows()), int64_t(p.lp.A.nnz()),
-        int64_t(p.Q.nnz())};
+    const int64_t dims[4] = {int64_t(p.cols()), int64_t(p.rows()),
+        int64_t(p.lp.A.nnz()), int64_t(p.Q.nnz())};
     put("AXQP", 4);
     put(&version, 4);
     put(dims, sizeof dims);
@@ -113,7 +115,8 @@ import_axqp(const std::string &path)
     int64_t dims[4];
     QpProblem p;
     get(magic, 4);
-    if (std::string(magic, 4) != "AXQP") throw std::runtime_error(path + ": not an .axqp file");
+    if (std::string(magic, 4) != "AXQP")
+        throw std::runtime_error(path + ": not an .axqp file");
     get(&version, 4);
     get(dims, sizeof dims);
     get(&p.lp.offset, 8);
@@ -180,10 +183,12 @@ run(int argc, char **argv, const QpComm &comm)
 {
     const bool root = comm.rank() == 0; // prints and writes files
     if (argc < 2) {
-        std::fprintf(stderr, "usage: %s <file.qps|dir> [--device cpu|gpu] [--method hprqp|pdhcg] "
-                             "[--tol e] [--time-limit s] [--max-iter n] [--check-every k] "
-                             "[--no-scaling] [--verbose v] [--out file.csv] [--only a,b] "
-                             "[--export dir] [--save-sol dir]\n",
+        std::fprintf(stderr,
+            "usage: %s <file.qps|dir> [--device cpu|gpu] [--method "
+            "hprqp|pdhcg] "
+            "[--tol e] [--time-limit s] [--max-iter n] [--check-every k] "
+            "[--no-scaling] [--verbose v] [--out file.csv] [--only a,b] "
+            "[--export dir] [--save-sol dir]\n",
             argv[0]);
         return 2;
     }
@@ -197,36 +202,51 @@ run(int argc, char **argv, const QpComm &comm)
     for (int i = 2; i < argc; ++i) {
         const std::string a = argv[i];
         auto next = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value after " + a);
+            if (i + 1 >= argc)
+                throw std::runtime_error("missing value after " + a);
             return argv[++i];
         };
         if (a == "--device") {
             const std::string d = next();
             opt.auto_device = d == "auto";
             opt.use_gpu = d == "gpu" || (opt.auto_device && qp_gpu_available());
-        } else if (a == "--gpu-min-work") opt.gpu_min_work = std::stoul(next());
+        } else if (a == "--gpu-min-work")
+            opt.gpu_min_work = std::stoul(next());
         else if (a == "--method") {
             const std::string m = next();
-            opt.method = m == "pdhcg" ? QpMethod::Pdhcg
+            opt.method = m == "pdhcg"  ? QpMethod::Pdhcg
                          : m == "ipm"  ? QpMethod::Ipm
                          : m == "auto" ? QpMethod::Auto
                                        : QpMethod::HprQp;
-        } else if (a == "--tol") opt.tol = std::stod(next());
-        else if (a == "--time-limit") opt.time_limit = std::stod(next());
-        else if (a == "--max-iter") opt.max_iterations = std::stol(next());
-        else if (a == "--check-every") opt.check_every = std::stoi(next());
-        else if (a == "--no-scaling") opt.scaling = false;
-        else if (a == "--profile") opt.profile = true;
-        else if (a == "--hpr-free") opt.hpr_free_variant = std::stoi(next());
-        else if (a == "--ipm-max-flops") opt.ipm_max_flops = std::stod(next());
-        else if (a == "--verbose") opt.verbose = std::stoi(next());
-        else if (a == "--out") out_path = next();
-        else if (a == "--export") export_dir = next();
-        else if (a == "--save-sol") sol_dir = next();
+        } else if (a == "--tol")
+            opt.tol = std::stod(next());
+        else if (a == "--time-limit")
+            opt.time_limit = std::stod(next());
+        else if (a == "--max-iter")
+            opt.max_iterations = std::stol(next());
+        else if (a == "--check-every")
+            opt.check_every = std::stoi(next());
+        else if (a == "--no-scaling")
+            opt.scaling = false;
+        else if (a == "--profile")
+            opt.profile = true;
+        else if (a == "--hpr-free")
+            opt.hpr_free_variant = std::stoi(next());
+        else if (a == "--ipm-max-flops")
+            opt.ipm_max_flops = std::stod(next());
+        else if (a == "--verbose")
+            opt.verbose = std::stoi(next());
+        else if (a == "--out")
+            out_path = next();
+        else if (a == "--export")
+            export_dir = next();
+        else if (a == "--save-sol")
+            sol_dir = next();
         else if (a == "--only") {
             std::stringstream ss(next());
             std::string t;
-            while (std::getline(ss, t, ',')) only.insert(t);
+            while (std::getline(ss, t, ','))
+                only.insert(t);
         } else {
             std::fprintf(stderr, "unknown option %s\n", a.c_str());
             return 2;
@@ -238,8 +258,9 @@ run(int argc, char **argv, const QpComm &comm)
     if (fs::is_directory(target)) {
         for (auto &e : fs::directory_iterator(target)) {
             const std::string ext = e.path().extension().string();
-            if (ext == ".SIF" || ext == ".sif" || ext == ".QPS" || ext == ".qps" ||
-                ext == ".mps" || ext == ".MPS" || ext == ".axqp")
+            if (ext == ".SIF" || ext == ".sif" || ext == ".QPS" ||
+                ext == ".qps" || ext == ".mps" || ext == ".MPS" ||
+                ext == ".axqp")
                 if (only.empty() || only.count(e.path().stem().string()))
                     files.push_back(e.path());
         }
@@ -252,8 +273,11 @@ run(int argc, char **argv, const QpComm &comm)
         fs::create_directories(export_dir);
         for (const auto &f : files) {
             const QpProblem p = read_problem(f);
-            export_axqp(p, (fs::path(export_dir) / (f.stem().string() + ".axqp")).string());
-            std::printf("exported %s (n %zu, m %zu)\n", f.stem().string().c_str(), p.cols(), p.rows());
+            export_axqp(
+                p, (fs::path(export_dir) / (f.stem().string() + ".axqp"))
+                       .string());
+            std::printf("exported %s (n %zu, m %zu)\n",
+                f.stem().string().c_str(), p.cols(), p.rows());
         }
         return 0;
     }
@@ -261,24 +285,31 @@ run(int argc, char **argv, const QpComm &comm)
 #if defined(AXOS_ENABLE_CUDA)
     if (opt.use_gpu) {
         int count = 0;
-        if (comm.distributed() && cudaGetDeviceCount(&count) == cudaSuccess && count > 0)
-            cudaSetDevice(comm.local_rank() % count); // before any other CUDA call
+        if (comm.distributed() && cudaGetDeviceCount(&count) == cudaSuccess &&
+            count > 0)
+            cudaSetDevice(
+                comm.local_rank() % count); // before any other CUDA call
         const auto t0 = std::chrono::steady_clock::now();
         qp::CudaBackend warm; // compiles the kernels (NVRTC) once
         if (root || opt.verbose)
-            std::fprintf(stderr, "# rank %d of %d: %s, kernels compiled in %.2f s\n", comm.rank(),
-                comm.size(), warm.name().c_str(),
-                std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
+            std::fprintf(stderr,
+                "# rank %d of %d: %s, kernels compiled in %.2f s\n",
+                comm.rank(), comm.size(), warm.name().c_str(),
+                std::chrono::duration<double>(
+                    std::chrono::steady_clock::now() - t0)
+                    .count());
     }
 #endif
-    std::string method_s = opt.method == QpMethod::Pdhcg ? "pdhcg"
+    std::string method_s = opt.method == QpMethod::Pdhcg  ? "pdhcg"
                            : opt.method == QpMethod::Ipm  ? "ipm"
                            : opt.method == QpMethod::Auto ? "auto"
                                                           : "hpr-qp";
-    if (comm.distributed()) method_s = "hpr-qp-mpi" + std::to_string(comm.size());
+    if (comm.distributed())
+        method_s = "hpr-qp-mpi" + std::to_string(comm.size());
     const char *method = method_s.c_str();
     const std::string header =
-        "problem,n,m,nnzA,nnzQ,solver,device,tol,status,iterations,seconds,setup_seconds,"
+        "problem,n,m,nnzA,nnzQ,solver,device,tol,status,iterations,seconds,"
+        "setup_seconds,"
         "objective,rel_primal,rel_dual,rel_gap,read_seconds";
     if (root) std::printf("%s\n", header.c_str());
     std::ofstream out;
@@ -293,13 +324,16 @@ run(int argc, char **argv, const QpComm &comm)
         try {
             const auto t0 = std::chrono::steady_clock::now();
             QpProblem p = read_problem(f);
-            const double read_s =
-                std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+            const double read_s = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - t0)
+                                      .count();
             QpSolution s = solve_qp(p, opt);
             if (!sol_dir.empty() && root) {
                 fs::create_directories(sol_dir);
-                std::ofstream f((fs::path(sol_dir) / (name + ".sol")).string(), std::ios::binary);
-                const int64_t dims[2] = {int64_t(s.x.size()), int64_t(s.y.size())};
+                std::ofstream f((fs::path(sol_dir) / (name + ".sol")).string(),
+                    std::ios::binary);
+                const int64_t dims[2] = {
+                    int64_t(s.x.size()), int64_t(s.y.size())};
                 f.write(reinterpret_cast<const char *>(dims), sizeof dims);
                 f.write(reinterpret_cast<const char *>(s.x.data()),
                     static_cast<std::streamsize>(s.x.size() * sizeof(double)));
@@ -307,19 +341,23 @@ run(int argc, char **argv, const QpComm &comm)
                     static_cast<std::streamsize>(s.y.size() * sizeof(double)));
             }
             std::snprintf(line, sizeof line,
-                "%s,%zu,%zu,%zu,%zu,axos-%s,%s,%.0e,%s,%ld,%.6f,%.6f,%.12e,%.3e,%.3e,%.3e,%.3f",
-                name.c_str(), p.cols(), p.rows(), p.lp.A.nnz(), p.Q.nnz(), method,
-                s.device.rfind("gpu", 0) == 0 ? "gpu" : "cpu", opt.tol, status_name(s.status).c_str(),
-                s.iterations, s.seconds, s.setup_seconds,
-                p.lp.maximize ? -s.primal_objective : s.primal_objective, s.rel_primal,
-                s.rel_dual, s.rel_gap, read_s);
+                "%s,%zu,%zu,%zu,%zu,axos-%s,%s,%.0e,%s,%ld,%.6f,%.6f,%.12e,%."
+                "3e,%.3e,%.3e,%.3f",
+                name.c_str(), p.cols(), p.rows(), p.lp.A.nnz(), p.Q.nnz(),
+                method, s.device.rfind("gpu", 0) == 0 ? "gpu" : "cpu", opt.tol,
+                status_name(s.status).c_str(), s.iterations, s.seconds,
+                s.setup_seconds,
+                p.lp.maximize ? -s.primal_objective : s.primal_objective,
+                s.rel_primal, s.rel_dual, s.rel_gap, read_s);
         } catch (const std::exception &e) {
-            if (comm.distributed()) throw; // the other ranks may be waiting: MPI_Abort
+            if (comm.distributed())
+                throw; // the other ranks may be waiting: MPI_Abort
             std::string msg = e.what();
             std::replace(msg.begin(), msg.end(), ',', ';');
             std::replace(msg.begin(), msg.end(), '\n', ' ');
-            std::snprintf(line, sizeof line, "%s,,,,,axos-%s,%s,%.0e,error,,,,,,,,%s",
-                name.c_str(), method, opt.use_gpu ? "gpu" : "cpu", opt.tol,
+            std::snprintf(line, sizeof line,
+                "%s,,,,,axos-%s,%s,%.0e,error,,,,,,,,%s", name.c_str(), method,
+                opt.use_gpu ? "gpu" : "cpu", opt.tol,
                 msg.substr(0, 400).c_str());
         }
         if (!root) continue;

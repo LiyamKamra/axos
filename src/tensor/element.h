@@ -25,8 +25,9 @@ struct half_fallback {
 
     half_fallback() = default;
     half_fallback(float f) : bits(from_float(f)) {}
-    template <class S, std::enable_if_t<std::is_arithmetic_v<S> &&
-                                            !std::is_same_v<S, float>, int> = 0>
+    template <class S,
+        std::enable_if_t<std::is_arithmetic_v<S> && !std::is_same_v<S, float>,
+            int> = 0>
     half_fallback(S v) : bits(from_float(static_cast<float>(v)))
     {
     }
@@ -73,7 +74,8 @@ struct half_fallback {
     static float
     to_float(std::uint16_t h)
     {
-        const std::uint32_t sign = static_cast<std::uint32_t>(h & 0x8000u) << 16;
+        const std::uint32_t sign = static_cast<std::uint32_t>(h & 0x8000u)
+                                   << 16;
         std::uint32_t e = (h >> 10) & 0x1fu, m = h & 0x3ffu, x;
         if (e == 0x1f) {
             x = sign | 0x7f800000u | (m << 13);
@@ -94,38 +96,30 @@ struct half_fallback {
         return f;
     }
 
-#define AXOS_HALF_OP(op)                                                       \
-    friend half_fallback operator op(half_fallback a, half_fallback b)         \
-    {                                                                          \
-        return half_fallback(float(a) op float(b));                            \
-    }                                                                          \
-    template <class S, std::enable_if_t<std::is_arithmetic_v<S>, int> = 0>     \
-    friend half_fallback operator op(half_fallback a, S b)                     \
-    {                                                                          \
-        return half_fallback(float(a) op static_cast<float>(b));               \
-    }                                                                          \
-    template <class S, std::enable_if_t<std::is_arithmetic_v<S>, int> = 0>     \
-    friend half_fallback operator op(S a, half_fallback b)                     \
-    {                                                                          \
-        return half_fallback(static_cast<float>(a) op float(b));               \
-    }                                                                          \
-    half_fallback &operator op##=(half_fallback b)                             \
-    {                                                                          \
-        return *this = *this op b;                                             \
-    }
+#define AXOS_HALF_OP(op) \
+    friend half_fallback operator op(half_fallback a, half_fallback b) \
+    { return half_fallback(float(a) op float(b)); } \
+    template <class S, std::enable_if_t<std::is_arithmetic_v<S>, int> = 0> \
+    friend half_fallback operator op(half_fallback a, S b) \
+    { return half_fallback(float(a) op static_cast<float>(b)); } \
+    template <class S, std::enable_if_t<std::is_arithmetic_v<S>, int> = 0> \
+    friend half_fallback operator op(S a, half_fallback b) \
+    { return half_fallback(static_cast<float>(a) op float(b)); } \
+    half_fallback &operator op## = (half_fallback b) \
+    { return *this = *this op b; }
     AXOS_HALF_OP(+)
     AXOS_HALF_OP(-)
     AXOS_HALF_OP(*)
     AXOS_HALF_OP(/)
 #undef AXOS_HALF_OP
 
-    half_fallback operator-() const { return from_bits(bits ^ 0x8000u); }
+    half_fallback
+    operator-() const
+    { return from_bits(bits ^ 0x8000u); }
 
-#define AXOS_HALF_CMP(op)                                                      \
-    friend bool operator op(half_fallback a, half_fallback b)                  \
-    {                                                                          \
-        return float(a) op float(b);                                           \
-    }
+#define AXOS_HALF_CMP(op) \
+    friend bool operator op(half_fallback a, half_fallback b) \
+    { return float(a) op float(b); }
     AXOS_HALF_CMP(==)
     AXOS_HALF_CMP(!=)
     AXOS_HALF_CMP(<)
@@ -176,8 +170,12 @@ template <class T>
 inline constexpr bool is_tensor_element_v = is_tensor_element<T>::value;
 
 // Real type underlying T (complex<R> -> R, otherwise T).
-template <class T> struct real_type { using type = T; };
-template <class R> struct real_type<std::complex<R>> { using type = R; };
+template <class T> struct real_type {
+    using type = T;
+};
+template <class R> struct real_type<std::complex<R>> {
+    using type = R;
+};
 template <class T> using real_type_t = typename real_type<T>::type;
 
 // Floating-point types the dense linear algebra works on.

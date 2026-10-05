@@ -70,9 +70,7 @@ make_random(size_t m, size_t n, double density, unsigned seed)
 template <typename T>
 static double
 tol()
-{
-    return std::is_same_v<real_of_t<T>, float> ? 2e-4 : 1e-11;
-}
+{ return std::is_same_v<real_of_t<T>, float> ? 2e-4 : 1e-11; }
 
 template <typename T, typename Idx, template <typename> class S>
 static EMat<T>
@@ -121,8 +119,8 @@ template <typename T, template <typename> class S>
 static tensorET<2, T, S<T>>
 to_dev2(const EMat<T> &M)
 {
-    tensorET<2, T> h({static_cast<size_t>(M.rows()),
-        static_cast<size_t>(M.cols())}, T(0));
+    tensorET<2, T> h(
+        {static_cast<size_t>(M.rows()), static_cast<size_t>(M.cols())}, T(0));
     for (long i = 0; i < M.rows(); ++i)
         for (long j = 0; j < M.cols(); ++j)
             h.data[i * M.cols() + j] = M(i, j);
@@ -242,9 +240,12 @@ test_products(const char *cat, const char *tag)
         std::string sh = std::to_string(m) + "x" + std::to_string(n);
 
         EVec<T> x(n), y0(m), z(m), w(n);
-        for (size_t i = 0; i < n; ++i) x(i) = rand_val<T>(g);
-        for (size_t i = 0; i < m; ++i) y0(i) = rand_val<T>(g);
-        for (size_t i = 0; i < m; ++i) z(i) = rand_val<T>(g);
+        for (size_t i = 0; i < n; ++i)
+            x(i) = rand_val<T>(g);
+        for (size_t i = 0; i < m; ++i)
+            y0(i) = rand_val<T>(g);
+        for (size_t i = 0; i < m; ++i)
+            z(i) = rand_val<T>(g);
         const T alpha = T(1.5), beta = T(-0.5);
 
         auto dx = to_dev<T, S>(x);
@@ -279,9 +280,11 @@ test_products(const char *cat, const char *tag)
         const size_t k = 5;
         EMat<T> X(n, k), Y0(m, k);
         for (size_t i = 0; i < n; ++i)
-            for (size_t c = 0; c < k; ++c) X(i, c) = rand_val<T>(g);
+            for (size_t c = 0; c < k; ++c)
+                X(i, c) = rand_val<T>(g);
         for (size_t i = 0; i < m; ++i)
-            for (size_t c = 0; c < k; ++c) Y0(i, c) = rand_val<T>(g);
+            for (size_t c = 0; c < k; ++c)
+                Y0(i, c) = rand_val<T>(g);
         auto dX = to_dev2<T, S>(X);
         auto dY = to_dev2<T, S>(Y0);
         spmm(A, dX, dY, alpha, beta);
@@ -299,11 +302,15 @@ test_products(const char *cat, const char *tag)
         std::mt19937 gg(9);
         std::uniform_real_distribution<double> u(0.5, 2);
         std::vector<R> rs(m), cs(n);
-        for (auto &v : rs) v = static_cast<R>(u(gg));
-        for (auto &v : cs) v = static_cast<R>(u(gg));
+        for (auto &v : rs)
+            v = static_cast<R>(u(gg));
+        for (auto &v : cs)
+            v = static_cast<R>(u(gg));
         tensorET<1, R> hr({m}, R(0)), hc({n}, R(0));
-        for (size_t i = 0; i < m; ++i) hr.data[i] = rs[i];
-        for (size_t j = 0; j < n; ++j) hc.data[j] = cs[j];
+        for (size_t i = 0; i < m; ++i)
+            hr.data[i] = rs[i];
+        for (size_t j = 0; j < n; ++j)
+            hc.data[j] = cs[j];
         tensorET<1, R, S<R>> dr(hr), dc(hc);
 
         // norms of the unscaled matrix
@@ -317,23 +324,25 @@ test_products(const char *cat, const char *tag)
                 double ref = 0;
                 for (size_t j = 0; j < n; ++j) {
                     double a = std::abs(r.dense(i, j));
-                    ref = p == Norm::L1    ? ref + a
-                          : p == Norm::L2  ? ref + a * a
-                                           : std::max(ref, a);
+                    ref = p == Norm::L1   ? ref + a
+                          : p == Norm::L2 ? ref + a * a
+                                          : std::max(ref, a);
                 }
                 if (p == Norm::L2) ref = std::sqrt(ref);
-                worst = std::max(worst, std::abs(hnr.data[i] - ref) / (1 + ref));
+                worst =
+                    std::max(worst, std::abs(hnr.data[i] - ref) / (1 + ref));
             }
             for (size_t j = 0; j < n; ++j) {
                 double ref = 0;
                 for (size_t i = 0; i < m; ++i) {
                     double a = std::abs(r.dense(i, j));
-                    ref = p == Norm::L1    ? ref + a
-                          : p == Norm::L2  ? ref + a * a
-                                           : std::max(ref, a);
+                    ref = p == Norm::L1   ? ref + a
+                          : p == Norm::L2 ? ref + a * a
+                                          : std::max(ref, a);
                 }
                 if (p == Norm::L2) ref = std::sqrt(ref);
-                worst = std::max(worst, std::abs(hnc.data[j] - ref) / (1 + ref));
+                worst =
+                    std::max(worst, std::abs(hnc.data[j] - ref) / (1 + ref));
             }
         }
         tlog(cat, (t + " row/col norms L1,L2,Linf").c_str(), worst < tol<T>(),
@@ -356,8 +365,9 @@ static void
 test_transpose_spgemm(const char *cat, const char *tag)
 {
     std::string t = tag;
-    for (auto shape : {std::pair<size_t, size_t>{35, 20},
-             std::pair<size_t, size_t>{1, 15}, std::pair<size_t, size_t>{15, 1}}) {
+    for (auto shape :
+        {std::pair<size_t, size_t>{35, 20}, std::pair<size_t, size_t>{1, 15},
+            std::pair<size_t, size_t>{15, 1}}) {
         auto r = make_random<T, Idx>(shape.first, shape.second, 0.2, 31);
         Csr<T, Idx, S> A(r.csr);
         Csr<T, Idx, S> At = A.transpose();
@@ -378,8 +388,8 @@ test_transpose_spgemm(const char *cat, const char *tag)
         tensorET<1, R, S<R>> two(h2);
         scale_rows_cols(A, two.data, static_cast<const R *>(nullptr));
         EMat<T> ref = r.dense * T(2);
-        double e = rel_err<T>(dense_of(A.transposed()),
-            EMat<T>(ref.transpose()));
+        double e =
+            rel_err<T>(dense_of(A.transposed()), EMat<T>(ref.transpose()));
         tlog(cat, (t + " transposed() refreshes after value write").c_str(),
             e < tol<T>(), e, 0);
         auto view = A.values_view();
@@ -387,7 +397,9 @@ test_transpose_spgemm(const char *cat, const char *tag)
             0);
     }
 
-    struct Case { size_t m, k, n; };
+    struct Case {
+        size_t m, k, n;
+    };
     for (Case c : {Case{25, 18, 22}, Case{1, 10, 1}, Case{12, 12, 12},
              Case{20, 15, 0 + 9}}) {
         auto ra = make_random<T, Idx>(c.m, c.k, 0.2, 41);
@@ -411,7 +423,8 @@ test_transpose_spgemm(const char *cat, const char *tag)
         tensorET<1, R> hd({n}, R(0));
         std::mt19937 g(2);
         std::uniform_real_distribution<double> u(0.1, 3);
-        for (size_t j = 0; j < n; ++j) hd.data[j] = static_cast<R>(u(g));
+        for (size_t j = 0; j < n; ++j)
+            hd.data[j] = static_cast<R>(u(g));
         tensorET<1, R, S<R>> dd(hd);
         Csr<T, Idx, S> N = AdAt(A, dd.data);
         EMat<T> ref = r.dense;
@@ -449,10 +462,12 @@ make_kkt(size_t n, size_t m, double density, unsigned seed)
     std::mt19937 g(seed + 1);
     std::uniform_real_distribution<double> u(0.5, 3);
     EMat<T> K = EMat<T>::Zero(n + m, n + m);
-    for (size_t i = 0; i < n; ++i) K(i, i) = T(u(g));
+    for (size_t i = 0; i < n; ++i)
+        K(i, i) = T(u(g));
     K.block(n, 0, m, n) = Ac.dense;
     K.block(0, n, n, m) = Ac.dense.transpose();
-    for (size_t i = 0; i < m; ++i) K(n + i, n + i) = T(-1e-2);
+    for (size_t i = 0; i < m; ++i)
+        K(n + i, n + i) = T(-1e-2);
     CooBuilder<T, Idx> b(n + m, n + m);
     for (size_t i = 0; i < n + m; ++i)
         for (size_t j = 0; j < n + m; ++j)
@@ -468,7 +483,8 @@ solve_residual(SparseLdlt<T, Idx, S> &ldl, const Csr<T, Idx, S> &A,
     const size_t n = A.rows();
     std::mt19937 g(seed);
     EVec<T> b(n);
-    for (size_t i = 0; i < n; ++i) b(i) = rand_val<T>(g);
+    for (size_t i = 0; i < n; ++i)
+        b(i) = rand_val<T>(g);
     auto db = to_dev<T, S>(b);
     auto dx = to_dev<T, S>(EVec<T>::Zero(n));
     ldl.solve(db, dx);
@@ -678,21 +694,28 @@ test_amd()
     tlog(cat, "amd returns a valid permutation (random SPD)", ok, 0, 0);
     {
         CooBuilder<double> b(50, 50); // diagonal: no edges
-        for (size_t i = 0; i < 50; ++i) b.add(i, i, 1.0);
+        for (size_t i = 0; i < 50; ++i)
+            b.add(i, i, 1.0);
         auto A = b.build();
         auto p = amd_order<int32_t>(50, A.row_ptr(), A.col_ind());
         tlog(cat, "amd on a diagonal matrix", is_permutation_of(p, 50), 0, 0);
         std::vector<int32_t> none;
-        tlog(cat, "amd on n = 0", amd_order<int32_t>(0, A.row_ptr(), A.col_ind()).empty(), 0, 0);
+        tlog(cat, "amd on n = 0",
+            amd_order<int32_t>(0, A.row_ptr(), A.col_ind()).empty(), 0, 0);
     }
-    {   // arrow matrix: one dense row/column that must be ordered last
+    { // arrow matrix: one dense row/column that must be ordered last
         const size_t n = 400;
         CooBuilder<double> b(n, n);
-        for (size_t i = 0; i < n; ++i) b.add(i, i, 4.0);
-        for (size_t i = 1; i < n; ++i) { b.add(0, i, 1.0); b.add(i, 0, 1.0); }
+        for (size_t i = 0; i < n; ++i)
+            b.add(i, i, 4.0);
+        for (size_t i = 1; i < n; ++i) {
+            b.add(0, i, 1.0);
+            b.add(i, 0, 1.0);
+        }
         auto A = b.build();
         auto p = amd_order<int32_t>(n, A.row_ptr(), A.col_ind());
-        size_t nat = fill_of(A, Ordering::Natural), amd = fill_of(A, Ordering::MinDegree);
+        size_t nat = fill_of(A, Ordering::Natural),
+               amd = fill_of(A, Ordering::MinDegree);
         tlog(cat, "amd orders the dense row of an arrow matrix last",
             is_permutation_of(p, n) && p.back() == 0 && amd < nat, 0, 0,
             (std::to_string(nat) + " -> " + std::to_string(amd)).c_str());
@@ -705,14 +728,19 @@ test_amd()
         size_t amd = fill_of(A, Ordering::MinDegree);
         size_t exact = g <= 20 ? fill_of(A, Ordering::ExactMinDegree) : amd;
         std::string det = "natural " + std::to_string(nat) + " amd " +
-                          std::to_string(amd) + " exact " + std::to_string(exact);
-        tlog(cat, ("amd fill on " + std::to_string(g) + "x" + std::to_string(g) + " grid").c_str(),
+                          std::to_string(amd) + " exact " +
+                          std::to_string(exact);
+        tlog(cat,
+            ("amd fill on " + std::to_string(g) + "x" + std::to_string(g) +
+                " grid")
+                .c_str(),
             amd < nat / 2 && amd <= exact * 1.35, 0, 0, det.c_str());
     }
     // the factorization with the AMD ordering still solves accurately
     {
         auto A = grid_laplacian(40);
-        SparseLdlt<double, int32_t, Cpu::HostStorage> s(Symmetry::SPD, Ordering::MinDegree);
+        SparseLdlt<double, int32_t, Cpu::HostStorage> s(
+            Symmetry::SPD, Ordering::MinDegree);
         s.analyze(A);
         bool f = s.factorize(A);
         const size_t n = A.rows();
@@ -721,7 +749,8 @@ test_amd()
         tensorET<1, double> r({n}, 0.0);
         spmv(A, x, r);
         double e = 0;
-        for (size_t i = 0; i < n; ++i) e = std::max(e, std::abs(r.data[i] - 1.0));
+        for (size_t i = 0; i < n; ++i)
+            e = std::max(e, std::abs(r.data[i] - 1.0));
         tlog(cat, "solve with the AMD ordering", f && e < 1e-9, e, 0);
     }
     // timing on a larger grid (CPU only; informational)
@@ -731,7 +760,8 @@ test_amd()
         TIC;
         auto p = amd_order<int32_t>(A.rows(), A.row_ptr(), A.col_ind());
         double ms = TOC;
-        tlog(cat, "amd on a 150x150 grid (22.5k rows)", is_permutation_of(p, A.rows()) && ms < 2000, 0, ms);
+        tlog(cat, "amd on a 150x150 grid (22.5k rows)",
+            is_permutation_of(p, A.rows()) && ms < 2000, 0, ms);
     }
 }
 
@@ -739,17 +769,22 @@ test_amd()
 using HostLdl = SparseLdlt<double, int32_t, Cpu::HostStorage>;
 
 static double
-solve_err(HostLdl &ldl, const Csr<double, int32_t> &A, unsigned seed, size_t *nfail = nullptr)
+solve_err(HostLdl &ldl, const Csr<double, int32_t> &A, unsigned seed,
+    size_t *nfail = nullptr)
 {
     const size_t n = A.rows();
     std::mt19937 g(seed);
     tensorET<1, double> b({n}, 0.0), x({n}, 0.0), r({n}, 0.0);
     double bn = 0;
-    for (size_t i = 0; i < n; ++i) { b.data[i] = rand_val<double>(g); bn += b.data[i] * b.data[i]; }
+    for (size_t i = 0; i < n; ++i) {
+        b.data[i] = rand_val<double>(g);
+        bn += b.data[i] * b.data[i];
+    }
     ldl.solve(b, x);
     spmv(A, x, r);
     double e = 0;
-    for (size_t i = 0; i < n; ++i) e += (r.data[i] - b.data[i]) * (r.data[i] - b.data[i]);
+    for (size_t i = 0; i < n; ++i)
+        e += (r.data[i] - b.data[i]) * (r.data[i] - b.data[i]);
     (void)nfail;
     return std::sqrt(e) / (1 + std::sqrt(bn));
 }
@@ -758,12 +793,19 @@ static void
 test_multifrontal()
 {
     const char *cat = "SPARSE_MF";
-    struct Case { std::string name; RandSparse<double, int32_t> m; Symmetry kind; };
+    struct Case {
+        std::string name;
+        RandSparse<double, int32_t> m;
+        Symmetry kind;
+    };
     std::vector<Case> cases;
     for (size_t n : {1, 2, 7, 60, 200, 500})
-        cases.push_back({"spd n=" + std::to_string(n), make_spd<double, int32_t>(n, 0.06, 500 + n), Symmetry::SPD});
-    cases.push_back({"kkt 60+25", make_kkt<double, int32_t>(60, 25, 0.12, 601), Symmetry::Symmetric});
-    cases.push_back({"kkt 300+120", make_kkt<double, int32_t>(300, 120, 0.03, 602), Symmetry::Symmetric});
+        cases.push_back({"spd n=" + std::to_string(n),
+            make_spd<double, int32_t>(n, 0.06, 500 + n), Symmetry::SPD});
+    cases.push_back({"kkt 60+25", make_kkt<double, int32_t>(60, 25, 0.12, 601),
+        Symmetry::Symmetric});
+    cases.push_back({"kkt 300+120",
+        make_kkt<double, int32_t>(300, 120, 0.03, 602), Symmetry::Symmetric});
     for (auto &c : cases) {
         auto &A = c.m.csr;
         HostLdl mf(c.kind, Ordering::MinDegree, Factorization::Supernodal);
@@ -771,35 +813,44 @@ test_multifrontal()
         mf.analyze(A);
         sp.analyze(A);
         bool f1 = mf.factorize(A), f2 = sp.factorize(A);
-        double e1 = f1 ? solve_err(mf, A, 3) : 1e30, e2 = f2 ? solve_err(sp, A, 3) : 1e30;
+        double e1 = f1 ? solve_err(mf, A, 3) : 1e30,
+               e2 = f2 ? solve_err(sp, A, 3) : 1e30;
         size_t p1, n1, z1, p2, n2, z2;
         mf.inertia(p1, n1, z1);
         sp.inertia(p2, n2, z2);
-        bool ok = f1 && f2 && mf.supernodal() && !sp.supernodal() && e1 < 1e-9 &&
-                  mf.factor_nnz() == sp.factor_nnz() && p1 == p2 && n1 == n2 && z1 == z2;
-        tlog(cat, ("supernodal == simplicial: " + c.name).c_str(), ok, std::max(e1, e2), 0,
+        bool ok = f1 && f2 && mf.supernodal() && !sp.supernodal() &&
+                  e1 < 1e-9 && mf.factor_nnz() == sp.factor_nnz() && p1 == p2 &&
+                  n1 == n2 && z1 == z2;
+        tlog(cat, ("supernodal == simplicial: " + c.name).c_str(), ok,
+            std::max(e1, e2), 0,
             (std::to_string(mf.factor_nnz()) + " nnz(L)").c_str());
     }
-    // bipartite matrices with a dense coupling block (transportation-problem normal
-    // equations): the leaf supernodes of one side are merged (sibling merge)
+    // bipartite matrices with a dense coupling block (transportation-problem
+    // normal equations): the leaf supernodes of one side are merged (sibling
+    // merge)
     for (size_t k : {5, 40, 300}) {
         std::mt19937 g(900 + k);
         CooBuilder<double> b(2 * k, 2 * k);
-        for (size_t i = 0; i < 2 * k; ++i) b.add(i, i, 4.0 * k + rand_val<double>(g) * 0.1);
+        for (size_t i = 0; i < 2 * k; ++i)
+            b.add(i, i, 4.0 * k + rand_val<double>(g) * 0.1);
         for (size_t i = 0; i < k; ++i)
             for (size_t j = 0; j < k; ++j) {
-                if ((i * 7 + j * 3 + k) % 5 == 0) continue; // a few structural zeros
+                if ((i * 7 + j * 3 + k) % 5 == 0)
+                    continue; // a few structural zeros
                 const double v = rand_val<double>(g);
                 b.add(i, k + j, v);
                 b.add(k + j, i, v);
             }
         auto A = b.build();
-        HostLdl mf(Symmetry::SPD, Ordering::MinDegree, Factorization::Supernodal);
-        HostLdl sp(Symmetry::SPD, Ordering::MinDegree, Factorization::Simplicial);
+        HostLdl mf(
+            Symmetry::SPD, Ordering::MinDegree, Factorization::Supernodal);
+        HostLdl sp(
+            Symmetry::SPD, Ordering::MinDegree, Factorization::Simplicial);
         mf.analyze(A);
         sp.analyze(A);
         bool f1 = mf.factorize(A), f2 = sp.factorize(A);
-        double e1 = f1 ? solve_err(mf, A, 11) : 1e30, e2 = f2 ? solve_err(sp, A, 11) : 1e30;
+        double e1 = f1 ? solve_err(mf, A, 11) : 1e30,
+               e2 = f2 ? solve_err(sp, A, 11) : 1e30;
         tlog(cat, ("bipartite dense block k=" + std::to_string(k)).c_str(),
             f1 && f2 && e1 < 1e-9 && e2 < 1e-9, std::max(e1, e2), 0);
     }
@@ -811,40 +862,56 @@ test_multifrontal()
         bool f = s.factorize(A);
         double e = f ? solve_err(s, A, 5) : 1e30;
         bool want_mf = s.factor_nnz() > 200000;
-        tlog(cat, ("grid " + std::to_string(g) + "x" + std::to_string(g) + " (auto picks " +
-                   (s.supernodal() ? "supernodal" : "simplicial") + ")").c_str(),
+        tlog(cat,
+            ("grid " + std::to_string(g) + "x" + std::to_string(g) +
+                " (auto picks " +
+                (s.supernodal() ? "supernodal" : "simplicial") + ")")
+                .c_str(),
             f && e < 1e-9 && s.supernodal() == want_mf, e, 0);
     }
     // refactorization with new values, failure detection, regularization
     {
         auto r = make_spd<double, int32_t>(300, 0.03, 700);
-        HostLdl s(Symmetry::SPD, Ordering::MinDegree, Factorization::Supernodal);
+        HostLdl s(
+            Symmetry::SPD, Ordering::MinDegree, Factorization::Supernodal);
         s.analyze(r.csr);
         bool f1 = s.factorize(r.csr);
         auto h = r.csr;
         for (size_t i = 0; i < h.rows(); ++i)
             for (int k = h.row_ptr()[i]; k < h.row_ptr()[i + 1]; ++k)
-                if (static_cast<size_t>(h.col_ind()[k]) == i) h.values_mut()[k] += 5.0;
+                if (static_cast<size_t>(h.col_ind()[k]) == i)
+                    h.values_mut()[k] += 5.0;
         bool f2 = s.factorize(h);
         double e = f2 ? solve_err(s, h, 6) : 1e30;
         tlog(cat, "supernodal refactorize", f1 && f2 && e < 1e-9, e, 0);
 
         auto k = make_kkt<double, int32_t>(40, 15, 0.2, 701);
-        HostLdl bad(Symmetry::SPD, Ordering::MinDegree, Factorization::Supernodal);
+        HostLdl bad(
+            Symmetry::SPD, Ordering::MinDegree, Factorization::Supernodal);
         bad.analyze(k.csr);
-        tlog(cat, "supernodal SPD mode rejects an indefinite matrix", !bad.factorize(k.csr), 0, 0);
+        tlog(cat, "supernodal SPD mode rejects an indefinite matrix",
+            !bad.factorize(k.csr), 0, 0);
     }
-    {   // dynamic pivot regularization: a singular (zero) diagonal entry
+    { // dynamic pivot regularization: a singular (zero) diagonal entry
         CooBuilder<double> b(3, 3);
-        b.add(0, 0, 0.0); b.add(0, 1, 1.0); b.add(1, 0, 1.0); b.add(1, 1, 2.0); b.add(2, 2, 3.0);
+        b.add(0, 0, 0.0);
+        b.add(0, 1, 1.0);
+        b.add(1, 0, 1.0);
+        b.add(1, 1, 2.0);
+        b.add(2, 2, 3.0);
         auto A = b.build();
-        for (Factorization fac : {Factorization::Supernodal, Factorization::Simplicial}) {
+        for (Factorization fac :
+            {Factorization::Supernodal, Factorization::Simplicial}) {
             HostLdl s(Symmetry::Symmetric, Ordering::Natural, fac);
             s.analyze(A);
             bool plain = s.factorize(A); // zero pivot
             s.set_pivot_regularization({-1, 1, 1}, 1e-8);
             bool reg = s.factorize(A);
-            tlog(cat, (std::string("pivot regularization ") + (fac == Factorization::Supernodal ? "supernodal" : "simplicial")).c_str(),
+            tlog(cat,
+                (std::string("pivot regularization ") +
+                    (fac == Factorization::Supernodal ? "supernodal"
+                                                      : "simplicial"))
+                    .c_str(),
                 !plain && reg && s.regularized_pivots() == 1, 0, 0);
         }
     }

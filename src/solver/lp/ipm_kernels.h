@@ -19,9 +19,15 @@ namespace ipm {
 
 using namespace pdlp;
 
-AXOS_HD inline bool bl(double lb, double ub) { return fin(lb) && lb != ub; }
-AXOS_HD inline bool bu(double lb, double ub) { return fin(ub) && lb != ub; }
-AXOS_HD inline bool fixedv(double lb, double ub) { return lb == ub; }
+AXOS_HD inline bool
+bl(double lb, double ub)
+{ return fin(lb) && lb != ub; }
+AXOS_HD inline bool
+bu(double lb, double ub)
+{ return fin(ub) && lb != ub; }
+AXOS_HD inline bool
+fixedv(double lb, double ub)
+{ return lb == ub; }
 
 constexpr double kBig = 1e300;
 
@@ -45,7 +51,9 @@ struct ResD {
 struct ResP {
     double *rp;
     const double *w, *ax;
-    AXOS_HD void operator()(size_t i) const { rp[i] = w[i] - ax[i]; }
+    AXOS_HD void
+    operator()(size_t i) const
+    { rp[i] = w[i] - ax[i]; }
 };
 
 // |rd|^2, c^T x, dual objective, sum of complementarity products, count.
@@ -76,7 +84,8 @@ struct SqNorm {
     const double *a;
     static constexpr int K = 1;
     AXOS_HD void
-    operator()(size_t i, double *acc) const { acc[0] += a[i] * a[i]; }
+    operator()(size_t i, double *acc) const
+    { acc[0] += a[i] * a[i]; }
 };
 
 // Theta^{-1} = sl/tl + su/tu  (huge for fixed entries)
@@ -86,7 +95,10 @@ struct BuildTheta {
     AXOS_HD void
     operator()(size_t j) const
     {
-        if (fixedv(lb[j], ub[j])) { hz[j] = kBig; return; }
+        if (fixedv(lb[j], ub[j])) {
+            hz[j] = kBig;
+            return;
+        }
         double h = 0.0;
         if (bl(lb[j], ub[j])) h += sl[j] / tl[j];
         if (bu(lb[j], ub[j])) h += su[j] / tu[j];
@@ -136,10 +148,10 @@ struct CompCorr {
     AXOS_HD void
     operator()(size_t j) const
     {
-        rcl[j] = bl(lb[j], ub[j])
-                     ? sigma_mu - tl[j] * sl[j] - dz[j] * dsl[j] : 0.0;
-        rcu[j] = bu(lb[j], ub[j])
-                     ? sigma_mu - tu[j] * su[j] + dz[j] * dsu[j] : 0.0;
+        rcl[j] =
+            bl(lb[j], ub[j]) ? sigma_mu - tl[j] * sl[j] - dz[j] * dsl[j] : 0.0;
+        rcu[j] =
+            bu(lb[j], ub[j]) ? sigma_mu - tu[j] * su[j] + dz[j] * dsu[j] : 0.0;
     }
 };
 
@@ -165,8 +177,10 @@ struct PackRhs {
     AXOS_HD void
     operator()(size_t j) const
     {
-        if (j < n) rhs[j] = -g[j];
-        else rhs[j] = rp[j - n] + thw[j - n] * g[j];
+        if (j < n)
+            rhs[j] = -g[j];
+        else
+            rhs[j] = rp[j - n] + thw[j - n] * g[j];
     }
 };
 
@@ -274,7 +288,9 @@ struct Axpy {
     double *y;
     const double *x;
     double a;
-    AXOS_HD void operator()(size_t i) const { y[i] += a * x[i]; }
+    AXOS_HD void
+    operator()(size_t i) const
+    { y[i] += a * x[i]; }
 };
 
 // residual of the unregularized reduced KKT system
@@ -286,8 +302,10 @@ struct RefineRes {
     AXOS_HD void
     operator()(size_t j) const
     {
-        if (j < n) res[j] = rhs[j] - (-hz[j] * v[j] + tmpn[j]);
-        else res[j] = rhs[j] - (tmpm[j - n] + thw[j - n] * v[j]);
+        if (j < n)
+            res[j] = rhs[j] - (-hz[j] * v[j] + tmpn[j]);
+        else
+            res[j] = rhs[j] - (tmpm[j - n] + thw[j - n] * v[j]);
     }
 };
 

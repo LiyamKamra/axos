@@ -29,8 +29,10 @@
 #endif
 
 using namespace AXOS;
-using EMat = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-using EMatF = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using EMat =
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using EMatF =
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 static double
 median_ms(const std::function<void()> &f, int runs = 5)
@@ -41,7 +43,8 @@ median_ms(const std::function<void()> &f, int runs = 5)
         const auto s = std::chrono::steady_clock::now();
         f();
         t.push_back(std::chrono::duration<double, std::milli>(
-            std::chrono::steady_clock::now() - s).count());
+            std::chrono::steady_clock::now() - s)
+                .count());
     }
     std::sort(t.begin(), t.end());
     return t[t.size() / 2];
@@ -52,26 +55,26 @@ static void
 row(const char *op, size_t n, double axos, double eigen)
 {
     if (eigen < 0) {
-        std::printf("| %-26s | %6zu | %10.3f | %10s | %7s |\n", op, n, axos, "n/a", "");
+        std::printf(
+            "| %-26s | %6zu | %10.3f | %10s | %7s |\n", op, n, axos, "n/a", "");
         std::fflush(stdout);
         return;
     }
-    std::printf("| %-26s | %6zu | %10.3f | %10.3f | %6.2fx |\n", op, n, axos, eigen,
-        eigen / axos);
+    std::printf("| %-26s | %6zu | %10.3f | %10.3f | %6.2fx |\n", op, n, axos,
+        eigen, eigen / axos);
     std::fflush(stdout);
 }
 
 template <class T>
 static tensorET<2, T>
 rnd(size_t m, size_t n, unsigned seed)
-{
-    return tensorET<2, T>::uniform({m, n}, T(-1), T(1), seed);
-}
+{ return tensorET<2, T>::uniform({m, n}, T(-1), T(1), seed); }
 
 static EMat
 emat(const tensorET<2, double> &t)
 {
-    return Eigen::Map<const EMat>(t.data, Eigen::Index(t.size(0)), Eigen::Index(t.size(1)));
+    return Eigen::Map<const EMat>(
+        t.data, Eigen::Index(t.size(0)), Eigen::Index(t.size(1)));
 }
 
 int
@@ -82,7 +85,8 @@ main(int argc, char **argv)
 #ifdef _OPENMP
     threads = omp_get_max_threads();
 #endif
-    std::printf("AXOS dense layer vs Eigen %d.%d.%d, %d thread(s), SIMD: %s\n\n",
+    std::printf(
+        "AXOS dense layer vs Eigen %d.%d.%d, %d thread(s), SIMD: %s\n\n",
         EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION, threads,
 #if defined(AXOS_SIMD_AVX512)
         "AVX-512"
@@ -94,14 +98,16 @@ main(int argc, char **argv)
         "none"
 #endif
     );
-    std::printf("| %-26s | %6s | %10s | %10s | %7s |\n", "operation", "n", "axos ms",
-        "eigen ms", "speedup");
-    std::printf("|%s|%s|%s|%s|%s|\n", std::string(28, '-').c_str(), std::string(8, '-').c_str(),
-        std::string(12, '-').c_str(), std::string(12, '-').c_str(), std::string(9, '-').c_str());
+    std::printf("| %-26s | %6s | %10s | %10s | %7s |\n", "operation", "n",
+        "axos ms", "eigen ms", "speedup");
+    std::printf("|%s|%s|%s|%s|%s|\n", std::string(28, '-').c_str(),
+        std::string(8, '-').c_str(), std::string(12, '-').c_str(),
+        std::string(12, '-').c_str(), std::string(9, '-').c_str());
 
     // GEMM
-    const std::vector<size_t> gemm_n = quick ? std::vector<size_t>{256, 1024}
-                                             : std::vector<size_t>{256, 512, 1024, 2048, 3072};
+    const std::vector<size_t> gemm_n =
+        quick ? std::vector<size_t>{256, 1024}
+              : std::vector<size_t>{256, 512, 1024, 2048, 3072};
     for (size_t n : gemm_n) {
         auto A = rnd<double>(n, n, 1), B = rnd<double>(n, n, 2);
         tensorET<2, double> C({n, n});
@@ -112,12 +118,14 @@ main(int argc, char **argv)
     for (size_t n : gemm_n) {
         auto A = rnd<float>(n, n, 1), B = rnd<float>(n, n, 2);
         tensorET<2, float> C({n, n});
-        EMatF eA = Eigen::Map<EMatF>(A.data, n, n), eB = Eigen::Map<EMatF>(B.data, n, n), eC(n, n);
+        EMatF eA = Eigen::Map<EMatF>(A.data, n, n),
+              eB = Eigen::Map<EMatF>(B.data, n, n), eC(n, n);
         row("gemm f32 (matMul)", n, median_ms([&] { C = matMul(A, B); }),
             median_ms([&] { eC.noalias() = eA * eB; }));
     }
     // GEMV
-    for (size_t n : quick ? std::vector<size_t>{4096} : std::vector<size_t>{4096, 8192, 16384}) {
+    for (size_t n : quick ? std::vector<size_t>{4096}
+                          : std::vector<size_t>{4096, 8192, 16384}) {
         auto A = rnd<double>(n, n, 3);
         auto x = tensorET<1, double>::uniform({n}, -1.0, 1.0, 4);
         tensorET<1, double> y({n});
@@ -134,7 +142,8 @@ main(int argc, char **argv)
         tensorET<1, double> C({n});
         Eigen::Map<Eigen::VectorXd> eA(A.data, n), eB(B.data, n);
         Eigen::VectorXd eC(n);
-        row("C = A + B", n, median_ms([&] { C = A + B; }), median_ms([&] { eC = eA + eB; }));
+        row("C = A + B", n, median_ms([&] { C = A + B; }),
+            median_ms([&] { eC = eA + eB; }));
         row("C = A + B * 2", n, median_ms([&] { C = A + B * 2.0; }),
             median_ms([&] { eC = eA + eB * 2.0; }));
         row("C = sqrt(A)", n, median_ms([&] { C = sqrt(A); }),
@@ -144,8 +153,10 @@ main(int argc, char **argv)
         tensorET<1, double> c({m});
         Eigen::Map<Eigen::VectorXd> ea(a.data, m);
         Eigen::VectorXd ec(m);
-        row("C = exp(sin(A) + cos(A))", m, median_ms([&] { c = exp(sin(a) + cos(a)); }),
-            median_ms([&] { ec = (ea.array().sin() + ea.array().cos()).exp().matrix(); }));
+        row("C = exp(sin(A) + cos(A))", m,
+            median_ms([&] { c = exp(sin(a) + cos(a)); }), median_ms([&] {
+                ec = (ea.array().sin() + ea.array().cos()).exp().matrix();
+            }));
     }
     // transpose
     {
@@ -153,12 +164,14 @@ main(int argc, char **argv)
         auto A = rnd<double>(n, n, 8);
         tensorET<2, double> T({n, n});
         EMat eA = emat(A), eT(n, n);
-        row("transpose f64", n,
-            median_ms([&] { kernels::transpose<double>(n, n, A.data, n, T.data, n); }),
+        row("transpose f64", n, median_ms([&] {
+            kernels::transpose<double>(n, n, A.data, n, T.data, n);
+        }),
             median_ms([&] { eT = eA.transpose(); }));
     }
     // LU, solve, inverse
-    for (size_t n : quick ? std::vector<size_t>{500} : std::vector<size_t>{500, 1000, 2000}) {
+    for (size_t n : quick ? std::vector<size_t>{500}
+                          : std::vector<size_t>{500, 1000, 2000}) {
         auto A = rnd<double>(n, n, 9);
         EMat eA = emat(A);
         row("luDcmpPivoted", n, median_ms([&] { auto r = luDcmpPivoted(A); }),
@@ -167,40 +180,45 @@ main(int argc, char **argv)
         auto b = tensorET<1, double>::uniform({n}, -1.0, 1.0, 10);
         Eigen::PartialPivLU<EMat> elu(eA);
         Eigen::VectorXd eb = Eigen::Map<Eigen::VectorXd>(b.data, n), ex(n);
-        row("luSolve, 1 rhs", n,
-            median_ms([&] { auto x = luSolve(lu.first.first, lu.first.second, lu.second, b); }),
+        row("luSolve, 1 rhs", n, median_ms([&] {
+            auto x = luSolve(lu.first.first, lu.first.second, lu.second, b);
+        }),
             median_ms([&] { ex = elu.solve(eb); }));
     }
-    for (size_t n : quick ? std::vector<size_t>{256} : std::vector<size_t>{256, 512, 1024}) {
+    for (size_t n : quick ? std::vector<size_t>{256}
+                          : std::vector<size_t>{256, 512, 1024}) {
         auto A = rnd<double>(n, n, 11);
-        for (size_t i = 0; i < n; ++i) A(i, i) += 4.0;
+        for (size_t i = 0; i < n; ++i)
+            A(i, i) += 4.0;
         EMat eA = emat(A);
         row("inverse (general)", n, median_ms([&] { auto X = inverse(A); }),
             median_ms([&] { EMat X = eA.inverse(); }));
     }
     // upper-triangular inverse
-    for (size_t n : quick ? std::vector<size_t>{512} : std::vector<size_t>{512, 1024, 2048}) {
+    for (size_t n : quick ? std::vector<size_t>{512}
+                          : std::vector<size_t>{512, 1024, 2048}) {
         auto A = rnd<double>(n, n, 12);
         for (size_t i = 0; i < n; ++i) {
             A(i, i) = 2.0 + double(i % 7);
-            for (size_t j = 0; j < i; ++j) A(i, j) = 0.0;
+            for (size_t j = 0; j < i; ++j)
+                A(i, j) = 0.0;
         }
         EMat eU = emat(A);
-        row("inverse_backs (upper)", n, median_ms([&] { auto X = inverse_backs(A, 64); }),
-            median_ms([&] {
+        row("inverse_backs (upper)", n,
+            median_ms([&] { auto X = inverse_backs(A, 64); }), median_ms([&] {
                 EMat X = EMat::Identity(n, n);
                 eU.triangularView<Eigen::Upper>().solveInPlace(X);
             }));
     }
     // QR
-    for (size_t n : quick ? std::vector<size_t>{500} : std::vector<size_t>{500, 1000}) {
+    for (size_t n :
+        quick ? std::vector<size_t>{500} : std::vector<size_t>{500, 1000}) {
         auto A = rnd<double>(n, n, 13);
         EMat eA = emat(A);
-        row("qrDecompositionTile", n,
-            median_ms([&] {
-                auto Q = A.clone();
-                auto R = qrDecompositionTile(Q);
-            }),
+        row("qrDecompositionTile", n, median_ms([&] {
+            auto Q = A.clone();
+            auto R = qrDecompositionTile(Q);
+        }),
             median_ms([&] {
                 Eigen::HouseholderQR<EMat> qr(eA);
                 EMat Q = qr.householderQ() * EMat::Identity(n, n);
@@ -212,14 +230,17 @@ main(int argc, char **argv)
         const size_t n = 2000;
         auto M = rnd<double>(n, n, 14);
         tensorET<2, double> S = matMul(M, transpose(M));
-        for (size_t i = 0; i < n; ++i) S(i, i) += double(n);
+        for (size_t i = 0; i < n; ++i)
+            S(i, i) += double(n);
         // A large right-hand side keeps p^T A p far above the spec'd 1e-12
         // stop, so both solvers run exactly 20 iterations.
         auto b = tensorET<1, double>::uniform({n}, -1e6, 1e6, 15);
         tensorET<1, double> x0({n}, 0.0);
         EMat eS = emat(S);
         Eigen::VectorXd eb = Eigen::Map<Eigen::VectorXd>(b.data, n);
-        Eigen::ConjugateGradient<EMat, Eigen::Lower | Eigen::Upper, Eigen::IdentityPreconditioner> ecg;
+        Eigen::ConjugateGradient<EMat, Eigen::Lower | Eigen::Upper,
+            Eigen::IdentityPreconditioner>
+            ecg;
         ecg.setMaxIterations(20);
         ecg.setTolerance(1e-30);
         row("conjugateGradient, 20 it", n,

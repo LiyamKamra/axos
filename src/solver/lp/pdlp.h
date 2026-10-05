@@ -46,7 +46,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
 
   public:
     // Optional starting point (original scale) and termination mode for the
-    // polishing sub-solves: 0 full KKT, 1 primal residual only, 2 dual residual only.
+    // polishing sub-solves: 0 full KKT, 1 primal residual only, 2 dual residual
+    // only.
     struct Start {
         const std::vector<double> *x = nullptr, *y = nullptr;
         int mode = 0;
@@ -54,17 +55,21 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
 
     // Solves p (no presolve). Requires at least one row and one column. With
     // opt.pdlp_polish and a tight tolerance, PDLP runs to a looser tolerance
-    // first and then polishes: a feasibility solve for x (objective dropped)
-    // and one for y (right-hand sides and bounds zeroed) from that point, which
+    // first, then polishes: a feasibility solve for x (objective dropped) and
+    // one for y (right-hand sides and bounds zeroed) from that point, which
     // converge much faster than continuing on the full problem.
     LpSolution
     solve(const LpProblem &p, const SolverOptions &opt)
     {
-        const double tight = std::min({opt.eps_primal, opt.eps_dual, opt.eps_gap});
-        if (!opt.pdlp_polish || tight >= 5e-6) return solve_core(p, opt, nullptr);
+        const double tight =
+            std::min({opt.eps_primal, opt.eps_dual, opt.eps_gap});
+        if (!opt.pdlp_polish || tight >= 5e-6)
+            return solve_core(p, opt, nullptr);
         const auto t0 = std::chrono::steady_clock::now();
         auto since = [&] {
-            return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+            return std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - t0)
+                .count();
         };
         SolverOptions loose = opt;
         loose.set_tolerance(std::max(tight, 1e-4));
@@ -81,10 +86,14 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
         LpSolution a = solve_core(pp, o1, &s1);
         // dual feasibility from y (b and finite bounds zeroed, objective kept)
         LpProblem pd = p;
-        for (double &v : pd.row_lb) if (std::isfinite(v)) v = 0;
-        for (double &v : pd.row_ub) if (std::isfinite(v)) v = 0;
-        for (double &v : pd.col_lb) if (std::isfinite(v)) v = 0;
-        for (double &v : pd.col_ub) if (std::isfinite(v)) v = 0;
+        for (double &v : pd.row_lb)
+            if (std::isfinite(v)) v = 0;
+        for (double &v : pd.row_ub)
+            if (std::isfinite(v)) v = 0;
+        for (double &v : pd.col_lb)
+            if (std::isfinite(v)) v = 0;
+        for (double &v : pd.col_ub)
+            if (std::isfinite(v)) v = 0;
         pd.offset = 0;
         SolverOptions o2 = opt;
         o2.time_limit = std::max(1.0, opt.time_limit - since());
@@ -97,10 +106,13 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             // x from a, y from b; keep the better-gap combination
             LpSolution c = evaluate_solution(p, a.x, b.y);
             const double nbn = norm_b(p), ncn = norm_c(p);
-            const bool ok = c.primal_residual <= opt.eps_primal * (1 + nbn) &&
-                            c.dual_residual <= opt.eps_dual * (1 + ncn) &&
-                            c.gap <= opt.eps_gap * (1 + std::abs(c.primal_objective) + std::abs(c.dual_objective)) &&
-                            c.error_bound <= 10 * opt.eps_gap * (1 + std::abs(c.primal_objective));
+            const bool ok =
+                c.primal_residual <= opt.eps_primal * (1 + nbn) &&
+                c.dual_residual <= opt.eps_dual * (1 + ncn) &&
+                c.gap <= opt.eps_gap * (1 + std::abs(c.primal_objective) +
+                                           std::abs(c.dual_objective)) &&
+                c.error_bound <=
+                    10 * opt.eps_gap * (1 + std::abs(c.primal_objective));
             if (ok) {
                 c.status = Status::Optimal;
                 c.iterations = iters;
@@ -108,7 +120,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                 return c;
             }
         }
-        // polishing did not reach the tolerance: continue from the loose solution
+        // polishing did not reach the tolerance: continue from the loose
+        // solution
         SolverOptions o3 = opt;
         o3.time_limit = std::max(1.0, opt.time_limit - since());
         Start s3{&main.x, &main.y, 0};
@@ -133,7 +146,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
     norm_c(const LpProblem &p)
     {
         double nc = 0;
-        for (double v : p.c) nc += v * v;
+        for (double v : p.c)
+            nc += v * v;
         return std::sqrt(nc);
     }
 
@@ -158,7 +172,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
         Scaling sc;
         LpProblem q;
         if (opt.scaling) {
-            sc = compute_scaling(p.A, opt.ruiz_iterations, opt.pock_chambolle_alpha);
+            sc = compute_scaling(
+                p.A, opt.ruiz_iterations, opt.pock_chambolle_alpha);
             q = apply_scaling(p, sc);
         } else {
             sc.row.assign(m, 1.0);
@@ -174,8 +189,10 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             return Vec(t);
         };
         std::vector<double> cinv(n), rinv(m);
-        for (size_t j = 0; j < n; ++j) cinv[j] = 1.0 / sc.col[j];
-        for (size_t i = 0; i < m; ++i) rinv[i] = 1.0 / sc.row[i];
+        for (size_t j = 0; j < n; ++j)
+            cinv[j] = 1.0 / sc.col[j];
+        for (size_t i = 0; i < m; ++i)
+            rinv[i] = 1.0 / sc.row[i];
         Vec c = upload(q.c), lb = upload(q.col_lb), ub = upload(q.col_ub);
         Vec l = upload(q.row_lb), u = upload(q.row_ub);
         Vec dcinv = upload(cinv), drinv = upload(rinv);
@@ -192,7 +209,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
 
         // ---- problem norms for tolerances and the initial primal weight ---
         double nc = 0, nb = 0;
-        for (size_t j = 0; j < n; ++j) nc += p.c[j] * p.c[j];
+        for (size_t j = 0; j < n; ++j)
+            nc += p.c[j] * p.c[j];
         for (size_t i = 0; i < m; ++i) {
             if (std::isfinite(p.row_lb[i])) nb += p.row_lb[i] * p.row_lb[i];
             if (std::isfinite(p.row_ub[i])) nb += p.row_ub[i] * p.row_ub[i];
@@ -200,7 +218,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
         nc = std::sqrt(nc);
         nb = std::sqrt(nb);
         double qc = 0, qb = 0, amax = 0; // scaled-space norms
-        for (size_t j = 0; j < n; ++j) qc += q.c[j] * q.c[j];
+        for (size_t j = 0; j < n; ++j)
+            qc += q.c[j] * q.c[j];
         for (size_t i = 0; i < m; ++i) {
             if (std::isfinite(q.row_lb[i])) qb += q.row_lb[i] * q.row_lb[i];
             if (std::isfinite(q.row_ub[i])) qb += q.row_ub[i] * q.row_ub[i];
@@ -212,7 +231,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
         double omega = (qc > 1e-10 && qb > 1e-10) ? qc / qb : 1.0;
         double eta = amax > 0 ? 1.0 / amax : 1.0;
 
-        // Halpern PDHG uses fixed steps: eta = 0.998 / ||A||_2 (power iteration)
+        // Halpern PDHG uses fixed steps: eta = 0.998 / ||A||_2 (power
+        // iteration)
         if (opt.pdlp_halpern) {
             Vec &v = X1, &w = Ax1, &t = Aty1;
             par.for_each(n, pdlp::Fill{v.data, 1.0});
@@ -225,7 +245,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                 par.reduce(1, n, SqNormN{v.data});
                 const double *s = par.fetch();
                 if (s[1] <= 0 || s[0] <= 0) break;
-                sig = std::sqrt(std::sqrt(s[0] / s[1])); // ||A^T A v|| / ||v|| ~ sigma_max^2
+                sig = std::sqrt(std::sqrt(
+                    s[0] / s[1])); // ||A^T A v|| / ||v|| ~ sigma_max^2
                 const double inv = 1.0 / std::sqrt(s[0]);
                 par.for_each(n, pdlp::ScaleCopy{v.data, t.data, inv});
             }
@@ -235,18 +256,21 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             par.for_each(n, pdlp::Fill{Aty1.data, 0.0});
         }
 
-        // ---- initial point: x = proj(0), y = 0, or the given start -----------
+        // ---- initial point: x = proj(0), y = 0, or the given start
+        // -----------
         {
             tensorET<1, double> h({n}, 0.0);
             for (size_t j = 0; j < n; ++j) {
-                const double v = (start && start->x) ? (*start->x)[j] / sc.col[j] : 0.0;
+                const double v =
+                    (start && start->x) ? (*start->x)[j] / sc.col[j] : 0.0;
                 h.data[j] = std::min(std::max(v, q.col_lb[j]), q.col_ub[j]);
             }
             Vec init(h);
             par.copy(x->data, init.data, n);
             if (start && start->y) {
                 tensorET<1, double> hy({m}, 0.0);
-                for (size_t i = 0; i < m; ++i) hy.data[i] = (*start->y)[i] / sc.row[i];
+                for (size_t i = 0; i < m; ++i)
+                    hy.data[i] = (*start->y)[i] / sc.row[i];
                 Vec inity(hy);
                 par.copy(y->data, inity.data, m);
             }
@@ -259,9 +283,10 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
         auto eval = [&](const Vec &xv, const Vec &yv, const Vec &axv,
                         const Vec &atyv) {
             par.zero();
-            par.reduce(0, m, KktM{axv.data, yv.data, l.data, u.data, drinv.data});
-            par.reduce(3, n, KktN{xv.data, atyv.data, c.data, lb.data, ub.data,
-                                dcinv.data});
+            par.reduce(
+                0, m, KktM{axv.data, yv.data, l.data, u.data, drinv.data});
+            par.reduce(3, n,
+                KktN{xv.data, atyv.data, c.data, lb.data, ub.data, dcinv.data});
             const double *s = par.fetch();
             Kkt k;
             k.pr_scaled = std::sqrt(s[0]);
@@ -276,7 +301,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             par.reduce(0, n, WSqNorm{xv.data, dcol.data});
             par.reduce(1, m, WSqNorm{yv.data, drow.data});
             const double *w = par.fetch();
-            k.bound = k.gap + k.dr_orig * std::sqrt(w[0]) + k.pr_orig * std::sqrt(w[1]);
+            k.bound = k.gap + k.dr_orig * std::sqrt(w[0]) +
+                      k.pr_orig * std::sqrt(w[1]);
             k.err = std::sqrt(omega * omega * k.pr_scaled * k.pr_scaled +
                               k.dr_scaled * k.dr_scaled / (omega * omega) +
                               k.gap * k.gap);
@@ -288,13 +314,15 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             if (mode == 2) return k.dr_orig <= opt.eps_dual * (1 + nc);
             return k.pr_orig <= opt.eps_primal * (1 + nb) &&
                    k.dr_orig <= opt.eps_dual * (1 + nc) &&
-                   k.gap <= opt.eps_gap * (1 + std::abs(k.pobj) + std::abs(k.dobj)) &&
+                   k.gap <= opt.eps_gap *
+                                (1 + std::abs(k.pobj) + std::abs(k.dobj)) &&
                    k.bound <= 10 * opt.eps_gap * (1 + std::abs(k.pobj));
         };
 
         auto finish = [&](Status st, const Vec &fx, const Vec &fy, long iters) {
             tensorET<1, double> hx(fx), hy(fy);
-            std::vector<double> xv(hx.data, hx.data + n), yv(hy.data, hy.data + m);
+            std::vector<double> xv(hx.data, hx.data + n),
+                yv(hy.data, hy.data + m);
             unscale_solution(xv, yv, sc);
             LpSolution s = evaluate_solution(p, xv, yv);
             s.status = st;
@@ -314,16 +342,23 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
         const double cert_margin_primal = 10 * opt.eps_dual * (1 + qc);
 
         while (true) {
-            // Halpern PDHG: the output point is T(z) (feasible for the bounds), not z
+            // Halpern PDHG: the output point is T(z) (feasible for the bounds),
+            // not z
             Vec *cx = x, *cy = y, *cax = ax, *caty = aty;
-            if (opt.pdlp_halpern && it > 0) { cx = xn; cy = yn; cax = axn; caty = atyn; }
+            if (opt.pdlp_halpern && it > 0) {
+                cx = xn;
+                cy = yn;
+                cax = axn;
+                caty = atyn;
+            }
             if (it % opt.check_frequency == 0) {
                 cur = eval(*cx, *cy, *cax, *caty);
                 if (opt.verbose)
-                    std::printf("[pdlp] it %-8ld pobj % .8e dobj % .8e "
-                                "pres %.2e dres %.2e gap %.2e omega %.2e eta %.2e\n",
-                        it, cur.pobj, cur.dobj, cur.pr_orig, cur.dr_orig, cur.gap,
-                        omega, eta);
+                    std::printf(
+                        "[pdlp] it %-8ld pobj % .8e dobj % .8e "
+                        "pres %.2e dres %.2e gap %.2e omega %.2e eta %.2e\n",
+                        it, cur.pobj, cur.dobj, cur.pr_orig, cur.dr_orig,
+                        cur.gap, omega, eta);
                 if (!std::isfinite(cur.err))
                     return finish(Status::NumericalError, *cx, *cy, it);
 
@@ -340,15 +375,21 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                 if (have_avg && converged(avg) &&
                     (!converged(cur) || avg.err < cur.err))
                     return finish(Status::Optimal, *xn, *yn, it);
-                if (converged(cur)) return finish(Status::Optimal, *cx, *cy, it);
+                if (converged(cur))
+                    return finish(Status::Optimal, *cx, *cy, it);
 
                 // infeasibility / unboundedness certificates
                 if (since_restart > 0) {
                     par.zero();
-                    par.reduce(0, m, DualRayM{cy->data, Yr.data, l.data, u.data});
-                    par.reduce(3, n, DualRayN{caty->data, Atyr.data, lb.data, ub.data});
-                    par.reduce(5, n, PrimalRayN{cx->data, Xr.data, c.data, lb.data, ub.data});
-                    par.reduce(8, m, PrimalRayM{cax->data, Axr.data, l.data, u.data});
+                    par.reduce(
+                        0, m, DualRayM{cy->data, Yr.data, l.data, u.data});
+                    par.reduce(3, n,
+                        DualRayN{caty->data, Atyr.data, lb.data, ub.data});
+                    par.reduce(5, n,
+                        PrimalRayN{
+                            cx->data, Xr.data, c.data, lb.data, ub.data});
+                    par.reduce(
+                        8, m, PrimalRayM{cax->data, Axr.data, l.data, u.data});
                     const double *s = par.fetch();
                     const double dy2 = s[0], dx2 = s[5];
                     if (dy2 > 1e-20) {
@@ -356,10 +397,11 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                         const double rho = (s[2] + s[4]) / ny;
                         const double viol = std::sqrt(s[1] + s[3]) / ny;
                         if (opt.verbose)
-                            std::printf("[pdlp]   dual ray: |dy| %.3e rho %.3e viol %.3e margin %.3e\n",
+                            std::printf("[pdlp]   dual ray: |dy| %.3e rho %.3e "
+                                        "viol %.3e margin %.3e\n",
                                 ny, rho, viol, cert_margin_dual);
-                        // The ray must improve the homogeneous dual objective by
-                        // a real margin: redundant constraints give null
+                        // The ray must improve the homogeneous dual objective
+                        // by a real margin: redundant constraints give null
                         // directions whose objective is only round-off.
                         if (rho > cert_margin_dual && viol <= eps_inf * rho)
                             return finish(Status::Infeasible, *cx, *cy, it);
@@ -368,7 +410,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                         const double nx = std::sqrt(dx2);
                         const double slope = s[6] / nx;
                         const double viol = std::sqrt(s[7] + s[8]) / nx;
-                        if (-slope > cert_margin_primal && viol <= eps_inf * (-slope))
+                        if (-slope > cert_margin_primal &&
+                            viol <= eps_inf * (-slope))
                             return finish(Status::Unbounded, *cx, *cy, it);
                     }
                 }
@@ -384,7 +427,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                 const bool suff = cand_err <= 0.2 * last_restart_err;
                 const bool nec = cand_err <= 0.8 * last_restart_err &&
                                  cand_err > prev_cand_err;
-                const bool art = since_restart >= 0.36 * static_cast<double>(it);
+                const bool art =
+                    since_restart >= 0.36 * static_cast<double>(it);
                 if (it > 0 && (suff || nec || art)) {
                     if (opt.pdlp_halpern) { // restart from T(z)
                         par.copy(x->data, cx->data, n);
@@ -404,7 +448,8 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                     const double *s = par.fetch();
                     const double dx = std::sqrt(s[0]), dy = std::sqrt(s[1]);
                     if (dx > 1e-10 && dy > 1e-10)
-                        omega = std::exp(0.5 * std::log(dy / dx) + 0.5 * std::log(omega));
+                        omega = std::exp(
+                            0.5 * std::log(dy / dx) + 0.5 * std::log(omega));
                     snapshot(par, n, m, *x, *y, *ax, *aty, Xr, Yr, Axr, Atyr);
                     par.for_each(n, pdlp::Fill{Sx.data, 0.0});
                     par.for_each(n, pdlp::Fill{Saty.data, 0.0});
@@ -423,19 +468,27 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
                 // ---- reflected Halpern PDHG step (fixed step size) ---------
                 const double tau = eta / omega, sigma = eta * omega;
                 par.zero();
-                par.reduce(0, n, XUpdateStep{c.data, aty->data, lb.data, ub.data,
-                                    x->data, xn->data, tau});
+                par.reduce(0, n,
+                    XUpdateStep{c.data, aty->data, lb.data, ub.data, x->data,
+                        xn->data, tau});
                 Sparse::spmv(A, *xn, *axn);
-                par.reduce(1, m, YUpdateStep{l.data, u.data, y->data, ax->data,
-                                    axn->data, yn->data, sigma});
+                par.reduce(1, m,
+                    YUpdateStep{l.data, u.data, y->data, ax->data, axn->data,
+                        yn->data, sigma});
                 Sparse::spmv(AT, *yn, *atyn);
                 const double k1 = static_cast<double>(since_restart);
-                const double w1 = (k1 + 1.0) / (k1 + 2.0), w0 = 1.0 / (k1 + 2.0);
-                // z <- w1 (2 T(z) - z) + w0 z0, in place; T(z) stays in xn/yn/axn/atyn
-                par.for_each(n, pdlp::HalpernMix{x->data, xn->data, Xr.data, w1, w0});
-                par.for_each(m, pdlp::HalpernMix{y->data, yn->data, Yr.data, w1, w0});
-                par.for_each(m, pdlp::HalpernMix{ax->data, axn->data, Axr.data, w1, w0});
-                par.for_each(n, pdlp::HalpernMix{aty->data, atyn->data, Atyr.data, w1, w0});
+                const double w1 = (k1 + 1.0) / (k1 + 2.0),
+                             w0 = 1.0 / (k1 + 2.0);
+                // z <- w1 (2 T(z) - z) + w0 z0, in place; T(z) stays in
+                // xn/yn/axn/atyn
+                par.for_each(
+                    n, pdlp::HalpernMix{x->data, xn->data, Xr.data, w1, w0});
+                par.for_each(
+                    m, pdlp::HalpernMix{y->data, yn->data, Yr.data, w1, w0});
+                par.for_each(
+                    m, pdlp::HalpernMix{ax->data, axn->data, Axr.data, w1, w0});
+                par.for_each(n,
+                    pdlp::HalpernMix{aty->data, atyn->data, Atyr.data, w1, w0});
                 ++it;
                 ++since_restart;
                 continue;
@@ -447,11 +500,13 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             for (int tries = 0; tries < 60 && !accepted; ++tries) {
                 const double tau = eta / omega, sigma = eta * omega;
                 par.zero();
-                par.reduce(0, n, XUpdateStep{c.data, aty->data, lb.data, ub.data,
-                                    x->data, xn->data, tau});
+                par.reduce(0, n,
+                    XUpdateStep{c.data, aty->data, lb.data, ub.data, x->data,
+                        xn->data, tau});
                 Sparse::spmv(A, *xn, *axn);
-                par.reduce(1, m, YUpdateStep{l.data, u.data, y->data, ax->data,
-                                    axn->data, yn->data, sigma});
+                par.reduce(1, m,
+                    YUpdateStep{l.data, u.data, y->data, ax->data, axn->data,
+                        yn->data, sigma});
                 Sparse::spmv(AT, *yn, *atyn);
                 const double *s = par.fetch();
                 const double dz = omega * s[0] + s[1] / omega;
@@ -474,8 +529,10 @@ template <template <typename> class Store = Cpu::HostStorage> class Pdlp {
             if (!accepted) return finish(Status::NumericalError, *x, *y, it);
 
             se += eta_used;
-            par.for_each(n, AvgN{eta_used, xn->data, atyn->data, Sx.data, Saty.data});
-            par.for_each(m, AvgM{eta_used, yn->data, axn->data, Sy.data, Sax.data});
+            par.for_each(
+                n, AvgN{eta_used, xn->data, atyn->data, Sx.data, Saty.data});
+            par.for_each(
+                m, AvgM{eta_used, yn->data, axn->data, Sy.data, Sax.data});
             std::swap(x, xn);
             std::swap(y, yn);
             std::swap(ax, axn);

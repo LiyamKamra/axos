@@ -1,28 +1,26 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// Cutting planes for the MILP root: Gomory mixed-integer (GMI) cuts from the
-// optimal simplex tableau.
+// Gomory mixed-integer (GMI) cuts from the optimal simplex tableau (MILP root).
 //
 // A tableau row of a basic integer column x_k with fractional value reads
 //     x_k + sum_{j nonbasic} a_j v_j = 0
 // (v_j a column, or the activity w_i = (A x)_i of row i, see
-// DualSimplex::tableau_row). Writing each nonbasic v_j through its distance
-// to the bound it sits at, s_j = v_j - L_j (at lower) or U_j - v_j (at
-// upper), s_j >= 0, gives x_k + sum a'_j s_j = b with b = the current x_k and
-// a'_j = +-a_j. With f0 = frac(b) the GMI inequality is
+// DualSimplex::tableau_row). Writing each nonbasic through its distance to the
+// bound it sits at, s_j = v_j - L_j (at lower) or U_j - v_j (at upper), s_j >=
+// 0, gives x_k + sum a'_j s_j = b with b = the current x_k and a'_j = +-a_j.
+// With f0 = frac(b) the GMI inequality is
 //     sum g_j s_j >= 1,
 //     g_j = f_j / f0 or (1 - f_j) / (1 - f0)   (s_j integer, f_j = frac(a'_j))
 //     g_j = a'_j / f0 or -a'_j / (1 - f0)       (s_j continuous, by sign)
 // s_j is integer when v_j is an integer column with integral bounds; row
-// activities count as continuous. Substituting s_j back and expanding the
-// row activities over the columns gives a cut sum pi_t x_t >= pi_0 that is
-// valid for every integer point within the bounds it was derived from (the
-// global root bounds).
+// activities count as continuous. Substituting back and expanding the row
+// activities gives a cut sum pi_t x_t >= pi_0 valid for every integer point
+// within the bounds it was derived from (the global root bounds).
 //
-// A cut is kept only if it is numerically safe: no free nonbasic in the row,
-// coefficients within a 1e6 range (tiny ones are moved to the right-hand
-// side through the column bounds, which keeps validity), and a violation by
-// the LP point of at least 1e-4 relative to its norm (efficacy).
+// A cut is kept only if numerically safe: no free nonbasic in the row,
+// coefficients within a 1e6 range (tiny ones moved to the right-hand side
+// through the column bounds, keeping validity), and a violation by the LP point
+// of at least 1e-4 relative to its norm (efficacy).
 #pragma once
 
 #include "solver/lp/simplex.h"
@@ -46,9 +44,10 @@ struct Cut {
 // GMI cut from basis position r of the last solve of `lp` by `spx`. lb/ub:
 // the column bounds the cut must be valid for. x: the LP point (columns).
 inline bool
-gmi_cut(const DualSimplex &spx, const LpProblem &lp, int r, const std::vector<double> &lb,
-    const std::vector<double> &ub, const std::vector<double> &x, Cut &cut,
-    std::vector<int> &tidx, std::vector<double> &tcoef, std::vector<double> &dense,
+gmi_cut(const DualSimplex &spx, const LpProblem &lp, int r,
+    const std::vector<double> &lb, const std::vector<double> &ub,
+    const std::vector<double> &x, Cut &cut, std::vector<int> &tidx,
+    std::vector<double> &tcoef, std::vector<double> &dense,
     std::vector<int> &touched)
 {
     const int n = static_cast<int>(lp.cols());
@@ -95,7 +94,8 @@ gmi_cut(const DualSimplex &spx, const LpProblem &lp, int r, const std::vector<do
             break;
         }
         const double ap = at_lower ? a : -a;
-        const bool integer_s = j < n && is_int(lp, j) && bound == std::round(bound);
+        const bool integer_s =
+            j < n && is_int(lp, j) && bound == std::round(bound);
         double g;
         if (integer_s) {
             const double fj = ap - std::floor(ap);
@@ -111,20 +111,24 @@ gmi_cut(const DualSimplex &spx, const LpProblem &lp, int r, const std::vector<do
             add(j, sign * g);
         } else {
             const int i = j - n;
-            for (auto q = rp[i]; q < rp[i + 1]; ++q) add(ci[q], sign * g * va[q]);
+            for (auto q = rp[i]; q < rp[i + 1]; ++q)
+                add(ci[q], sign * g * va[q]);
         }
     }
     if (!ok) {
-        for (int t : touched) dense[t] = 0.0;
+        for (int t : touched)
+            dense[t] = 0.0;
         return false;
     }
     // collect, drop tiny coefficients through the bounds, check the range
     double mx = 0;
-    for (int t : touched) mx = std::max(mx, std::abs(dense[t]));
+    for (int t : touched)
+        mx = std::max(mx, std::abs(dense[t]));
     cut.idx.clear();
     cut.coef.clear();
     if (mx == 0) {
-        for (int t : touched) dense[t] = 0.0;
+        for (int t : touched)
+            dense[t] = 0.0;
         return false;
     }
     double mn = 1e300;
@@ -132,7 +136,8 @@ gmi_cut(const DualSimplex &spx, const LpProblem &lp, int r, const std::vector<do
         const double v = dense[t];
         dense[t] = 0.0;
         if (std::abs(v) < 1e-9 * mx) {
-            // sum pi x >= rhs  ->  drop pi_t x_t: rhs -= max over the bounds of pi_t x_t
+            // sum pi x >= rhs  ->  drop pi_t x_t: rhs -= max over the bounds of
+            // pi_t x_t
             const double worst = v > 0 ? v * ub[t] : v * lb[t];
             if (!std::isfinite(worst) || std::abs(worst) > 1e12) {
                 ok = false;
@@ -158,7 +163,8 @@ gmi_cut(const DualSimplex &spx, const LpProblem &lp, int r, const std::vector<do
     if (viol <= 1e-6 * (1 + std::abs(rhs)) || cut.efficacy < 1e-4) return false;
     // scale to a unit largest coefficient
     const double s = 1.0 / mx;
-    for (double &c : cut.coef) c *= s;
+    for (double &c : cut.coef)
+        c *= s;
     cut.rhs *= s;
     return true;
 }
@@ -174,7 +180,8 @@ append_cuts(LpProblem &lp, const std::vector<Cut> &cuts)
     std::vector<double> va(lp.A.values(), lp.A.values() + lp.A.nnz());
     for (const Cut &c : cuts) {
         std::vector<std::pair<int, double>> e;
-        for (size_t t = 0; t < c.idx.size(); ++t) e.emplace_back(c.idx[t], c.coef[t]);
+        for (size_t t = 0; t < c.idx.size(); ++t)
+            e.emplace_back(c.idx[t], c.coef[t]);
         std::sort(e.begin(), e.end());
         for (auto &pr : e) {
             ci.push_back(pr.first);

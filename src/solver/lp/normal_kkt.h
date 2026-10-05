@@ -2,15 +2,16 @@
 //
 // Normal-equations solver for the interior-point KKT system (CPU).
 //
-// The augmented system used by Ipm,
+// Instead of the augmented system
 //        [ -D    A^T ] [dx]   [r1]
-//        [  A     E  ] [dy] = [r2],     D = Theta_x^{-1} + rho,  E = Theta_w + delta,
-// is solved by eliminating dx:  S dy = r2 + A D^{-1} r1  with S = A D^{-1} A^T + E
-// (symmetric positive definite), then dx = D^{-1}(A^T dy - r1). This wins when
-// A has many more columns than rows and no dense columns (transportation and
-// assignment LPs, set covering): S is only m x m and is factored with the
-// multifrontal Cholesky. It is not used with free columns (D -> rho makes S
-// badly conditioned) or when a column touches many rows (S would be dense).
+//        [  A     E  ] [dy] = [r2],   D = Theta_x^{-1} + rho,  E = Theta_w +
+//        delta,
+// eliminate dx:  S dy = r2 + A D^{-1} r1  with S = A D^{-1} A^T + E (symmetric
+// positive definite), then dx = D^{-1}(A^T dy - r1). Wins when A has far more
+// columns than rows and no dense columns (transportation / assignment LPs, set
+// covering): S is only m x m, factored with the multifrontal Cholesky. Not used
+// with free columns (D -> rho makes S badly conditioned) or when a column
+// touches many rows (S would be dense).
 #pragma once
 
 #include "solver/model.h"
@@ -37,7 +38,8 @@ class NormalKkt {
         m_ = q.rows();
         n_ = q.cols();
         for (size_t j = 0; j < n_; ++j)
-            if (!std::isfinite(q.col_lb[j]) && !std::isfinite(q.col_ub[j])) return;
+            if (!std::isfinite(q.col_lb[j]) && !std::isfinite(q.col_ub[j]))
+                return;
         A_ = &q.A;
         AT_ = q.A.transpose();
         const int *cp = AT_.row_ptr();
@@ -86,21 +88,32 @@ class NormalKkt {
         ok_ = true;
     }
 
-    bool eligible() const { return ok_; }
+    bool
+    eligible() const
+    { return ok_; }
 
-    void analyze()
+    void
+    analyze()
     {
         ldl_.analyze(S_);
         analyzed_ = true;
     }
-    double factor_flops() const { return ldl_.factor_flops(); }
-    size_t factor_nnz() const { return ldl_.factor_nnz(); }
-    void print_profile() const { ldl_.print_profile(); }
+    double
+    factor_flops() const
+    { return ldl_.factor_flops(); }
+    size_t
+    factor_nnz() const
+    { return ldl_.factor_nnz(); }
+    void
+    print_profile() const
+    { ldl_.print_profile(); }
 
     // hz: Theta_x^{-1} for the n columns; thw: Theta_w for the m rows.
-    bool factorize(const double *hz, const double *thw, double rho, double delta)
+    bool
+    factorize(const double *hz, const double *thw, double rho, double delta)
     {
-        for (size_t j = 0; j < n_; ++j) dinv_[j] = 1.0 / (hz[j] + rho);
+        for (size_t j = 0; j < n_; ++j)
+            dinv_[j] = 1.0 / (hz[j] + rho);
         const int *ar = A_->row_ptr(), *ac = A_->col_ind();
         const double *av = A_->values();
         const int *tr = AT_.row_ptr(), *tc = AT_.col_ind();
@@ -114,7 +127,8 @@ class NormalKkt {
                 for (int k = ar[i]; k < ar[i + 1]; ++k) {
                     const int j = ac[k];
                     const double f = av[k] * dinv_[j];
-                    for (int t = tr[j]; t < tr[j + 1]; ++t) acc[tc[t]] += f * tv[t];
+                    for (int t = tr[j]; t < tr[j + 1]; ++t)
+                        acc[tc[t]] += f * tv[t];
                 }
                 for (int32_t p = srp_[i]; p < srp_[i + 1]; ++p) {
                     sv[p] = acc[sci_[p]];
@@ -127,12 +141,14 @@ class NormalKkt {
     }
 
     // Solves the (regularized) augmented system: rhs = [r1 (n); r2 (m)].
-    void solve(const double *r, double *out)
+    void
+    solve(const double *r, double *out)
     {
         const double *r1 = r, *r2 = r + n_;
         // y := r2 + A D^{-1} r1
         std::vector<double> t(n_);
-        for (size_t j = 0; j < n_; ++j) t[j] = dinv_[j] * r1[j];
+        for (size_t j = 0; j < n_; ++j)
+            t[j] = dinv_[j] * r1[j];
         for (size_t i = 0; i < m_; ++i) {
             double s = r2[i];
             for (int k = A_->row_ptr()[i]; k < A_->row_ptr()[i + 1]; ++k)
@@ -141,7 +157,8 @@ class NormalKkt {
         }
         ldl_.solve(rhs_, y_);
         double *dx = out, *dy = out + n_;
-        for (size_t i = 0; i < m_; ++i) dy[i] = y_.data[i];
+        for (size_t i = 0; i < m_; ++i)
+            dy[i] = y_.data[i];
         // dx = D^{-1} (A^T dy - r1)
         for (size_t j = 0; j < n_; ++j) {
             double s = 0;

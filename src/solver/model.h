@@ -6,15 +6,14 @@
 //   subject to  row_lb <= A x <= row_ub
 //               col_lb <=  x  <= col_ub
 //
-// Any bound may be +-infinity (Solver::kInf). Equalities have row_lb ==
-// row_ub. A maximization problem is stored negated (c -> -c, offset -> -offset)
-// with `maximize` set so results can be reported in the original sense.
+// Any bound may be +-infinity (Solver::kInf). Equalities have row_lb == row_ub.
+// A maximization problem is stored negated (c -> -c, offset -> -offset) with
+// `maximize` set, so results can be reported in the original sense.
 //
 // Duals follow the convention used throughout the solvers:
-//   z = c - A^T y  (reduced costs)
-//   y_i >= 0 only if the row is at its lower bound, y_i <= 0 only if at its
-//   upper bound; z_j >= 0 only if x_j is at its lower bound, z_j <= 0 only if
-//   x_j is at its upper bound.
+//   z = c - A^T y  (reduced costs); y_i >= 0 only at a lower row bound, <= 0
+//   only at an upper one; z_j >= 0 only at a lower column bound, <= 0 only at
+//   an upper one.
 //   dual objective = offset + sum_i (y_i > 0 ? row_lb_i : row_ub_i) * y_i
 //                           + sum_j (z_j > 0 ? col_lb_j : col_ub_j) * z_j
 #pragma once
@@ -34,8 +33,8 @@ inline constexpr double kInf = std::numeric_limits<double>::infinity();
 enum class Status {
     NotSolved,
     Optimal,
-    Infeasible,      // primal infeasible (a dual ray was found)
-    Unbounded,       // dual infeasible: a primal improving ray exists
+    Infeasible, // primal infeasible (a dual ray was found)
+    Unbounded,  // dual infeasible: a primal improving ray exists
     IterationLimit,
     TimeLimit,
     NumericalError,
@@ -45,13 +44,20 @@ inline const char *
 to_string(Status s)
 {
     switch (s) {
-    case Status::NotSolved: return "not solved";
-    case Status::Optimal: return "optimal";
-    case Status::Infeasible: return "infeasible";
-    case Status::Unbounded: return "unbounded";
-    case Status::IterationLimit: return "iteration limit";
-    case Status::TimeLimit: return "time limit";
-    case Status::NumericalError: return "numerical error";
+    case Status::NotSolved:
+        return "not solved";
+    case Status::Optimal:
+        return "optimal";
+    case Status::Infeasible:
+        return "infeasible";
+    case Status::Unbounded:
+        return "unbounded";
+    case Status::IterationLimit:
+        return "iteration limit";
+    case Status::TimeLimit:
+        return "time limit";
+    case Status::NumericalError:
+        return "numerical error";
     }
     return "?";
 }
@@ -67,9 +73,14 @@ struct LpProblem {
     std::vector<uint8_t> is_integer; // empty for a pure LP
     std::vector<std::string> row_names, col_names;
 
-    size_t rows() const { return A.rows(); }
-    size_t cols() const { return A.cols(); }
-    bool has_integers() const
+    size_t
+    rows() const
+    { return A.rows(); }
+    size_t
+    cols() const
+    { return A.cols(); }
+    bool
+    has_integers() const
     {
         for (auto v : is_integer)
             if (v) return true;
@@ -92,7 +103,8 @@ struct LpProblem {
         std::string v = A.validate();
         if (!v.empty()) return "matrix: " + v;
         for (size_t j = 0; j < n; ++j) {
-            if (std::isnan(c[j]) || std::isnan(col_lb[j]) || std::isnan(col_ub[j]))
+            if (std::isnan(c[j]) || std::isnan(col_lb[j]) ||
+                std::isnan(col_ub[j]))
                 return "NaN in column data at " + std::to_string(j);
             if (col_lb[j] > col_ub[j])
                 return "column " + std::to_string(j) + " has lb > ub";
@@ -121,30 +133,31 @@ struct LpProblem {
 // Solution in the problem's stored (minimization) form.
 struct LpSolution {
     Status status = Status::NotSolved;
-    std::vector<double> x;     // primal, cols()
-    std::vector<double> y;     // row duals, rows()
-    std::vector<double> z;     // reduced costs, cols()
+    std::vector<double> x; // primal, cols()
+    std::vector<double> y; // row duals, rows()
+    std::vector<double> z; // reduced costs, cols()
     double primal_objective = 0;
     double dual_objective = 0;
     double primal_residual = 0; // ||violation of Ax in [row_lb,row_ub]||_2
     double dual_residual = 0;   // ||violation of reduced-cost sign||_2
     double gap = 0;             // |primal - dual objective|
-    // Bound on the objective error of (x, y): the gap plus each residual
-    // times the size of the variables it multiplies,
+    // Bound on the objective error of (x, y): the gap plus each residual times
+    // the size of the variables it multiplies,
     //   gap + ||dual residual||_2 ||x||_2 + ||primal residual||_2 ||y||_2.
     // A small relative gap with a large error_bound means the point is not
     // trustworthy (badly scaled problem).
     double error_bound = 0;
     long iterations = 0;
     double seconds = 0;
-    double factor_flops = 0; // Ipm (CPU): estimated flops of one KKT factorization, when known
+    double factor_flops =
+        0; // Ipm (CPU): estimated flops of one KKT factorization, when known
 };
 
-// Which algorithm solve_lp() uses. Pdlp is cheap per iteration (best on the GPU
-// and on huge problems), reaches moderate accuracy and detects infeasibility;
-// Ipm is accurate in few iterations but has no infeasibility certificates;
-// Simplex is the dual simplex (exact vertex solutions, certificates, warm
-// starts); Auto runs Ipm, then Simplex, then Pdlp until one reports a result.
+// Algorithm of solve_lp(). Pdlp: cheap per iteration, moderate accuracy,
+// detects infeasibility (best on the GPU and huge problems); Ipm: accurate in
+// few iterations, no infeasibility certificates; Simplex: dual simplex (exact
+// vertex solutions, certificates, warm starts); Auto: Ipm, then Simplex, then
+// Pdlp, until one reports a result.
 enum class LpMethod { Pdlp, Ipm, Simplex, Auto };
 
 // Termination tolerances follow the PDLP convention:
@@ -161,11 +174,18 @@ struct SolverOptions {
     long max_iterations = 200000;
     double time_limit = 1e100; // seconds
     bool verbose = false;
-    bool pdlp_polish = false;  // Pdlp: reach tight tolerances by polishing a 1e-4 solution (primal / dual feasibility solves)
-    bool pdlp_halpern = true;  // Pdlp: reflected Halpern PDHG with fixed steps instead of adaptive-step PDHG with averaging
-    int ipm_normal = 0;       // Ipm (CPU): 0 choose between normal equations and the augmented system, 1 force normal, -1 never
-    double ipm_max_flops = 0; // Ipm (CPU): give up (NotSolved) if one factorization exceeds this many flops; 0 = no limit
-    bool crossover = false; // Ipm: finish with a simplex crossover to a basic (vertex) solution
+    bool pdlp_polish =
+        false; // Pdlp: reach tight tolerances by polishing a 1e-4 solution
+               // (primal / dual feasibility solves)
+    bool pdlp_halpern = true; // Pdlp: reflected Halpern PDHG with fixed steps
+                              // instead of adaptive-step PDHG with averaging
+    int ipm_normal = 0; // Ipm (CPU): 0 choose between normal equations and the
+                        // augmented system, 1 force normal, -1 never
+    double ipm_max_flops =
+        0; // Ipm (CPU): give up (NotSolved) if one factorization exceeds this
+           // many flops; 0 = no limit
+    bool crossover = false; // Ipm: finish with a simplex crossover to a basic
+                            // (vertex) solution
     bool presolve = true;
     bool scaling = true;
     int ruiz_iterations = 10;
@@ -174,9 +194,7 @@ struct SolverOptions {
 
     void
     set_tolerance(double eps)
-    {
-        eps_primal = eps_dual = eps_gap = eps;
-    }
+    { eps_primal = eps_dual = eps_gap = eps; }
 };
 
 // Residuals of a candidate (x, y) for `p`, computed on the host in double
@@ -209,19 +227,27 @@ evaluate_solution(const LpProblem &p, const std::vector<double> &x,
         pr += viol * viol;
         double yi = y[i];
         // A dual on an infinite bound is a dual infeasibility.
-        if (yi > 0 && std::isinf(p.row_lb[i])) dr += yi * yi;
-        else if (yi < 0 && std::isinf(p.row_ub[i])) dr += yi * yi;
-        else if (yi > 0) dual += yi * p.row_lb[i];
-        else if (yi < 0) dual += yi * p.row_ub[i];
+        if (yi > 0 && std::isinf(p.row_lb[i]))
+            dr += yi * yi;
+        else if (yi < 0 && std::isinf(p.row_ub[i]))
+            dr += yi * yi;
+        else if (yi > 0)
+            dual += yi * p.row_lb[i];
+        else if (yi < 0)
+            dual += yi * p.row_ub[i];
     }
     for (size_t j = 0; j < n; ++j) {
         double viol = std::max({p.col_lb[j] - x[j], x[j] - p.col_ub[j], 0.0});
         pr += viol * viol;
         double zj = s.z[j];
-        if (zj > 0 && std::isinf(p.col_lb[j])) dr += zj * zj;
-        else if (zj < 0 && std::isinf(p.col_ub[j])) dr += zj * zj;
-        else if (zj > 0) dual += zj * p.col_lb[j];
-        else if (zj < 0) dual += zj * p.col_ub[j];
+        if (zj > 0 && std::isinf(p.col_lb[j]))
+            dr += zj * zj;
+        else if (zj < 0 && std::isinf(p.col_ub[j]))
+            dr += zj * zj;
+        else if (zj > 0)
+            dual += zj * p.col_lb[j];
+        else if (zj < 0)
+            dual += zj * p.col_ub[j];
     }
     s.primal_objective = p.objective(x);
     s.dual_objective = dual;
@@ -229,8 +255,10 @@ evaluate_solution(const LpProblem &p, const std::vector<double> &x,
     s.dual_residual = std::sqrt(dr);
     s.gap = std::abs(s.primal_objective - s.dual_objective);
     double xn = 0, yn = 0;
-    for (double v : x) xn += v * v;
-    for (double v : y) yn += v * v;
+    for (double v : x)
+        xn += v * v;
+    for (double v : y)
+        yn += v * v;
     s.error_bound = s.gap + s.dual_residual * std::sqrt(xn) +
                     s.primal_residual * std::sqrt(yn);
     return s;

@@ -23,8 +23,8 @@ struct Scaling {
 
 // Computes scaling factors for A (does not modify A).
 inline Scaling
-compute_scaling(const HostMatrix &A0, int ruiz_iterations,
-    double pock_chambolle_alpha)
+compute_scaling(
+    const HostMatrix &A0, int ruiz_iterations, double pock_chambolle_alpha)
 {
     const size_t m = A0.rows(), n = A0.cols();
     Scaling sc;
@@ -37,11 +37,15 @@ compute_scaling(const HostMatrix &A0, int ruiz_iterations,
     for (int it = 0; it < ruiz_iterations; ++it) {
         Sparse::row_norms(A, rn.data(), Sparse::Norm::Linf);
         Sparse::col_norms(A, cn.data(), Sparse::Norm::Linf);
-        for (size_t i = 0; i < m; ++i) rn[i] = rn[i] > 0 ? 1.0 / std::sqrt(rn[i]) : 1.0;
-        for (size_t j = 0; j < n; ++j) cn[j] = cn[j] > 0 ? 1.0 / std::sqrt(cn[j]) : 1.0;
+        for (size_t i = 0; i < m; ++i)
+            rn[i] = rn[i] > 0 ? 1.0 / std::sqrt(rn[i]) : 1.0;
+        for (size_t j = 0; j < n; ++j)
+            cn[j] = cn[j] > 0 ? 1.0 / std::sqrt(cn[j]) : 1.0;
         Sparse::scale_rows_cols(A, rn.data(), cn.data());
-        for (size_t i = 0; i < m; ++i) sc.row[i] *= rn[i];
-        for (size_t j = 0; j < n; ++j) sc.col[j] *= cn[j];
+        for (size_t i = 0; i < m; ++i)
+            sc.row[i] *= rn[i];
+        for (size_t j = 0; j < n; ++j)
+            sc.col[j] *= cn[j];
     }
 
     if (pock_chambolle_alpha >= 0) {
@@ -60,11 +64,16 @@ compute_scaling(const HostMatrix &A0, int ruiz_iterations,
                 cn[ci[k]] += std::pow(a, pc);
             }
         for (size_t i = 0; i < m; ++i)
-            rn[i] = rn[i] > 0 ? 1.0 / std::sqrt(std::pow(rn[i], 1.0 / pr)) : 1.0;
+            rn[i] =
+                rn[i] > 0 ? 1.0 / std::sqrt(std::pow(rn[i], 1.0 / pr)) : 1.0;
         for (size_t j = 0; j < n; ++j)
-            cn[j] = cn[j] > 0 ? 1.0 / std::sqrt(std::pow(cn[j], 1.0 / std::max(pc, 1e-12))) : 1.0;
-        for (size_t i = 0; i < m; ++i) sc.row[i] *= rn[i];
-        for (size_t j = 0; j < n; ++j) sc.col[j] *= cn[j];
+            cn[j] = cn[j] > 0 ? 1.0 / std::sqrt(std::pow(
+                                          cn[j], 1.0 / std::max(pc, 1e-12)))
+                              : 1.0;
+        for (size_t i = 0; i < m; ++i)
+            sc.row[i] *= rn[i];
+        for (size_t j = 0; j < n; ++j)
+            sc.col[j] *= cn[j];
     }
     return sc;
 }
@@ -91,11 +100,13 @@ apply_scaling(const LpProblem &p, const Scaling &sc)
 
 // Maps a solution of the scaled problem back to the original variables.
 inline void
-unscale_solution(std::vector<double> &x, std::vector<double> &y,
-    const Scaling &sc)
+unscale_solution(
+    std::vector<double> &x, std::vector<double> &y, const Scaling &sc)
 {
-    for (size_t j = 0; j < x.size(); ++j) x[j] *= sc.col[j];
-    for (size_t i = 0; i < y.size(); ++i) y[i] *= sc.row[i];
+    for (size_t j = 0; j < x.size(); ++j)
+        x[j] *= sc.col[j];
+    for (size_t i = 0; i < y.size(); ++i)
+        y[i] *= sc.row[i];
 }
 
 } // namespace Solver

@@ -236,3 +236,40 @@ PDLP to 1e-4, then a primal feasibility solve (objective dropped) and a dual fea
 solve (b and bounds zeroed), each from the current point. Mixed results at a 1e-6
 to 1e-8 target: 80bau3b 5.5 s -> 2.5 s, shell 117 -> 80 ms, but qap15 0.56 -> 1.2 s,
 stair 0.37 -> 1.3 s, e226 and 25fv47 slower; perold and greenbea still hit the limit.
+
+## Re-verification on the benchmark machine (2026/10/05)
+
+Re-run after the compile fix (tensorET lambda-local type shadowing and explicit
+print_level template arguments): the same machine (AMD Ryzen 7 7840HS, RTX 4060
+Laptop) and the same commands, results are unchanged within run-to-run noise.
+The recorded tables above stay as the reference; this section only confirms they
+still reproduce.
+
+Generated instances, 60 s limit (`./build/bench_lp --time 60` and
+`bench_highs.py build/lp_bench 60`), ms:
+
+```
+instance         ipm_cpu   ipm_cuda   pdlp_cpu_1e-6  pdlp_cuda_1e-6  highs_auto  highs_ds  highs_ipm
+transport100         17        411             79              63          35           33        56
+transport300        343        504            299             240         251          251       502
+mcf10k            13439       6862            187             137         454          449       810
+packing20k   786 (limit)  667 (limit)         919             736  60043(limit) 60042(limit) 63416(limit)
+```
+
+Every optimal / (limit) verdict matches the tables in section 1; `packing20k`
+is still solved only by PDLP (1e-4: 98/83 ms; 1e-6: 919/736 ms), and its
+objective agrees with the doc to 9 significant digits. The IPM cells for
+`mcf10k` land on the section-1 values (13.4 s CPU vs 13.7 s, 6.9 s GPU vs 8.9 s)
+and reproduce the fill-in story; `transport300` IPM moved 489 -> 343 ms CPU,
+419 -> 504 ms GPU (the machine is on battery, so the CPU is throttled and the
+absolute times drift by tens of percent; the ranking does not).
+
+Netlib, `run_mps` on the 25 models (`fetch_netlib.sh`), 90 s limit: Auto / IPM
+/ PDLP reproduce the section-2 verdicts exactly - Auto solves all 19 feasible
+models and certifies all 6 infeasible ones; IPM solves the 18 feasible
+non-greenbea models to ~1e-9 and never certifies infeasibility; PDLP certifies
+the 3 infeasible ones (forest6, galenet, refinery) and does not finish greenbea,
+perold, klein1 or vol1. `greenbea`'s simplex optimum (-7.2555248130e+07,
+5207 iterations) matches section 2. The section-2 HiGHS column needs highspy,
+which is not installed in this venv, so that comparison was not re-run
+(`pip install highspy`).

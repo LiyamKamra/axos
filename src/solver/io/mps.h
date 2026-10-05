@@ -60,12 +60,14 @@ tokens(const std::string &line)
 inline std::vector<std::string>
 fixed_tokens(const std::string &line)
 {
-    static const size_t pos[6][2] = {{1, 3}, {4, 12}, {14, 22}, {24, 36}, {39, 47}, {49, 61}};
+    static const size_t pos[6][2] = {
+        {1, 3}, {4, 12}, {14, 22}, {24, 36}, {39, 47}, {49, 61}};
     std::vector<std::string> t;
     for (const auto &f : pos) {
         if (f[0] >= line.size()) break;
         std::string s = line.substr(f[0], f[1] - f[0]);
-        const size_t a = s.find_first_not_of(" \t"), b = s.find_last_not_of(" \t");
+        const size_t a = s.find_first_not_of(" \t"),
+                     b = s.find_last_not_of(" \t");
         if (a != std::string::npos) t.push_back(s.substr(a, b - a + 1));
     }
     return t;
@@ -77,8 +79,8 @@ to_double(const std::string &s, size_t line)
     char *end = nullptr;
     double v = std::strtod(s.c_str(), &end);
     if (end == s.c_str() || *end != '\0')
-        throw std::runtime_error("MPS line " + std::to_string(line) +
-                                 ": bad number '" + s + "'");
+        throw std::runtime_error(
+            "MPS line " + std::to_string(line) + ": bad number '" + s + "'");
     return v;
 }
 
@@ -105,13 +107,25 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
 {
     using namespace mps_detail;
     LpProblem p;
-    enum class Sec { None, Name, ObjSense, ObjName, Rows, Columns, Rhs, Ranges, Bounds, Quad, End };
+    enum class Sec {
+        None,
+        Name,
+        ObjSense,
+        ObjName,
+        Rows,
+        Columns,
+        Rhs,
+        Ranges,
+        Bounds,
+        Quad,
+        End
+    };
     bool quad_full = false; // QMATRIX lists both triangles, QUADOBJ one
     Sec sec = Sec::None;
 
     std::string obj_row, obj_name_wanted;
-    std::vector<char> row_type;                     // per constraint row
-    std::vector<double> rhs, range;                 // per constraint row
+    std::vector<char> row_type;     // per constraint row
+    std::vector<double> rhs, range; // per constraint row
     std::vector<std::string> row_names;
     std::unordered_map<std::string, int> row_index; // constraint rows only
     std::unordered_set<std::string> dropped_rows;   // extra N rows
@@ -143,8 +157,10 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
         ++ln;
         if (!line.empty() && line.back() == '\r') line.pop_back();
         if (line.empty() || line[0] == '*') continue;
-        const bool data_line = std::isspace(static_cast<unsigned char>(line[0]));
-        auto t = (fixed_format && data_line) ? fixed_tokens(line) : tokens(line);
+        const bool data_line =
+            std::isspace(static_cast<unsigned char>(line[0]));
+        auto t =
+            (fixed_format && data_line) ? fixed_tokens(line) : tokens(line);
         if (t.empty()) continue;
 
         if (!std::isspace(static_cast<unsigned char>(line[0]))) { // header
@@ -157,23 +173,31 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
                 if (t.size() > 1) maximize = upper(t[1]).rfind("MAX", 0) == 0;
             } else if (h == "OBJNAME") {
                 sec = Sec::ObjName;
-            } else if (h == "ROWS") sec = Sec::Rows;
-            else if (h == "COLUMNS") sec = Sec::Columns;
-            else if (h == "RHS") sec = Sec::Rhs;
-            else if (h == "RANGES") sec = Sec::Ranges;
-            else if (h == "BOUNDS") sec = Sec::Bounds;
+            } else if (h == "ROWS")
+                sec = Sec::Rows;
+            else if (h == "COLUMNS")
+                sec = Sec::Columns;
+            else if (h == "RHS")
+                sec = Sec::Rhs;
+            else if (h == "RANGES")
+                sec = Sec::Ranges;
+            else if (h == "BOUNDS")
+                sec = Sec::Bounds;
             else if (h == "QUADOBJ" || h == "QMATRIX" || h == "QSECTION") {
                 if (!quad)
-                    throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                             ": quadratic objective; read it with read_qps");
+                    throw std::runtime_error(
+                        "MPS line " + std::to_string(ln) +
+                        ": quadratic objective; read it with read_qps");
                 sec = Sec::Quad;
                 quad_full = (h == "QMATRIX");
                 if (h == "QSECTION" && t.size() > 1 && t[1] != obj_row)
-                    throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                             ": quadratic constraints are not supported");
-            }
-            else if (h == "ENDATA") { sec = Sec::End; break; }
-            else
+                    throw std::runtime_error(
+                        "MPS line " + std::to_string(ln) +
+                        ": quadratic constraints are not supported");
+            } else if (h == "ENDATA") {
+                sec = Sec::End;
+                break;
+            } else
                 throw std::runtime_error("MPS line " + std::to_string(ln) +
                                          ": unknown section '" + t[0] + "'");
             continue;
@@ -188,8 +212,8 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
             break;
         case Sec::Rows: {
             if (t.size() < 2)
-                throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                         ": bad ROWS entry");
+                throw std::runtime_error(
+                    "MPS line " + std::to_string(ln) + ": bad ROWS entry");
             char ty = static_cast<char>(std::toupper(t[0][0]));
             if (ty == 'N') {
                 if (obj_row.empty() &&
@@ -215,8 +239,8 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
                 break;
             }
             if (t.size() < 3 || t.size() % 2 == 0)
-                throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                         ": bad COLUMNS entry");
+                throw std::runtime_error(
+                    "MPS line " + std::to_string(ln) + ": bad COLUMNS entry");
             int j = col_of(t[0]);
             for (size_t k = 1; k + 1 < t.size(); k += 2) {
                 double v = to_double(t[k + 1], ln);
@@ -226,8 +250,9 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
                     auto it = row_index.find(t[k]);
                     if (it == row_index.end()) {
                         if (dropped_rows.count(t[k])) continue;
-                        throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                                 ": unknown row '" + t[k] + "'");
+                        throw std::runtime_error(
+                            "MPS line " + std::to_string(ln) +
+                            ": unknown row '" + t[k] + "'");
                     }
                     ci_i.push_back(it->second);
                     ci_j.push_back(j);
@@ -252,41 +277,58 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
                     throw std::runtime_error("MPS line " + std::to_string(ln) +
                                              ": unknown row '" + t[k] + "'");
                 }
-                if (sec == Sec::Rhs) rhs[it->second] = v;
-                else range[it->second] = v;
+                if (sec == Sec::Rhs)
+                    rhs[it->second] = v;
+                else
+                    range[it->second] = v;
             }
             break;
         }
         case Sec::Bounds: {
             std::string ty = upper(t[0]);
-            bool valued = !(ty == "FR" || ty == "MI" || ty == "PL" || ty == "BV");
+            bool valued =
+                !(ty == "FR" || ty == "MI" || ty == "PL" || ty == "BV");
             size_t need = valued ? 3 : 2; // without a bound-set name
             if (t.size() < need)
-                throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                         ": bad BOUNDS entry");
+                throw std::runtime_error(
+                    "MPS line " + std::to_string(ln) + ": bad BOUNDS entry");
             size_t name_at = (t.size() == need) ? 1 : 2;
             int j = col_of(t[name_at]);
             double v = valued ? clamp_inf(to_double(t[name_at + 1], ln)) : 0;
             if (ty == "UP") {
                 ub[j] = v;
                 if (v < 0 && lb[j] == 0) lb[j] = -kInf;
-            } else if (ty == "LO") lb[j] = v;
-            else if (ty == "FX") lb[j] = ub[j] = v;
-            else if (ty == "FR") { lb[j] = -kInf; ub[j] = kInf; }
-            else if (ty == "MI") lb[j] = -kInf;
-            else if (ty == "PL") ub[j] = kInf;
-            else if (ty == "BV") { lb[j] = 0; ub[j] = 1; integer[j] = 1; }
-            else if (ty == "LI") { lb[j] = v; integer[j] = 1; }
-            else if (ty == "UI") { ub[j] = v; integer[j] = 1; }
-            else
+            } else if (ty == "LO")
+                lb[j] = v;
+            else if (ty == "FX")
+                lb[j] = ub[j] = v;
+            else if (ty == "FR") {
+                lb[j] = -kInf;
+                ub[j] = kInf;
+            } else if (ty == "MI")
+                lb[j] = -kInf;
+            else if (ty == "PL")
+                ub[j] = kInf;
+            else if (ty == "BV") {
+                lb[j] = 0;
+                ub[j] = 1;
+                integer[j] = 1;
+            } else if (ty == "LI") {
+                lb[j] = v;
+                integer[j] = 1;
+            } else if (ty == "UI") {
+                ub[j] = v;
+                integer[j] = 1;
+            } else
                 throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                         ": unsupported bound type '" + t[0] + "'");
+                                         ": unsupported bound type '" + t[0] +
+                                         "'");
             break;
         }
         case Sec::Quad: {
             if (t.size() < 3)
-                throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                         ": bad quadratic entry");
+                throw std::runtime_error(
+                    "MPS line " + std::to_string(ln) + ": bad quadratic entry");
             const int a = col_of(t[0]), b = col_of(t[1]);
             const double v = to_double(t[2], ln);
             quad->push_back({a, b, v});
@@ -294,8 +336,8 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
             break;
         }
         default:
-            throw std::runtime_error("MPS line " + std::to_string(ln) +
-                                     ": data outside a section");
+            throw std::runtime_error(
+                "MPS line " + std::to_string(ln) + ": data outside a section");
         }
     }
     if (obj_row.empty() && row_type.empty() && col_names.empty())
@@ -318,9 +360,15 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
             if (has_range) p.row_ub[i] = r + R;
             break;
         default: // E
-            if (!has_range) { p.row_lb[i] = p.row_ub[i] = r; }
-            else if (range[i] >= 0) { p.row_lb[i] = r; p.row_ub[i] = r + R; }
-            else { p.row_lb[i] = r - R; p.row_ub[i] = r; }
+            if (!has_range) {
+                p.row_lb[i] = p.row_ub[i] = r;
+            } else if (range[i] >= 0) {
+                p.row_lb[i] = r;
+                p.row_ub[i] = r + R;
+            } else {
+                p.row_lb[i] = r - R;
+                p.row_ub[i] = r;
+            }
         }
     }
     Sparse::CooBuilder<double> b(m, n);
@@ -335,11 +383,13 @@ read_mps(std::istream &in, std::vector<QuadEntry> *quad = nullptr,
     p.row_names = row_names;
     p.col_names = col_names;
     bool any_int = false;
-    for (auto v : integer) any_int |= (v != 0);
+    for (auto v : integer)
+        any_int |= (v != 0);
     if (any_int) p.is_integer = integer;
     if (maximize) {
         p.maximize = true;
-        for (auto &v : p.c) v = -v;
+        for (auto &v : p.c)
+            v = -v;
         p.offset = -p.offset;
     }
     return p;
@@ -359,10 +409,12 @@ write_mps(std::ostream &out, const LpProblem &p)
 {
     const size_t m = p.rows(), n = p.cols();
     auto rname = [&](size_t i) {
-        return i < p.row_names.size() ? p.row_names[i] : "R" + std::to_string(i + 1);
+        return i < p.row_names.size() ? p.row_names[i]
+                                      : "R" + std::to_string(i + 1);
     };
     auto cname = [&](size_t j) {
-        return j < p.col_names.size() ? p.col_names[j] : "C" + std::to_string(j + 1);
+        return j < p.col_names.size() ? p.col_names[j]
+                                      : "C" + std::to_string(j + 1);
     };
     out.precision(17);
     const double sgn = p.maximize ? -1.0 : 1.0;
@@ -372,9 +424,12 @@ write_mps(std::ostream &out, const LpProblem &p)
     // A free row (both bounds infinite) constrains nothing; it is written as
     // an extra N row, which readers drop.
     for (size_t i = 0; i < m; ++i) {
-        const bool lo = std::isfinite(p.row_lb[i]), hi = std::isfinite(p.row_ub[i]);
+        const bool lo = std::isfinite(p.row_lb[i]),
+                   hi = std::isfinite(p.row_ub[i]);
         char ty = (lo && hi && p.row_lb[i] == p.row_ub[i]) ? 'E'
-                  : hi ? 'L' : lo ? 'G' : 'N';
+                  : hi                                     ? 'L'
+                  : lo                                     ? 'G'
+                                                           : 'N';
         out << ' ' << ty << ' ' << rname(i) << "\n";
     }
     // Column-wise entries via the transpose.
@@ -389,7 +444,8 @@ write_mps(std::ostream &out, const LpProblem &p)
                 << (is_int ? "INTORG" : "INTEND") << "'\n";
             in_int = is_int;
         }
-        if (p.c[j] != 0) out << "    " << cname(j) << " OBJ " << sgn * p.c[j] << "\n";
+        if (p.c[j] != 0)
+            out << "    " << cname(j) << " OBJ " << sgn * p.c[j] << "\n";
         for (int k = At.row_ptr()[j]; k < At.row_ptr()[j + 1]; ++k)
             out << "    " << cname(j) << ' ' << rname(At.col_ind()[k]) << ' '
                 << At.values()[k] << "\n";
@@ -401,27 +457,42 @@ write_mps(std::ostream &out, const LpProblem &p)
     if (p.offset != 0) out << "    RHS OBJ " << -sgn * p.offset << "\n";
     std::vector<int> ranged;
     for (size_t i = 0; i < m; ++i) {
-        const bool lo = std::isfinite(p.row_lb[i]), hi = std::isfinite(p.row_ub[i]);
+        const bool lo = std::isfinite(p.row_lb[i]),
+                   hi = std::isfinite(p.row_ub[i]);
         double r = (lo && hi && p.row_lb[i] == p.row_ub[i]) ? p.row_lb[i]
-                   : hi ? p.row_ub[i] : lo ? p.row_lb[i] : 0.0;
+                   : hi                                     ? p.row_ub[i]
+                   : lo                                     ? p.row_lb[i]
+                                                            : 0.0;
         if (r != 0) out << "    RHS " << rname(i) << ' ' << r << "\n";
-        if (lo && hi && p.row_lb[i] != p.row_ub[i]) ranged.push_back(static_cast<int>(i));
+        if (lo && hi && p.row_lb[i] != p.row_ub[i])
+            ranged.push_back(static_cast<int>(i));
     }
     if (!ranged.empty()) {
         out << "RANGES\n";
         for (int i : ranged)
-            out << "    RNG " << rname(i) << ' ' << (p.row_ub[i] - p.row_lb[i]) << "\n";
+            out << "    RNG " << rname(i) << ' ' << (p.row_ub[i] - p.row_lb[i])
+                << "\n";
     }
     out << "BOUNDS\n";
     for (size_t j = 0; j < n; ++j) {
         const double l = p.col_lb[j], u = p.col_ub[j];
         const bool is_int = !p.is_integer.empty() && p.is_integer[j];
-        if (l == u) { out << " FX BND " << cname(j) << ' ' << l << "\n"; continue; }
-        if (std::isinf(l) && std::isinf(u)) { out << " FR BND " << cname(j) << "\n"; continue; }
-        if (std::isinf(l)) out << " MI BND " << cname(j) << "\n";
-        else if (l != 0) out << " LO BND " << cname(j) << ' ' << l << "\n";
-        if (std::isfinite(u)) out << " UP BND " << cname(j) << ' ' << u << "\n";
-        else if (is_int) out << " PL BND " << cname(j) << "\n";
+        if (l == u) {
+            out << " FX BND " << cname(j) << ' ' << l << "\n";
+            continue;
+        }
+        if (std::isinf(l) && std::isinf(u)) {
+            out << " FR BND " << cname(j) << "\n";
+            continue;
+        }
+        if (std::isinf(l))
+            out << " MI BND " << cname(j) << "\n";
+        else if (l != 0)
+            out << " LO BND " << cname(j) << ' ' << l << "\n";
+        if (std::isfinite(u))
+            out << " UP BND " << cname(j) << ' ' << u << "\n";
+        else if (is_int)
+            out << " PL BND " << cname(j) << "\n";
     }
     out << "ENDATA\n";
 }

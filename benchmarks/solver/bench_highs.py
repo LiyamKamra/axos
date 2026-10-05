@@ -1,7 +1,7 @@
 """Solve the LPs exported by bench_lp with HiGHS (through SciPy) and print
 RESULT lines in the same format.
 
-    ~/python_junk/.venv/bin/python benchmarks/solver/bench_highs.py [dir] [time_limit]
+    /home/a/programs/python/.venv/bin/python benchmarks/solver/bench_highs.py [dir] [time_limit]
 """
 import glob
 import os

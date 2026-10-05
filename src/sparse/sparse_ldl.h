@@ -31,11 +31,10 @@ namespace Sparse {
 enum class Symmetry { SPD, Symmetric };
 
 // Fill-reducing orderings. MinDegree is approximate minimum degree (AMD);
-// ExactMinDegree is a slow reference implementation. The cuDSS backend
-// picks its own default ordering unless told otherwise: it maps MinDegree to
-// its AMD, NestedDissection to its nested dissection, and Natural /
-// ExactMinDegree to its default. On the CPU, NestedDissection falls back to
-// MinDegree.
+// ExactMinDegree is a slow reference implementation. The cuDSS backend picks
+// its own default unless told otherwise: it maps MinDegree to its AMD,
+// NestedDissection to its nested dissection, and Natural / ExactMinDegree to
+// its default. On the CPU, NestedDissection falls back to MinDegree.
 enum class Ordering { Natural, MinDegree, ExactMinDegree, NestedDissection };
 
 // CPU factorization algorithm. Simplicial is the scalar up-looking LDL^T;
@@ -87,9 +86,8 @@ min_degree_order(size_t n, const Idx *rp, const Idx *ci)
             merged.clear();
             std::set_union(adj[u].begin(), adj[u].end(), nb.begin(), nb.end(),
                 std::back_inserter(merged));
-            merged.erase(
-                std::remove_if(merged.begin(), merged.end(),
-                    [&](Idx w) { return w == u || w == v; }),
+            merged.erase(std::remove_if(merged.begin(), merged.end(),
+                             [&](Idx w) { return w == u || w == v; }),
                 merged.end());
             adj[u] = merged;
             pq.insert({adj[u].size(), u});
@@ -101,8 +99,8 @@ min_degree_order(size_t n, const Idx *rp, const Idx *ci)
 } // namespace detail
 
 template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
-    static_assert(std::is_floating_point_v<T>,
-        "SparseLdlt supports float and double");
+    static_assert(
+        std::is_floating_point_v<T>, "SparseLdlt supports float and double");
 
   public:
     using matrix_type = Csr<T, Idx, Cpu::HostStorage>;
@@ -126,7 +124,9 @@ template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
         const Idx *rp = A.row_ptr(), *ci = A.col_ind();
 
         perm_.resize(n_);
-        if ((ord_ == Ordering::MinDegree || ord_ == Ordering::NestedDissection) && n_ > 0)
+        if ((ord_ == Ordering::MinDegree ||
+                ord_ == Ordering::NestedDissection) &&
+            n_ > 0)
             perm_ = amd_order<Idx>(n_, rp, ci);
         else if (ord_ == Ordering::ExactMinDegree && n_ > 0)
             perm_ = detail::min_degree_order<Idx>(n_, rp, ci);
@@ -159,7 +159,8 @@ template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
         double flops = 0;
         for (size_t k = 0; k < n_; ++k) {
             total += static_cast<size_t>(lnz_[k]);
-            flops += static_cast<double>(lnz_[k]) * static_cast<double>(lnz_[k]);
+            flops +=
+                static_cast<double>(lnz_[k]) * static_cast<double>(lnz_[k]);
         }
         factor_flops_ = flops;
         use_mf_ = fact_ == Factorization::Supernodal ||
@@ -198,8 +199,9 @@ template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
         if (use_mf_) {
             n_reg_ = 0;
             factored_ = mf_.factorize(A.values(),
-                kind_ == Symmetry::SPD ? MultifrontalLdl<T, Idx>::Kind::SPD
-                                       : MultifrontalLdl<T, Idx>::Kind::Symmetric,
+                kind_ == Symmetry::SPD
+                    ? MultifrontalLdl<T, Idx>::Kind::SPD
+                    : MultifrontalLdl<T, Idx>::Kind::Symmetric,
                 signs_.empty() ? nullptr : signs_.data(), pivot_eps_);
             n_reg_ = mf_.regularized_pivots();
             failed_ = factored_ ? -1 : mf_.failed_pivot();
@@ -248,10 +250,13 @@ template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
             }
             if (!signs_.empty() && signs_[kk] != 0) {
                 const T sg = static_cast<T>(signs_[kk]);
-                if (!(sg * d_[k] >= pivot_eps_)) { d_[k] = sg * pivot_eps_; ++n_reg_; }
+                if (!(sg * d_[k] >= pivot_eps_)) {
+                    d_[k] = sg * pivot_eps_;
+                    ++n_reg_;
+                }
             }
-            const bool bad = (kind_ == Symmetry::SPD) ? !(d_[k] > T(0))
-                                                        : (d_[k] == T(0));
+            const bool bad =
+                (kind_ == Symmetry::SPD) ? !(d_[k] > T(0)) : (d_[k] == T(0));
             if (bad || !std::isfinite(d_[k])) {
                 failed_ = static_cast<long>(k);
                 return false;
@@ -291,31 +296,45 @@ template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
     // Dynamic pivot regularization (Symmetric kind): entry i of `signs` is the
     // expected sign (+1 / -1, 0 = none) of the pivot of variable i. A pivot
     // whose value times its sign is below `eps` is replaced by sign * eps, so
-    // only pivots that really need it are perturbed. Returns via
-    // regularized_pivots() how many were.
+    // only pivots that really need it are perturbed. regularized_pivots()
+    // reports how many were.
     void
     set_pivot_regularization(std::vector<signed char> signs, T eps)
     {
         signs_ = std::move(signs);
         pivot_eps_ = eps;
     }
-    size_t regularized_pivots() const { return n_reg_; }
+    size_t
+    regularized_pivots() const
+    { return n_reg_; }
 
-    size_t factor_nnz() const { return analyzed_ ? factor_nnz_ : 0; }
-    // approximate flop count of one numeric factorization (sum of squared column counts)
-    double factor_flops() const { return analyzed_ ? factor_flops_ : 0.0; }
-    bool supernodal() const { return use_mf_; }
+    size_t
+    factor_nnz() const
+    { return analyzed_ ? factor_nnz_ : 0; }
+    // approximate flop count of one numeric factorization (sum of squared
+    // column counts)
+    double
+    factor_flops() const
+    { return analyzed_ ? factor_flops_ : 0.0; }
+    bool
+    supernodal() const
+    { return use_mf_; }
     void
     print_profile() const
     {
         if (!use_mf_) return;
         const auto &p = mf_.profile();
-        std::printf("[ldl]        zero+assemble %.1f  extend-add %.1f  dense %.1f  store %.1f ms (max front %zu, %zu supernodes)\n",
-            p.zero_assemble, p.extend_add, p.dense, p.store, mf_.max_front(), mf_.supernodes());
-        std::printf("[ldl]        wall: %zu parallel subtrees %.1f ms, %zu top nodes %.1f ms\n",
+        std::printf("[ldl]        zero+assemble %.1f  extend-add %.1f  dense "
+                    "%.1f  store %.1f ms (max front %zu, %zu supernodes)\n",
+            p.zero_assemble, p.extend_add, p.dense, p.store, mf_.max_front(),
+            mf_.supernodes());
+        std::printf("[ldl]        wall: %zu parallel subtrees %.1f ms, %zu top "
+                    "nodes %.1f ms\n",
             p.ntasks, p.wall_tasks, p.ntop, p.wall_top);
     }
-    long failed_pivot() const { return failed_; }
+    long
+    failed_pivot() const
+    { return failed_; }
 
     // Counts of positive / negative / zero pivots after factorize().
     void
@@ -324,9 +343,12 @@ template <typename T, typename Idx> class SparseLdlt<T, Idx, Cpu::HostStorage> {
         pos = neg = zero = 0;
         const std::vector<T> &d = use_mf_ ? mf_.pivots() : d_;
         for (size_t k = 0; k < n_; ++k) {
-            if (d[k] > T(0)) ++pos;
-            else if (d[k] < T(0)) ++neg;
-            else ++zero;
+            if (d[k] > T(0))
+                ++pos;
+            else if (d[k] < T(0))
+                ++neg;
+            else
+                ++zero;
         }
     }
 

@@ -20,10 +20,10 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <new>
 #include <map>
-#include <mutex>
 #include <memory>
+#include <mutex>
+#include <new>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
@@ -39,23 +39,28 @@ template <typename T, typename Idx> class MultifrontalLdl {
     // (rp, ci): CSR pattern of the full symmetric matrix; perm: elimination
     // order (perm[k] = original index eliminated k-th).
     void
-    analyze(size_t n, const Idx *rp, const Idx *ci, const std::vector<Idx> &perm0)
+    analyze(
+        size_t n, const Idx *rp, const Idx *ci, const std::vector<Idx> &perm0)
     {
         n_ = n;
         // ---- etree of the given order, then postorder ------------------
         std::vector<Idx> pinv0(n), parent0, cnt0;
-        for (size_t k = 0; k < n; ++k) pinv0[perm0[k]] = static_cast<Idx>(k);
+        for (size_t k = 0; k < n; ++k)
+            pinv0[perm0[k]] = static_cast<Idx>(k);
         etree_counts(n, rp, ci, perm0, pinv0, parent0, cnt0);
         std::vector<Idx> post = postorder(parent0);
         perm_.resize(n);
-        for (size_t k = 0; k < n; ++k) perm_[k] = perm0[post[k]];
+        for (size_t k = 0; k < n; ++k)
+            perm_[k] = perm0[post[k]];
         pinv_.assign(n, 0);
-        for (size_t k = 0; k < n; ++k) pinv_[perm_[k]] = static_cast<Idx>(k);
+        for (size_t k = 0; k < n; ++k)
+            pinv_[perm_[k]] = static_cast<Idx>(k);
         std::vector<Idx> parent, cnt;
         etree_counts(n, rp, ci, perm_, pinv_, parent, cnt);
 
         factor_nnz_ = 0;
-        for (size_t j = 0; j < n; ++j) factor_nnz_ += static_cast<size_t>(cnt[j]);
+        for (size_t j = 0; j < n; ++j)
+            factor_nnz_ += static_cast<size_t>(cnt[j]);
 
         // ---- lower CSC of the permuted matrix, with value positions -----
         std::vector<Idx> count(n + 1, 0);
@@ -66,7 +71,8 @@ template <typename T, typename Idx> class MultifrontalLdl {
                 if (pc <= pr) count[pc + 1]++;
             }
         }
-        for (size_t j = 0; j < n; ++j) count[j + 1] += count[j];
+        for (size_t j = 0; j < n; ++j)
+            count[j + 1] += count[j];
         acp_ = count;
         ari_.assign(acp_[n], 0);
         asrc_.assign(acp_[n], 0);
@@ -84,7 +90,10 @@ template <typename T, typename Idx> class MultifrontalLdl {
         }
 
         // ---- fundamental supernodes ---------------------------------------
-        struct Sn { Idx start, width; size_t nnz; };
+        struct Sn {
+            Idx start, width;
+            size_t nnz;
+        };
         std::vector<Sn> sns;
         {
             Idx s0 = 0;
@@ -115,14 +124,16 @@ template <typename T, typename Idx> class MultifrontalLdl {
                     if (!(pc >= cur.start && pc < cur.start + cur.width &&
                             prev.start + prev.width == cur.start))
                         break;
-                    const size_t ns = static_cast<size_t>(prev.width) + cur.width;
+                    const size_t ns =
+                        static_cast<size_t>(prev.width) + cur.width;
                     const size_t below =
                         static_cast<size_t>(cnt[cur.start + cur.width - 1]);
                     const size_t dense = ns * below + ns * (ns + 1) / 2;
                     const size_t truenz = prev.nnz + cur.nnz;
-                    const double z = dense > truenz
-                                         ? static_cast<double>(dense - truenz) / dense
-                                         : 0.0;
+                    const double z =
+                        dense > truenz
+                            ? static_cast<double>(dense - truenz) / dense
+                            : 0.0;
                     const bool merge = ns <= 4 || (ns <= 16 && z < 0.8) ||
                                        (ns <= 48 && z < 0.1) || z < 0.05;
                     if (!merge) break;
@@ -135,10 +146,11 @@ template <typename T, typename Idx> class MultifrontalLdl {
             }
             sns = std::move(out);
         }
-        // ---- sibling merge: adjacent leaf-like supernodes with the same parent
-        // and the same number of rows below (typically identical structure, e.g.
-        // the source rows of a transportation problem) become one supernode: an
-        // explicit-zero diagonal block instead of one update matrix each.
+        // ---- sibling merge: adjacent leaf-like supernodes with the same
+        // parent and the same number of rows below (typically identical
+        // structure, e.g. the source rows of a transportation problem) become
+        // one supernode: an explicit-zero diagonal block instead of one update
+        // matrix each.
         {
             std::vector<Sn> out;
             for (const Sn &cur0 : sns) {
@@ -147,16 +159,18 @@ template <typename T, typename Idx> class MultifrontalLdl {
                     const Sn &prev = out.back();
                     const Idx lastp = prev.start + prev.width - 1;
                     const Idx lastc = cur.start + cur.width - 1;
-                    const size_t ns = static_cast<size_t>(prev.width) + cur.width;
-                    if (prev.start + prev.width == cur.start && parent[lastp] >= 0 &&
-                        parent[lastp] == parent[lastc] && cnt[lastp] == cnt[lastc] &&
-                        ns <= 1024) {
+                    const size_t ns =
+                        static_cast<size_t>(prev.width) + cur.width;
+                    if (prev.start + prev.width == cur.start &&
+                        parent[lastp] >= 0 && parent[lastp] == parent[lastc] &&
+                        cnt[lastp] == cnt[lastc] && ns <= 1024) {
                         const size_t below = static_cast<size_t>(cnt[lastc]);
                         const size_t dense = ns * below + ns * (ns + 1) / 2;
                         const size_t truenz = prev.nnz + cur.nnz;
-                        const double z = dense > truenz
-                                             ? static_cast<double>(dense - truenz) / dense
-                                             : 0.0;
+                        const double z =
+                            dense > truenz
+                                ? static_cast<double>(dense - truenz) / dense
+                                : 0.0;
                         if (z < 0.5) {
                             cur.start = prev.start;
                             cur.width = static_cast<Idx>(ns);
@@ -171,7 +185,8 @@ template <typename T, typename Idx> class MultifrontalLdl {
         }
         const size_t S = sns.size();
         sn_start_.resize(S + 1);
-        for (size_t s = 0; s < S; ++s) sn_start_[s] = sns[s].start;
+        for (size_t s = 0; s < S; ++s)
+            sn_start_[s] = sns[s].start;
         sn_start_[S] = static_cast<Idx>(n);
         std::vector<Idx> sn_of(n);
         for (size_t s = 0; s < S; ++s)
@@ -184,7 +199,8 @@ template <typename T, typename Idx> class MultifrontalLdl {
         }
         children_.assign(S, {});
         for (size_t s = 0; s < S; ++s)
-            if (sn_parent_[s] >= 0) children_[sn_parent_[s]].push_back(static_cast<Idx>(s));
+            if (sn_parent_[s] >= 0)
+                children_[sn_parent_[s]].push_back(static_cast<Idx>(s));
 
         // ---- row structure below each supernode ----------------------------
         below_.assign(S, {});
@@ -226,20 +242,22 @@ template <typename T, typename Idx> class MultifrontalLdl {
     // Numeric factorization from the values of the ORIGINAL matrix (same CSR
     // pattern as analyze()). Returns false on a failed pivot.
     //
-    // Independent small subtrees of the assembly tree are factored in
-    // parallel (one OpenMP thread each, with private front buffers); the
-    // remaining top of the tree is processed in order with the dense updates
-    // and the assembly loops parallelized inside each large front.
+    // Independent small subtrees of the assembly tree are factored in parallel
+    // (one OpenMP thread each, private front buffers); the remaining top of the
+    // tree is processed in order with the dense updates and assembly loops
+    // parallelized inside each large front.
     bool
     factorize(const T *values, Kind kind, const signed char *signs, T eps)
     {
-        if (!analyzed_) throw std::runtime_error("MultifrontalLdl: not analyzed");
+        if (!analyzed_)
+            throw std::runtime_error("MultifrontalLdl: not analyzed");
         const size_t S = sn_start_.size() - 1;
         factored_ = false;
         failed_ = -1;
         n_reg_ = 0;
         prof_ = {};
-        std::vector<Block> U(S); // uninitialized update matrices (pooled buffers)
+        std::vector<Block> U(
+            S); // uninitialized update matrices (pooled buffers)
         std::atomic<long> fail_col(-1);
         std::atomic<size_t> nreg(0);
         std::mutex prof_mu;
@@ -265,7 +283,9 @@ template <typename T, typename Idx> class MultifrontalLdl {
         auto process = [&](size_t s, Buffers &bf, bool par) {
             using clock = std::chrono::steady_clock;
             auto ms = [](clock::time_point a) {
-                return std::chrono::duration<double, std::milli>(clock::now() - a).count();
+                return std::chrono::duration<double, std::milli>(
+                    clock::now() - a)
+                    .count();
             };
             auto t0 = clock::now();
             const Idx f = sn_start_[s];
@@ -274,14 +294,17 @@ template <typename T, typename Idx> class MultifrontalLdl {
             const int nb = static_cast<int>(bl.size());
             const int fs = ns + nb;
             Idx *relpos = bf.relpos.data();
-            for (int c = 0; c < ns; ++c) relpos[f + c] = c;
-            for (int i = 0; i < nb; ++i) relpos[bl[i]] = ns + i;
+            for (int c = 0; c < ns; ++c)
+                relpos[f + c] = c;
+            for (int i = 0; i < nb; ++i)
+                relpos[bl[i]] = ns + i;
             T *F = bf.F.data();
             const bool big = par && fs >= 256;
             if (big) {
 #pragma omp parallel for schedule(static)
                 for (int c = 0; c < fs; ++c)
-                    std::memset(F + static_cast<size_t>(c) * fs, 0, fs * sizeof(T));
+                    std::memset(
+                        F + static_cast<size_t>(c) * fs, 0, fs * sizeof(T));
             } else {
                 std::memset(F, 0, static_cast<size_t>(fs) * fs * sizeof(T));
             }
@@ -305,9 +328,11 @@ template <typename T, typename Idx> class MultifrontalLdl {
                 };
                 if (par && m >= 256) {
 #pragma omp parallel for schedule(dynamic, 16)
-                    for (int jj = 0; jj < m; ++jj) add_col(jj);
+                    for (int jj = 0; jj < m; ++jj)
+                        add_col(jj);
                 } else {
-                    for (int jj = 0; jj < m; ++jj) add_col(jj);
+                    for (int jj = 0; jj < m; ++jj)
+                        add_col(jj);
                 }
                 pool_.release(Ut);
             }
@@ -316,17 +341,19 @@ template <typename T, typename Idx> class MultifrontalLdl {
             const signed char *fsign = nullptr;
             if (signs) {
                 bf.sgn.resize(ns);
-                for (int c = 0; c < ns; ++c) bf.sgn[c] = signs[perm_[f + c]];
+                for (int c = 0; c < ns; ++c)
+                    bf.sgn[c] = signs[perm_[f + c]];
                 fsign = bf.sgn.data();
             }
             int fail = -1;
-            nreg += dense::partial_ldlt<T>(fs, ns, F, fs, d_.data() + f, fsign, eps,
-                check, &fail, bf.work.data(), par);
+            nreg += dense::partial_ldlt<T>(fs, ns, F, fs, d_.data() + f, fsign,
+                eps, check, &fail, bf.work.data(), par);
             bf.prof.dense += ms(t0);
             t0 = clock::now();
             if (fail >= 0) {
                 long expected = -1;
-                fail_col.compare_exchange_strong(expected, static_cast<long>(f) + fail);
+                fail_col.compare_exchange_strong(
+                    expected, static_cast<long>(f) + fail);
                 return false;
             }
             T *L = lvals_.data() + loff_[s];
@@ -342,12 +369,16 @@ template <typename T, typename Idx> class MultifrontalLdl {
             };
             if (big) {
 #pragma omp parallel for schedule(static)
-                for (int c = 0; c < ns; ++c) copy_l(c);
+                for (int c = 0; c < ns; ++c)
+                    copy_l(c);
 #pragma omp parallel for schedule(dynamic, 16)
-                for (int jj = 0; jj < nb; ++jj) copy_u(jj);
+                for (int jj = 0; jj < nb; ++jj)
+                    copy_u(jj);
             } else {
-                for (int c = 0; c < ns; ++c) copy_l(c);
-                for (int jj = 0; jj < nb; ++jj) copy_u(jj);
+                for (int c = 0; c < ns; ++c)
+                    copy_l(c);
+                for (int jj = 0; jj < nb; ++jj)
+                    copy_u(jj);
             }
             bf.prof.store += ms(t0);
             return true;
@@ -363,7 +394,8 @@ template <typename T, typename Idx> class MultifrontalLdl {
         auto wall0 = std::chrono::steady_clock::now();
         auto wall_ms = [&] {
             return std::chrono::duration<double, std::milli>(
-                std::chrono::steady_clock::now() - wall0).count();
+                std::chrono::steady_clock::now() - wall0)
+                .count();
         };
         // ---- parallel phase: independent small subtrees ------------------
         if (!tasks_.empty()) {
@@ -402,8 +434,14 @@ template <typename T, typename Idx> class MultifrontalLdl {
     }
 
     // Milliseconds spent per phase in the last factorize() (diagnostics).
-    struct Profile { double zero_assemble = 0, extend_add = 0, dense = 0, store = 0, wall_tasks = 0, wall_top = 0; size_t ntasks = 0, ntop = 0; };
-    const Profile &profile() const { return prof_; }
+    struct Profile {
+        double zero_assemble = 0, extend_add = 0, dense = 0, store = 0,
+               wall_tasks = 0, wall_top = 0;
+        size_t ntasks = 0, ntop = 0;
+    };
+    const Profile &
+    profile() const
+    { return prof_; }
 
     // x = A^{-1} b (b and x are in the original ordering; may not alias).
     void
@@ -411,7 +449,8 @@ template <typename T, typename Idx> class MultifrontalLdl {
     {
         const size_t S = sn_start_.size() - 1;
         std::vector<T> y(n_);
-        for (size_t k = 0; k < n_; ++k) y[k] = b[perm_[k]];
+        for (size_t k = 0; k < n_; ++k)
+            y[k] = b[perm_[k]];
         for (size_t s = 0; s < S; ++s) { // L y = b
             const Idx f = sn_start_[s];
             const int ns = static_cast<int>(sn_start_[s + 1] - f);
@@ -422,11 +461,14 @@ template <typename T, typename Idx> class MultifrontalLdl {
             for (int c = 0; c < ns; ++c) {
                 const T xc = y[f + c];
                 const T *col = L + static_cast<size_t>(c) * fs;
-                for (int i = c + 1; i < ns; ++i) y[f + i] -= col[i] * xc;
-                for (int i = 0; i < nb; ++i) y[bl[i]] -= col[ns + i] * xc;
+                for (int i = c + 1; i < ns; ++i)
+                    y[f + i] -= col[i] * xc;
+                for (int i = 0; i < nb; ++i)
+                    y[bl[i]] -= col[ns + i] * xc;
             }
         }
-        for (size_t k = 0; k < n_; ++k) y[k] /= d_[k];
+        for (size_t k = 0; k < n_; ++k)
+            y[k] /= d_[k];
         for (size_t s = S; s-- > 0;) { // L^T x = y
             const Idx f = sn_start_[s];
             const int ns = static_cast<int>(sn_start_[s + 1] - f);
@@ -437,22 +479,41 @@ template <typename T, typename Idx> class MultifrontalLdl {
             for (int c = ns - 1; c >= 0; --c) {
                 const T *col = L + static_cast<size_t>(c) * fs;
                 T sum = 0;
-                for (int i = c + 1; i < ns; ++i) sum += col[i] * y[f + i];
-                for (int i = 0; i < nb; ++i) sum += col[ns + i] * y[bl[i]];
+                for (int i = c + 1; i < ns; ++i)
+                    sum += col[i] * y[f + i];
+                for (int i = 0; i < nb; ++i)
+                    sum += col[ns + i] * y[bl[i]];
                 y[f + c] -= sum;
             }
         }
-        for (size_t k = 0; k < n_; ++k) x[perm_[k]] = y[k];
+        for (size_t k = 0; k < n_; ++k)
+            x[perm_[k]] = y[k];
     }
 
-    size_t factor_nnz() const { return factor_nnz_; }
-    size_t stored_entries() const { return lvals_.size(); }
-    size_t supernodes() const { return sn_start_.empty() ? 0 : sn_start_.size() - 1; }
-    long failed_pivot() const { return failed_; }
-    size_t regularized_pivots() const { return n_reg_; }
-    const std::vector<T> &pivots() const { return d_; }
-    size_t max_front() const { return max_front_; }
-    bool factored() const { return factored_; }
+    size_t
+    factor_nnz() const
+    { return factor_nnz_; }
+    size_t
+    stored_entries() const
+    { return lvals_.size(); }
+    size_t
+    supernodes() const
+    { return sn_start_.empty() ? 0 : sn_start_.size() - 1; }
+    long
+    failed_pivot() const
+    { return failed_; }
+    size_t
+    regularized_pivots() const
+    { return n_reg_; }
+    const std::vector<T> &
+    pivots() const
+    { return d_; }
+    size_t
+    max_front() const
+    { return max_front_; }
+    bool
+    factored() const
+    { return factored_; }
 
   private:
     // Recycles the update-matrix buffers between supernodes and factorizations
@@ -461,19 +522,25 @@ template <typename T, typename Idx> class MultifrontalLdl {
         T *p = nullptr;
         size_t cap = 0;
     };
-    // Free buffers are kept ordered by capacity, so the best fit (the smallest
-    // buffer >= n, taken only if it is at most 2n + 1024) is a lookup, not a
-    // scan: a factorization can hold tens of thousands of update matrices
-    // (e.g. many small fronts under one root), and a linear scan per acquire
-    // made every factorization after the first quadratic in their number.
+    // Buffers are kept ordered by capacity, so the best fit (smallest buffer >=
+    // n, taken only if at most 2n + 1024) is a lookup, not a scan: a
+    // factorization can hold tens of thousands of update matrices (many small
+    // fronts under one root), and a linear scan per acquire made every
+    // factorization after the first quadratic in their number.
     struct Pool {
         std::mutex mu;
         std::multimap<size_t, T *> free_; // capacity -> buffer
         size_t held = 0;
         Pool() = default;
         Pool(const Pool &) {}
-        Pool &operator=(const Pool &) { return *this; }
-        ~Pool() { for (auto &e : free_) std::free(e.second); }
+        Pool &
+        operator=(const Pool &)
+        { return *this; }
+        ~Pool()
+        {
+            for (auto &e : free_)
+                std::free(e.second);
+        }
         Block
         acquire(size_t n)
         {
@@ -500,9 +567,14 @@ template <typename T, typename Idx> class MultifrontalLdl {
         {
             if (!b.p) return;
             std::lock_guard<std::mutex> lk(mu);
-            constexpr size_t kMaxHeld = size_t(1) << 28; // elements (2 GB of doubles)
-            if (held + b.cap > kMaxHeld) std::free(b.p);
-            else { free_.emplace(b.cap, b.p); held += b.cap; }
+            constexpr size_t kMaxHeld = size_t(1)
+                                        << 28; // elements (2 GB of doubles)
+            if (held + b.cap > kMaxHeld)
+                std::free(b.p);
+            else {
+                free_.emplace(b.cap, b.p);
+                held += b.cap;
+            }
             b = Block();
         }
     };
@@ -517,11 +589,14 @@ template <typename T, typename Idx> class MultifrontalLdl {
         first_desc_.assign(S, 0);
         std::vector<double> sub(S, 0.0);
         for (size_t s = 0; s < S; ++s) {
-            const double ns = static_cast<double>(sn_start_[s + 1] - sn_start_[s]);
+            const double ns =
+                static_cast<double>(sn_start_[s + 1] - sn_start_[s]);
             const double fs = ns + static_cast<double>(below_[s].size());
-            sub[s] += ns * fs * fs + 100.0 * fs; // flops-ish plus per-node overhead
+            sub[s] +=
+                ns * fs * fs + 100.0 * fs; // flops-ish plus per-node overhead
             Idx fd = static_cast<Idx>(s);
-            for (Idx c : children_[s]) fd = std::min(fd, first_desc_[c]);
+            for (Idx c : children_[s])
+                fd = std::min(fd, first_desc_[c]);
             first_desc_[s] = fd;
             if (sn_parent_[s] >= 0) sub[sn_parent_[s]] += sub[s];
         }
@@ -537,7 +612,8 @@ template <typename T, typename Idx> class MultifrontalLdl {
         task_max_front_ = 1;
         max_front_top_ = 1;
         if (P <= 1 || S < 64) {
-            for (size_t s = 0; s < S; ++s) top_nodes_.push_back(static_cast<Idx>(s));
+            for (size_t s = 0; s < S; ++s)
+                top_nodes_.push_back(static_cast<Idx>(s));
             max_front_top_ = max_front_;
             return;
         }
@@ -554,19 +630,22 @@ template <typename T, typename Idx> class MultifrontalLdl {
                 tasks_.push_back(s);
                 for (Idx t = first_desc_[s]; t <= s; ++t) {
                     in_task[t] = 1;
-                    const size_t fs = static_cast<size_t>(sn_start_[t + 1] - sn_start_[t]) +
-                                      below_[t].size();
+                    const size_t fs =
+                        static_cast<size_t>(sn_start_[t + 1] - sn_start_[t]) +
+                        below_[t].size();
                     task_max_front_ = std::max(task_max_front_, fs);
                 }
             } else {
-                for (Idx c : children_[s]) stack.push_back(c);
+                for (Idx c : children_[s])
+                    stack.push_back(c);
             }
         }
         for (size_t s = 0; s < S; ++s)
             if (!in_task[s]) {
                 top_nodes_.push_back(static_cast<Idx>(s));
-                const size_t fs = static_cast<size_t>(sn_start_[s + 1] - sn_start_[s]) +
-                                  below_[s].size();
+                const size_t fs =
+                    static_cast<size_t>(sn_start_[s + 1] - sn_start_[s]) +
+                    below_[s].size();
                 max_front_top_ = std::max(max_front_top_, fs);
             }
     }
@@ -574,8 +653,9 @@ template <typename T, typename Idx> class MultifrontalLdl {
     // Elimination tree and strictly-below column counts of the matrix
     // ordered by perm (up-looking symbolic factorization).
     static void
-    etree_counts(size_t n, const Idx *rp, const Idx *ci, const std::vector<Idx> &perm,
-        const std::vector<Idx> &pinv, std::vector<Idx> &parent, std::vector<Idx> &cnt)
+    etree_counts(size_t n, const Idx *rp, const Idx *ci,
+        const std::vector<Idx> &perm, const std::vector<Idx> &pinv,
+        std::vector<Idx> &parent, std::vector<Idx> &cnt)
     {
         parent.assign(n, -1);
         cnt.assign(n, 0);
@@ -634,7 +714,7 @@ template <typename T, typename Idx> class MultifrontalLdl {
     bool analyzed_ = false, factored_ = false;
     long failed_ = -1;
     std::vector<Idx> perm_, pinv_;
-    std::vector<Idx> acp_, ari_, asrc_;         // permuted lower pattern
+    std::vector<Idx> acp_, ari_, asrc_; // permuted lower pattern
     std::vector<Idx> sn_start_, sn_parent_;
     std::vector<std::vector<Idx>> children_, below_;
     std::vector<size_t> loff_;

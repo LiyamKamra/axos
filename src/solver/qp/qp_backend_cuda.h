@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// GPU backend of the first-order QP solvers. Host code only: it needs the
-// CUDA runtime and driver headers and libraries (cudart, cuda) but no nvcc.
-// The kernels (qp_kernels.cuh, built on qp_ops.h) are compiled once per
-// process at run time with NVRTC for the device's architecture and launched
-// through the driver API; vectors live in the GPU memory pool. No cuBLAS or
-// cuSPARSE: the CSR products are this project's own kernels.
+// GPU backend of the first-order QP solvers. Host code only: needs the CUDA
+// runtime and driver (cudart, cuda) but no nvcc. The kernels (qp_kernels.cuh,
+// built on qp_ops.h) are compiled once per process at run time with NVRTC for
+// the device's architecture and launched through the driver API; vectors live
+// in the GPU memory pool. No cuBLAS or cuSPARSE: the CSR products are this
+// project's own kernels.
 //
-// NVRTC is loaded dynamically (nvrtc64_120_0.dll / libnvrtc.so.12, found
-// on the library path), so it is not a link-time dependency. The kernel
-// sources are read from the source tree: AXOS_SRC_DIR (environment
-// variable, else the compile-time macro, else derived from this file's
-// path) must name the directory that contains solver/qp/.
+// NVRTC is loaded dynamically (nvrtc64_120_0.dll / libnvrtc.so.12, from the
+// library path), so it is not a link-time dependency. The kernel sources come
+// from the source tree: AXOS_SRC_DIR (environment variable, else the
+// compile-time macro, else derived from this file's path) must name the
+// directory containing solver/qp/.
 //
-// Same interface as qp_backend_cpu.h. All work is queued on one stream of
-// the backend, so a block of iterations can be captured as a CUDA graph
-// (run_block) and replayed with a single launch.
+// Same interface as qp_backend_cpu.h. All work is queued on one stream, so a
+// block of iterations can be captured as a CUDA graph (run_block) and replayed
+// with a single launch.
 #pragma once
 
 #if !defined(AXOS_ENABLE_CUDA)
 #error "qp_backend_cuda.h needs -DAXOS_ENABLE_CUDA (CUDA runtime headers)"
 #endif
 
-#include "solver/qp/qp_ops.h"
 #include "solver/model.h"
+#include "solver/qp/qp_ops.h"
 #include "tensorCuda.h"
-#include <cuda.h>
-#include <cuda_runtime.h>
 #include <array>
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include <map>
 #include <mutex>
 #include <stdexcept>
@@ -62,8 +62,8 @@ check(CUresult r, const char *what)
     if (r != CUDA_SUCCESS) {
         const char *s = nullptr;
         cuGetErrorString(r, &s);
-        throw std::runtime_error(std::string("CUDA driver error in ") + what + ": " +
-                                 (s ? s : "?"));
+        throw std::runtime_error(
+            std::string("CUDA driver error in ") + what + ": " + (s ? s : "?"));
     }
 }
 
@@ -77,7 +77,8 @@ check(cudaError_t e, const char *what)
 
 // The subset of the NVRTC API used here, resolved at run time.
 struct Nvrtc {
-    typedef int (*Create)(void **, const char *, const char *, int, const char *const *, const char *const *);
+    typedef int (*Create)(void **, const char *, const char *, int,
+        const char *const *, const char *const *);
     typedef int (*Compile)(void *, int, const char *const *);
     typedef int (*Size)(void *, size_t *);
     typedef int (*Get)(void *, char *);
@@ -103,21 +104,26 @@ struct Nvrtc {
     {
         Nvrtc n;
 #ifdef _WIN32
-        const char *names[] = {"nvrtc64_120_0.dll", "nvrtc64_130_0.dll", "nvrtc64_112_0.dll"};
+        const char *names[] = {
+            "nvrtc64_120_0.dll", "nvrtc64_130_0.dll", "nvrtc64_112_0.dll"};
         HMODULE h = nullptr;
         for (const char *nm : names)
             if ((h = LoadLibraryA(nm)) != nullptr) break;
-        auto sym = [&](const char *s) { return reinterpret_cast<void *>(GetProcAddress(h, s)); };
+        auto sym = [&](const char *s) {
+            return reinterpret_cast<void *>(GetProcAddress(h, s));
+        };
 #else
-        const char *names[] = {"libnvrtc.so.12", "libnvrtc.so.13", "libnvrtc.so"};
+        const char *names[] = {
+            "libnvrtc.so.12", "libnvrtc.so.13", "libnvrtc.so"};
         void *h = nullptr;
         for (const char *nm : names)
             if ((h = dlopen(nm, RTLD_NOW | RTLD_LOCAL)) != nullptr) break;
         auto sym = [&](const char *s) { return dlsym(h, s); };
 #endif
         if (!h)
-            throw std::runtime_error("NVRTC not found: put the nvrtc library "
-                                     "(pip: nvidia-cuda-nvrtc-cu12) on the library path");
+            throw std::runtime_error(
+                "NVRTC not found: put the nvrtc library "
+                "(pip: nvidia-cuda-nvrtc-cu12) on the library path");
         n.create = reinterpret_cast<Create>(sym("nvrtcCreateProgram"));
         n.compile = reinterpret_cast<Compile>(sym("nvrtcCompileProgram"));
         n.cubin_size = reinterpret_cast<Size>(sym("nvrtcGetCUBINSize"));
@@ -126,8 +132,8 @@ struct Nvrtc {
         n.log = reinterpret_cast<Get>(sym("nvrtcGetProgramLog"));
         n.destroy = reinterpret_cast<Destroy>(sym("nvrtcDestroyProgram"));
         n.error_string = reinterpret_cast<ErrStr>(sym("nvrtcGetErrorString"));
-        if (!n.create || !n.compile || !n.cubin_size || !n.cubin || !n.log_size ||
-            !n.log || !n.destroy)
+        if (!n.create || !n.compile || !n.cubin_size || !n.cubin ||
+            !n.log_size || !n.log || !n.destroy)
             throw std::runtime_error("NVRTC library lacks a required function");
         return n;
     }
@@ -184,8 +190,12 @@ class Module {
         return f;
     }
 
-    std::string arch() const { return arch_; }
-    double compile_seconds() const { return compile_s_; }
+    std::string
+    arch() const
+    { return arch_; }
+    double
+    compile_seconds() const
+    { return compile_s_; }
 
   private:
     Module()
@@ -193,8 +203,12 @@ class Module {
         check(cudaFree(nullptr), "cudaFree(0) (runtime initialization)");
         int dev = 0, major = 0, minor = 0;
         check(cudaGetDevice(&dev), "cudaGetDevice");
-        check(cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, dev), "attribute");
-        check(cudaDeviceGetAttribute(&minor, cudaDevAttrComputeCapabilityMinor, dev), "attribute");
+        check(cudaDeviceGetAttribute(
+                  &major, cudaDevAttrComputeCapabilityMajor, dev),
+            "attribute");
+        check(cudaDeviceGetAttribute(
+                  &minor, cudaDevAttrComputeCapabilityMinor, dev),
+            "attribute");
         arch_ = "sm_" + std::to_string(major * 10 + minor);
         const auto t0 = std::chrono::steady_clock::now();
         const Nvrtc &nv = Nvrtc::get();
@@ -204,7 +218,8 @@ class Module {
         const char *opts[] = {opt_arch.c_str(), "-std=c++17", opt_inc.c_str(),
             "--fmad=true", "-lineinfo"};
         void *prog = nullptr;
-        if (nv.create(&prog, src.c_str(), "axos_qp.cu", 0, nullptr, nullptr) != 0)
+        if (nv.create(&prog, src.c_str(), "axos_qp.cu", 0, nullptr, nullptr) !=
+            0)
             throw std::runtime_error("nvrtcCreateProgram failed");
         const int rc = nv.compile(prog, 5, opts);
         size_t ls = 0;
@@ -213,8 +228,9 @@ class Module {
         if (ls) nv.log(prog, &log[0]);
         if (rc != 0) {
             nv.destroy(&prog);
-            throw std::runtime_error("NVRTC compilation of the QP kernels failed (" +
-                                     opt_inc + "):\n" + log);
+            throw std::runtime_error(
+                "NVRTC compilation of the QP kernels failed (" + opt_inc +
+                "):\n" + log);
         }
         size_t cs = 0;
         nv.cubin_size(prog, &cs);
@@ -222,7 +238,9 @@ class Module {
         nv.cubin(prog, bin.data());
         nv.destroy(&prog);
         check(cuModuleLoadData(&mod_, bin.data()), "cuModuleLoadData");
-        compile_s_ = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        compile_s_ =
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - t0)
+                .count();
     }
 
     CUmodule mod_ = nullptr;
@@ -239,14 +257,13 @@ class CudaBackend {
     static constexpr bool is_gpu = true;
     using Vec = tensorET<1, double, Cuda::CudaStorage<double>>;
     using IVec = tensorET<1, int32_t, Cuda::CudaStorage<int32_t>>;
-    // CSR on the device, T = tpr threads per row (from the mean row length).
-    // A row is summed in len / T sequential steps, so a matrix whose longest
-    // row would take much longer than the target (ch = T * steps nonzeros,
-    // steps chosen for about kThreads threads in flight) is split: the
-    // product then runs over chunks of at most ch nonzeros (cp, ctpr threads
-    // each) into part, and a second kernel adds each row's chunks (rcp)
-    // before the epilogue, so a few dense rows no longer serialize the whole
-    // product.
+    // CSR on the device, T = tpr threads per row (from the mean row length). A
+    // row is summed in len / T sequential steps; to keep a few dense rows from
+    // serializing the whole product, a matrix whose longest row would take much
+    // longer than the target (ch = T * steps nonzeros, steps for about kThreads
+    // threads in flight) is split: the product runs over chunks of at most ch
+    // nonzeros (cp, ctpr threads each) into part, and a second kernel adds each
+    // row's chunks (rcp) before the epilogue.
     struct Mat {
         IVec rp, ci;
         Vec v;
@@ -257,28 +274,36 @@ class CudaBackend {
         Vec part;
         size_t nchunks = 0;
         int ctpr = 1; // threads per chunk
-        size_t rows() const { return nrows; }
-        size_t nnz() const { return nnzs; }
+        size_t
+        rows() const
+        { return nrows; }
+        size_t
+        nnz() const
+        { return nnzs; }
     };
 
     CudaBackend() : mod_(cuda_rt::Module::get())
     {
-        cuda_rt::check(cuStreamCreate(&stream_, CU_STREAM_DEFAULT), "cuStreamCreate");
+        cuda_rt::check(
+            cuStreamCreate(&stream_, CU_STREAM_DEFAULT), "cuStreamCreate");
         part_ = Vec({size_t(kMaxBlocks) * 8}, 0.0);
         out_ = Vec({size_t(kSlots)}, 0.0);
-        cuda_rt::check(cudaMallocHost(reinterpret_cast<void **>(&host_), kSlots * sizeof(double)),
+        cuda_rt::check(cudaMallocHost(reinterpret_cast<void **>(&host_),
+                           kSlots * sizeof(double)),
             "cudaMallocHost");
         int dev = 0;
         cuda_rt::check(cudaGetDevice(&dev), "cudaGetDevice");
         cudaDeviceProp prop;
-        cuda_rt::check(cudaGetDeviceProperties(&prop, dev), "cudaGetDeviceProperties");
+        cuda_rt::check(
+            cudaGetDeviceProperties(&prop, dev), "cudaGetDeviceProperties");
         name_ = std::string("gpu ") + prop.name;
     }
 
     ~CudaBackend()
     {
         if (stream_) cuStreamSynchronize(stream_);
-        for (auto &g : graphs_) cuGraphExecDestroy(g.second);
+        for (auto &g : graphs_)
+            cuGraphExecDestroy(g.second);
         if (stream_) cuStreamDestroy(stream_);
         if (host_) cudaFreeHost(host_);
         if (stage_) cudaFreeHost(stage_);
@@ -286,20 +311,28 @@ class CudaBackend {
     CudaBackend(const CudaBackend &) = delete;
     CudaBackend &operator=(const CudaBackend &) = delete;
 
-    std::string name() const { return name_; }
-    static double compile_seconds() { return cuda_rt::Module::get().compile_seconds(); }
+    std::string
+    name() const
+    { return name_; }
+    static double
+    compile_seconds()
+    { return cuda_rt::Module::get().compile_seconds(); }
 
     // Vectors are created, uploaded and downloaded on the legacy default
     // stream, which is ordered with the backend stream (a blocking stream).
-    Vec vec(size_t n, double v = 0.0) const { return Vec({n}, v); }
+    Vec
+    vec(size_t n, double v = 0.0) const
+    { return Vec({n}, v); }
 
     Vec
     upload(const std::vector<double> &h) const
     {
         Vec v({h.size()});
         if (!h.empty())
-            cuda_rt::check(cudaMemcpy(v.data, h.data(), h.size() * sizeof(double),
-                               cudaMemcpyHostToDevice), "upload");
+            cuda_rt::check(
+                cudaMemcpy(v.data, h.data(), h.size() * sizeof(double),
+                    cudaMemcpyHostToDevice),
+                "upload");
         return v;
     }
 
@@ -308,12 +341,18 @@ class CudaBackend {
     {
         h.resize(v.size());
         if (!h.empty())
-            cuda_rt::check(cudaMemcpy(h.data(), v.data, h.size() * sizeof(double),
-                               cudaMemcpyDeviceToHost), "download");
+            cuda_rt::check(
+                cudaMemcpy(h.data(), v.data, h.size() * sizeof(double),
+                    cudaMemcpyDeviceToHost),
+                "download");
     }
 
-    static double *ptr(Vec &v) { return v.data; }
-    static const double *ptr(const Vec &v) { return v.data; }
+    static double *
+    ptr(Vec &v)
+    { return v.data; }
+    static const double *
+    ptr(const Vec &v)
+    { return v.data; }
 
     Mat
     upload(const HostMatrix &A) const
@@ -327,10 +366,13 @@ class CudaBackend {
         tensorET<1, double> v({std::max<size_t>(A.nnz(), 1)}, 0.0);
         if (A.nnz()) std::memcpy(v.data, A.values(), A.nnz() * sizeof(double));
         M.v = Vec(v);
-        M.tpr = threads_for(A.rows() ? double(A.nnz()) / double(A.rows()) : 0.0);
+        M.tpr =
+            threads_for(A.rows() ? double(A.nnz()) / double(A.rows()) : 0.0);
         int32_t longest = 0;
-        for (size_t i = 0; i < A.rows(); ++i) longest = std::max(longest, hrp[i + 1] - hrp[i]);
-        const size_t steps = std::min<size_t>(32, std::max<size_t>(4, A.nnz() / kThreads));
+        for (size_t i = 0; i < A.rows(); ++i)
+            longest = std::max(longest, hrp[i + 1] - hrp[i]);
+        const size_t steps =
+            std::min<size_t>(32, std::max<size_t>(4, A.nnz() / kThreads));
         const int32_t ch = static_cast<int32_t>(steps) * M.tpr;
         if (longest > 4 * ch) {
             std::vector<int32_t> cp{0}, rcp{0};
@@ -369,7 +411,8 @@ class CudaBackend {
         const int *cp = M.cp.data, *rcp = M.rcp.data;
         double *part = const_cast<double *>(M.part.data);
         void *cargs[] = {&nch, &cp, &ci, &v, &x, &part};
-        launch(fn("k_chunks", M.ctpr), blocks(M.nchunks * size_t(M.ctpr)), cargs);
+        launch(
+            fn("k_chunks", M.ctpr), blocks(M.nchunks * size_t(M.ctpr)), cargs);
         const double *cpart = part;
         void *fargs[] = {&rows, &rcp, &cpart, &copy};
         launch(fn(name, 0), grid(M.nrows, 16384), fargs);
@@ -377,9 +420,7 @@ class CudaBackend {
 
     void
     spmv(const Mat &M, const double *x, double *y)
-    {
-        spmv_epi("k_store", M, x, axos_qp::Store{y}, 0);
-    }
+    { spmv_epi("k_store", M, x, axos_qp::Store{y}, 0); }
 
     // f(i, s[i], a) for i < n: the epilogue of a product whose row sums s
     // were formed elsewhere (summed over MPI ranks); kernel "<name>_vec"
@@ -391,7 +432,8 @@ class CudaBackend {
         axos_qp::idx rows = static_cast<axos_qp::idx>(n);
         Args copy = a;
         void *args[] = {&rows, &s, &copy};
-        launch(mod_.fn((std::string(name) + "_vec").c_str()), grid(n, 16384), args);
+        launch(mod_.fn((std::string(name) + "_vec").c_str()), grid(n, 16384),
+            args);
     }
 
     template <class Args, class F>
@@ -433,12 +475,18 @@ class CudaBackend {
     void
     copy_results(int n)
     {
-        cuda_rt::check(cuMemcpyDtoHAsync(host_, reinterpret_cast<CUdeviceptr>(out_.data),
-                           size_t(n) * sizeof(double), stream_), "copy results");
+        cuda_rt::check(
+            cuMemcpyDtoHAsync(host_, reinterpret_cast<CUdeviceptr>(out_.data),
+                size_t(n) * sizeof(double), stream_),
+            "copy results");
     }
-    const double *results() const { return host_; }
+    const double *
+    results() const
+    { return host_; }
     // the result slots in device memory (for ops that read a reduction)
-    const double *results_dev() const { return out_.data; }
+    const double *
+    results_dev() const
+    { return out_.data; }
 
     template <class Args, class F>
     std::array<double, 8>
@@ -448,7 +496,8 @@ class CudaBackend {
         copy_results(Args::K);
         sync();
         std::array<double, 8> out{};
-        for (int k = 0; k < Args::K; ++k) out[k] = host_[k];
+        for (int k = 0; k < Args::K; ++k)
+            out[k] = host_[k];
         return out;
     }
 
@@ -465,7 +514,8 @@ class CudaBackend {
         }
         auto it = graphs_.find(key);
         if (it == graphs_.end()) {
-            cuda_rt::check(cuStreamBeginCapture(stream_, CU_STREAM_CAPTURE_MODE_THREAD_LOCAL),
+            cuda_rt::check(cuStreamBeginCapture(
+                               stream_, CU_STREAM_CAPTURE_MODE_THREAD_LOCAL),
                 "cuStreamBeginCapture");
             CUgraph g = nullptr;
             try {
@@ -475,7 +525,8 @@ class CudaBackend {
                 if (g) cuGraphDestroy(g);
                 throw;
             }
-            cuda_rt::check(cuStreamEndCapture(stream_, &g), "cuStreamEndCapture");
+            cuda_rt::check(
+                cuStreamEndCapture(stream_, &g), "cuStreamEndCapture");
             CUgraphExec exec = nullptr;
             const CUresult r = cuGraphInstantiate(&exec, g, 0);
             cuGraphDestroy(g);
@@ -495,10 +546,14 @@ class CudaBackend {
         graphs_.erase(it);
     }
 
-    void sync() const { cuda_rt::check(cuStreamSynchronize(stream_), "sync"); }
+    void
+    sync() const
+    { cuda_rt::check(cuStreamSynchronize(stream_), "sync"); }
 
     // run_block() captures graphs (default) or just runs its work
-    void use_graphs(bool on) { graphs_on_ = on; }
+    void
+    use_graphs(bool on)
+    { graphs_on_ = on; }
 
     // fn(h) on a host copy h of the n doubles at v, copied back to v after:
     // ordered with the queued work, through pinned memory (a host-side
@@ -513,18 +568,22 @@ class CudaBackend {
             if (stage_) cudaFreeHost(stage_);
             stage_ = nullptr;
             stage_n_ = 0;
-            cuda_rt::check(cudaMallocHost(reinterpret_cast<void **>(&stage_), n * sizeof(double)),
+            cuda_rt::check(cudaMallocHost(reinterpret_cast<void **>(&stage_),
+                               n * sizeof(double)),
                 "cudaMallocHost");
             stage_n_ = n;
         }
-        cuda_rt::check(cuMemcpyDtoHAsync(stage_, reinterpret_cast<CUdeviceptr>(v),
-                           n * sizeof(double), stream_), "through_host (to host)");
+        cuda_rt::check(
+            cuMemcpyDtoHAsync(stage_, reinterpret_cast<CUdeviceptr>(v),
+                n * sizeof(double), stream_),
+            "through_host (to host)");
         sync();
         fn(stage_);
         // stage_ is reused only after a later copy on the same stream, so
         // this one has finished by then
-        cuda_rt::check(cuMemcpyHtoDAsync(reinterpret_cast<CUdeviceptr>(v), stage_,
-                           n * sizeof(double), stream_), "through_host (to device)");
+        cuda_rt::check(cuMemcpyHtoDAsync(reinterpret_cast<CUdeviceptr>(v),
+                           stage_, n * sizeof(double), stream_),
+            "through_host (to device)");
     }
 
     // Microseconds per call of fn() (which queues work), over reps calls
@@ -538,7 +597,8 @@ class CudaBackend {
         cuda_rt::check(cuEventCreate(&b, CU_EVENT_DEFAULT), "cuEventCreate");
         fn(); // warm (graph capture, first launch)
         cuda_rt::check(cuEventRecord(a, stream_), "cuEventRecord");
-        for (int r = 0; r < reps; ++r) fn();
+        for (int r = 0; r < reps; ++r)
+            fn();
         cuda_rt::check(cuEventRecord(b, stream_), "cuEventRecord");
         cuda_rt::check(cuEventSynchronize(b), "cuEventSynchronize");
         float ms = 0;
@@ -557,7 +617,8 @@ class CudaBackend {
     threads_for(double mean)
     {
         int t = 1;
-        while (t < 32 && 2.0 * t <= mean) t *= 2;
+        while (t < 32 && 2.0 * t <= mean)
+            t *= 2;
         return t;
     }
 
@@ -575,7 +636,9 @@ class CudaBackend {
         const size_t g = (n + kBlock - 1) / kBlock;
         return static_cast<unsigned>(g < cap ? (g ? g : 1) : cap);
     }
-    static unsigned blocks(size_t threads) { return grid(threads, 0x7fffffffu); }
+    static unsigned
+    blocks(size_t threads)
+    { return grid(threads, 0x7fffffffu); }
 
     // "<name>_<t>" (t threads per row), or "<name>_fin" when t == 0
     CUfunction
@@ -589,7 +652,8 @@ class CudaBackend {
     void
     launch(CUfunction f, unsigned nblocks, void **args)
     {
-        cuda_rt::check(cuLaunchKernel(f, nblocks, 1, 1, kBlock, 1, 1, 0, stream_, args, nullptr),
+        cuda_rt::check(cuLaunchKernel(f, nblocks, 1, 1, kBlock, 1, 1, 0,
+                           stream_, args, nullptr),
             "cuLaunchKernel");
     }
 

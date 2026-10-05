@@ -132,7 +132,7 @@ mpiexec -n 4 build/axos_mpi model.qps --device gpu --time-limit 600
 
 ## Documentation
 
-* [ref-manual.txt](ref-manual.txt): API of the sparse and LP layers.
+* [ref-manual.txt](ref-manual.txt): API of the sparse, LP, QP and MILP layers.
 * [docs/TENSOR_SPEC.md](docs/TENSOR_SPEC.md): specification and
   implementation status of the dense tensor layer.
 * [benchmarks/sparse/RESULTS.md](benchmarks/sparse/RESULTS.md),
@@ -169,13 +169,7 @@ src/solver/        LP model, MPS I/O, presolve, scaling, PDLP, IPM, simplex; api
 src/solver/qp/     HPR-QP, PDHCG, QP interior point; GPU kernels (NVRTC); MPI (qp_dist.h)
 src/solver/milp/   branch and cut, cuts, propagation, probing, heuristics; GPU kernels (NVRTC)
 apps/              axos (command-line solver), axos.py (Python wrapper)
-benchmarks/        drivers and results (qp/, milp/, solver/, sparse/, dense/)
+benchmarks/        drivers and results (qp/, milp/, solver/, sparse/, dense/, reference/)
 tests/             test_tensor.cpp, test_sparse.cpp, test_solver.cpp, netlib models
-benchmarks/        dense/, sparse/, solver/ (results + drivers), reference/ (Eigen)
 docs/              TENSOR_SPEC.md
 ```
-#   a x o s _ t e m p  
- #   a x o s _ t e m p  
- #   a x o s _ t e m p  
- #   a x o s _ t e m p  
- 

@@ -1,7 +1,7 @@
 """Sparse benchmark with PyTorch (CPU + CUDA) and SciPy on the matrices exported
 by bench_sparse (build/sparse_bench/*.bin). Prints the same RESULT lines.
 
-    ~/python_junk/.venv/bin/python benchmarks/sparse/bench_torch.py
+    /home/a/programs/python/.venv/bin/python benchmarks/sparse/bench_torch.py
 """
 import statistics
 import sys

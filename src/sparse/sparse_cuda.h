@@ -34,20 +34,24 @@ check(cudaError_t e, const char *what)
                                  cudaGetErrorString(e));
 }
 
-template <typename T> constexpr cudaDataType
+template <typename T>
+constexpr cudaDataType
 value_type()
 {
-    if constexpr (std::is_same_v<T, float>) return CUDA_R_32F;
-    else if constexpr (std::is_same_v<T, double>) return CUDA_R_64F;
-    else if constexpr (std::is_same_v<T, std::complex<float>>) return CUDA_C_32F;
-    else return CUDA_C_64F;
+    if constexpr (std::is_same_v<T, float>)
+        return CUDA_R_32F;
+    else if constexpr (std::is_same_v<T, double>)
+        return CUDA_R_64F;
+    else if constexpr (std::is_same_v<T, std::complex<float>>)
+        return CUDA_C_32F;
+    else
+        return CUDA_C_64F;
 }
 
-template <typename Idx> constexpr cusparseIndexType_t
+template <typename Idx>
+constexpr cusparseIndexType_t
 index_type()
-{
-    return sizeof(Idx) == 4 ? CUSPARSE_INDEX_32I : CUSPARSE_INDEX_64I;
-}
+{ return sizeof(Idx) == 4 ? CUSPARSE_INDEX_32I : CUSPARSE_INDEX_64I; }
 
 // Scratch memory taken from the GPU pool.
 struct PoolBuf {
@@ -100,11 +104,11 @@ cache_of(const M &A)
         c = sp.get();
     }
     if (!c->mat) {
-        check(cusparseCreateCsr(&c->mat, A.rows(), A.cols(), A.nnz(),
-                  const_cast<Idx *>(A.row_ptr()),
-                  const_cast<Idx *>(A.col_ind()), const_cast<T *>(A.values()),
-                  index_type<Idx>(), index_type<Idx>(),
-                  CUSPARSE_INDEX_BASE_ZERO, value_type<T>()),
+        check(
+            cusparseCreateCsr(&c->mat, A.rows(), A.cols(), A.nnz(),
+                const_cast<Idx *>(A.row_ptr()), const_cast<Idx *>(A.col_ind()),
+                const_cast<T *>(A.values()), index_type<Idx>(),
+                index_type<Idx>(), CUSPARSE_INDEX_BASE_ZERO, value_type<T>()),
             "cusparseCreateCsr");
     }
     return *c;
@@ -112,9 +116,7 @@ cache_of(const M &A)
 
 inline cusparseHandle_t
 handle()
-{
-    return GPUMemoryPool::get().get_cusparse();
-}
+{ return GPUMemoryPool::get().get_cusparse(); }
 
 } // namespace cuda_detail
 
@@ -123,9 +125,8 @@ template <> struct Kernels<Cuda::Backend> {
 
     template <typename M>
     static void
-    spmv(const M &A, const typename M::value_type *x,
-        typename M::value_type *y, typename M::value_type alpha,
-        typename M::value_type beta)
+    spmv(const M &A, const typename M::value_type *x, typename M::value_type *y,
+        typename M::value_type alpha, typename M::value_type beta)
     {
         using T = typename M::value_type;
         using namespace cuda_detail;
@@ -136,7 +137,8 @@ template <> struct Kernels<Cuda::Backend> {
                 check(cudaMemcpy(h.data(), y, A.rows() * sizeof(T),
                           cudaMemcpyDeviceToHost),
                     "spmv copy");
-                for (auto &v : h) v *= beta;
+                for (auto &v : h)
+                    v *= beta;
             }
             check(cudaMemcpy(y, h.data(), A.rows() * sizeof(T),
                       cudaMemcpyHostToDevice),
@@ -145,17 +147,17 @@ template <> struct Kernels<Cuda::Backend> {
         }
         CusparseCache &c = cache_of(A);
         cusparseDnVecDescr_t vx, vy;
-        check(cusparseCreateDnVec(&vx, A.cols(), const_cast<T *>(x),
-                  value_type<T>()),
+        check(cusparseCreateDnVec(
+                  &vx, A.cols(), const_cast<T *>(x), value_type<T>()),
             "cusparseCreateDnVec");
         check(cusparseCreateDnVec(&vy, A.rows(), y, value_type<T>()),
             "cusparseCreateDnVec");
         if (!c.spmv_ready) {
             size_t sz = 0;
-            check(cusparseSpMV_bufferSize(handle(),
-                      CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, c.mat, vx,
-                      &beta, vy, value_type<T>(), CUSPARSE_SPMV_ALG_DEFAULT,
-                      &sz),
+            check(
+                cusparseSpMV_bufferSize(handle(),
+                    CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, c.mat, vx, &beta,
+                    vy, value_type<T>(), CUSPARSE_SPMV_ALG_DEFAULT, &sz),
                 "cusparseSpMV_bufferSize");
             c.spmv_buf.reserve(sz);
 #if CUSPARSE_VERSION >= 12400
@@ -189,7 +191,8 @@ template <> struct Kernels<Cuda::Backend> {
                 check(cudaMemcpy(h.data(), Y, h.size() * sizeof(T),
                           cudaMemcpyDeviceToHost),
                     "spmm copy");
-                for (auto &v : h) v *= beta;
+                for (auto &v : h)
+                    v *= beta;
             }
             check(cudaMemcpy(Y, h.data(), h.size() * sizeof(T),
                       cudaMemcpyHostToDevice),
@@ -201,19 +204,19 @@ template <> struct Kernels<Cuda::Backend> {
         check(cusparseCreateDnMat(&mx, A.cols(), k, k, const_cast<T *>(X),
                   value_type<T>(), CUSPARSE_ORDER_ROW),
             "cusparseCreateDnMat");
-        check(cusparseCreateDnMat(&my, A.rows(), k, k, Y, value_type<T>(),
-                  CUSPARSE_ORDER_ROW),
+        check(cusparseCreateDnMat(
+                  &my, A.rows(), k, k, Y, value_type<T>(), CUSPARSE_ORDER_ROW),
             "cusparseCreateDnMat");
         size_t sz = 0;
-        check(cusparseSpMM_bufferSize(handle(), CUSPARSE_OPERATION_NON_TRANSPOSE,
-                  CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, c.mat, mx, &beta,
-                  my, value_type<T>(), CUSPARSE_SPMM_ALG_DEFAULT, &sz),
+        check(
+            cusparseSpMM_bufferSize(handle(), CUSPARSE_OPERATION_NON_TRANSPOSE,
+                CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, c.mat, mx, &beta, my,
+                value_type<T>(), CUSPARSE_SPMM_ALG_DEFAULT, &sz),
             "cusparseSpMM_bufferSize");
         c.spmm_buf.reserve(sz);
         check(cusparseSpMM(handle(), CUSPARSE_OPERATION_NON_TRANSPOSE,
                   CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, c.mat, mx, &beta,
-                  my, value_type<T>(), CUSPARSE_SPMM_ALG_DEFAULT,
-                  c.spmm_buf.p),
+                  my, value_type<T>(), CUSPARSE_SPMM_ALG_DEFAULT, c.spmm_buf.p),
             "cusparseSpMM");
         cusparseDestroyDnMat(mx);
         cusparseDestroyDnMat(my);
@@ -233,13 +236,17 @@ template <> struct Kernels<Cuda::Backend> {
             // No complex kernel: scale on the host.
             Csr<T, typename M::index_type, Cpu::HostStorage> h(A);
             std::vector<R> hr(A.rows()), hc(A.cols());
-            if (r) check(cudaMemcpy(hr.data(), r, hr.size() * sizeof(R),
-                             cudaMemcpyDeviceToHost), "scale copy");
-            if (c) check(cudaMemcpy(hc.data(), c, hc.size() * sizeof(R),
-                             cudaMemcpyDeviceToHost), "scale copy");
+            if (r)
+                check(cudaMemcpy(hr.data(), r, hr.size() * sizeof(R),
+                          cudaMemcpyDeviceToHost),
+                    "scale copy");
+            if (c)
+                check(cudaMemcpy(hc.data(), c, hc.size() * sizeof(R),
+                          cudaMemcpyDeviceToHost),
+                    "scale copy");
             HostK::scale(h, r ? hr.data() : nullptr, c ? hc.data() : nullptr);
-            check(cudaMemcpy(A.values_mut(), h.values(),
-                      A.nnz() * sizeof(T), cudaMemcpyHostToDevice),
+            check(cudaMemcpy(A.values_mut(), h.values(), A.nnz() * sizeof(T),
+                      cudaMemcpyHostToDevice),
                 "scale copy");
         } else {
             constexpr int W = Sparse::cuda_kernels::SPARSE_WARPS_PER_BLOCK;
@@ -296,18 +303,16 @@ template <> struct Kernels<Cuda::Backend> {
             if (nz == 0) return B;
             size_t sz = 0;
             check(cusparseCsr2cscEx2_bufferSize(handle(), m, n, nz, A.values(),
-                      A.row_ptr(), A.col_ind(), B.values_mut(),
-                      B.row_ptr_mut(), B.col_ind_mut(), value_type<T>(),
-                      CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO,
-                      CUSPARSE_CSR2CSC_ALG1, &sz),
+                      A.row_ptr(), A.col_ind(), B.values_mut(), B.row_ptr_mut(),
+                      B.col_ind_mut(), value_type<T>(), CUSPARSE_ACTION_NUMERIC,
+                      CUSPARSE_INDEX_BASE_ZERO, CUSPARSE_CSR2CSC_ALG1, &sz),
                 "cusparseCsr2cscEx2_bufferSize");
             PoolBuf buf;
             buf.reserve(sz);
             check(cusparseCsr2cscEx2(handle(), m, n, nz, A.values(),
-                      A.row_ptr(), A.col_ind(), B.values_mut(),
-                      B.row_ptr_mut(), B.col_ind_mut(), value_type<T>(),
-                      CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO,
-                      CUSPARSE_CSR2CSC_ALG1, buf.p),
+                      A.row_ptr(), A.col_ind(), B.values_mut(), B.row_ptr_mut(),
+                      B.col_ind_mut(), value_type<T>(), CUSPARSE_ACTION_NUMERIC,
+                      CUSPARSE_INDEX_BASE_ZERO, CUSPARSE_CSR2CSC_ALG1, buf.p),
                 "cusparseCsr2cscEx2");
             return B;
         }

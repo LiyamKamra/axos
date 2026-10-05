@@ -74,8 +74,8 @@ logical_offset(const Tensor &t, size_t flat)
 
 // Calls f(offset, flat, len) for each run of `len` consecutive elements of t,
 // in row-major logical order: the run starts at t.data + offset and holds
-// logical elements [flat, flat + len). A contiguous tensor is one run; a
-// view has one run per innermost row (the innermost stride is always 1).
+// logical elements [flat, flat + len). A contiguous tensor is one run; a view
+// has one run per innermost row (the innermost stride is always 1).
 template <class Tensor, class F>
 void
 for_each_run(const Tensor &t, F &&f)
@@ -127,7 +127,8 @@ struct Backend {
     static auto
     read_element(const Tensor &t, size_t i)
     {
-        using T = std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
+        using T =
+            std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
         return T(t.data[i]);
     }
 
@@ -196,9 +197,12 @@ template <typename T> class HostStorage {
 
     HostStorage() noexcept = default;
 
-    explicit HostStorage(size_t n) : ptr_(allocate_raw(n)), n_(n), own_(n > 0) {}
+    explicit HostStorage(size_t n) : ptr_(allocate_raw(n)), n_(n), own_(n > 0)
+    {
+    }
 
-    HostStorage(size_t n, T x) : HostStorage(n) { detail::fill_elems(ptr_, n_, x); }
+    HostStorage(size_t n, T x) : HostStorage(n)
+    { detail::fill_elems(ptr_, n_, x); }
 
     HostStorage(T *raw, size_t n, bool own = false) noexcept
         : ptr_(raw), n_(raw ? n : 0), own_(own && raw != nullptr)
@@ -262,10 +266,18 @@ template <typename T> class HostStorage {
         own_ = n > 0;
     }
 
-    T *data() noexcept { return ptr_; }
-    const T *data() const noexcept { return ptr_; }
-    size_t size() const noexcept { return n_; }
-    bool owns() const noexcept { return own_; }
+    T *
+    data() noexcept
+    { return ptr_; }
+    const T *
+    data() const noexcept
+    { return ptr_; }
+    size_t
+    size() const noexcept
+    { return n_; }
+    bool
+    owns() const noexcept
+    { return own_; }
 
     void
     swap(HostStorage &o) noexcept
@@ -318,9 +330,10 @@ template <class S>
 inline constexpr bool is_host_storage_v = is_host_storage<S>::value;
 
 // backend_of_t<X>: X::backend_type when X has one, otherwise Cpu::Backend.
-template <class X, class = void> struct backend_of { using type = Cpu::Backend; };
-template <class X>
-struct backend_of<X, std::void_t<typename X::backend_type>> {
+template <class X, class = void> struct backend_of {
+    using type = Cpu::Backend;
+};
+template <class X> struct backend_of<X, std::void_t<typename X::backend_type>> {
     using type = typename X::backend_type;
 };
 template <class X> using backend_of_t = typename backend_of<X>::type;

@@ -20,8 +20,8 @@
 //   through_host(v, n, fn)      fn(h) on a host copy h of v[0..n), copied back
 #pragma once
 
-#include "solver/qp/qp_ops.h"
 #include "solver/model.h"
+#include "solver/qp/qp_ops.h"
 #include "sparse/sparse_cpu.h"
 #include "tensor/parallel.h"
 #include "tensorET.h"
@@ -41,32 +41,45 @@ class CpuBackend {
     using Vec = tensorET<1, double>;
     struct Mat {
         HostMatrix A;
-        size_t rows() const { return A.rows(); }
-        size_t nnz() const { return A.nnz(); }
+        size_t
+        rows() const
+        { return A.rows(); }
+        size_t
+        nnz() const
+        { return A.nnz(); }
     };
 
-    std::string name() const { return "cpu"; }
+    std::string
+    name() const
+    { return "cpu"; }
 
-    Vec vec(size_t n, double v = 0.0) const { return Vec({n}, v); }
+    Vec
+    vec(size_t n, double v = 0.0) const
+    { return Vec({n}, v); }
 
     Vec
     upload(const std::vector<double> &h) const
     {
         Vec v({h.size()});
-        if (!h.empty()) std::memcpy(v.data, h.data(), h.size() * sizeof(double));
+        if (!h.empty())
+            std::memcpy(v.data, h.data(), h.size() * sizeof(double));
         return v;
     }
 
     void
     download(const Vec &v, std::vector<double> &h) const
-    {
-        h.assign(v.data, v.data + v.size());
-    }
+    { h.assign(v.data, v.data + v.size()); }
 
-    static double *ptr(Vec &v) { return v.data; }
-    static const double *ptr(const Vec &v) { return v.data; }
+    static double *
+    ptr(Vec &v)
+    { return v.data; }
+    static const double *
+    ptr(const Vec &v)
+    { return v.data; }
 
-    Mat upload(const HostMatrix &A) const { return Mat{A}; }
+    Mat
+    upload(const HostMatrix &A) const
+    { return Mat{A}; }
 
     void
     spmv(const Mat &M, const double *x, double *y) const
@@ -77,7 +90,8 @@ class CpuBackend {
 
     template <class Args, class F>
     void
-    spmv_epi(const char *, const Mat &M, const double *x, const Args &a, F f) const
+    spmv_epi(
+        const char *, const Mat &M, const double *x, const Args &a, F f) const
     {
         const auto *rp = M.A.row_ptr();
         const auto *ci = M.A.col_ind();
@@ -85,7 +99,8 @@ class CpuBackend {
         detail::parallel_for(M.rows(), kGrain / 8, [&](size_t b, size_t e) {
             for (size_t i = b; i < e; ++i) {
                 double s = 0.0;
-                for (auto k = rp[i]; k < rp[i + 1]; ++k) s += v[k] * x[ci[k]];
+                for (auto k = rp[i]; k < rp[i + 1]; ++k)
+                    s += v[k] * x[ci[k]];
                 f(static_cast<axos_qp::idx>(i), s, a);
             }
         });
@@ -96,7 +111,8 @@ class CpuBackend {
     epi(const char *, size_t n, const double *s, const Args &a, F f) const
     {
         detail::parallel_for(n, kGrain, [&](size_t b, size_t e) {
-            for (size_t i = b; i < e; ++i) f(static_cast<axos_qp::idx>(i), s[i], a);
+            for (size_t i = b; i < e; ++i)
+                f(static_cast<axos_qp::idx>(i), s[i], a);
         });
     }
 
@@ -105,7 +121,8 @@ class CpuBackend {
     map(const char *, size_t n, const Args &a, F f) const
     {
         detail::parallel_for(n, kGrain, [&](size_t b, size_t e) {
-            for (size_t i = b; i < e; ++i) f(static_cast<axos_qp::idx>(i), a);
+            for (size_t i = b; i < e; ++i)
+                f(static_cast<axos_qp::idx>(i), a);
         });
     }
 
@@ -118,15 +135,21 @@ class CpuBackend {
         const int nt = detail::max_threads();
         const size_t chunks = detail::chunk_count(n, kGrain, nt);
         std::vector<std::array<double, K>> part(chunks);
-        detail::parallel_for(chunks, 1, [&](size_t c0, size_t c1) {
-            for (size_t c = c0; c < c1; ++c) {
-                double acc[Args::K] = {}; // (MSVC: no constexpr locals in lambdas)
-                const size_t b = detail::chunk_begin(n, chunks, c, 1);
-                const size_t e = detail::chunk_begin(n, chunks, c + 1, 1);
-                for (size_t i = b; i < e; ++i) f(static_cast<axos_qp::idx>(i), a, acc);
-                for (int k = 0; k < Args::K; ++k) part[c][k] = acc[k];
-            }
-        }, 1);
+        detail::parallel_for(
+            chunks, 1,
+            [&](size_t c0, size_t c1) {
+                for (size_t c = c0; c < c1; ++c) {
+                    double acc[Args::K] =
+                        {}; // (MSVC: no constexpr locals in lambdas)
+                    const size_t b = detail::chunk_begin(n, chunks, c, 1);
+                    const size_t e = detail::chunk_begin(n, chunks, c + 1, 1);
+                    for (size_t i = b; i < e; ++i)
+                        f(static_cast<axos_qp::idx>(i), a, acc);
+                    for (int k = 0; k < Args::K; ++k)
+                        part[c][k] = acc[k];
+                }
+            },
+            1);
         for (size_t c = 0; c < chunks; ++c)
             for (int k = 0; k < K; ++k)
                 out[k] = ((Args::kMax >> k) & 1u) ? std::max(out[k], part[c][k])
@@ -139,20 +162,32 @@ class CpuBackend {
     reduce_to(const char *name, size_t n, const Args &a, F f, int slot)
     {
         const auto r = reduce(name, n, a, f);
-        for (int k = 0; k < Args::K; ++k) res_[slot + k] = r[k];
+        for (int k = 0; k < Args::K; ++k)
+            res_[slot + k] = r[k];
     }
-    void copy_results(int) const {}
-    const double *results() const { return res_.data(); }
-    const double *results_dev() const { return res_.data(); }
+    void
+    copy_results(int) const
+    {
+    }
+    const double *
+    results() const
+    { return res_.data(); }
+    const double *
+    results_dev() const
+    { return res_.data(); }
 
     template <class F>
     void
     run_block(long, F &&fn) const
+    { fn(); }
+    void
+    forget(long) const
     {
-        fn();
     }
-    void forget(long) const {}
-    void use_graphs(bool) const {}
+    void
+    use_graphs(bool) const
+    {
+    }
 
     template <class F>
     void
@@ -161,7 +196,10 @@ class CpuBackend {
         if (n) fn(v);
     }
 
-    void sync() const {}
+    void
+    sync() const
+    {
+    }
 
     template <class F>
     double
@@ -169,8 +207,13 @@ class CpuBackend {
     {
         fn();
         const auto t0 = std::chrono::steady_clock::now();
-        for (int r = 0; r < reps; ++r) fn();
-        return 1e6 * std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() / reps;
+        for (int r = 0; r < reps; ++r)
+            fn();
+        return 1e6 *
+               std::chrono::duration<double>(
+                   std::chrono::steady_clock::now() - t0)
+                   .count() /
+               reps;
     }
 
   private:

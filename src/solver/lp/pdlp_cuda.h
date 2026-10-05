@@ -21,7 +21,7 @@ for_each_kernel(size_t n, F f)
 {
     const size_t stride = static_cast<size_t>(gridDim.x) * blockDim.x;
     for (size_t i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
-         i < n; i += stride)
+        i < n; i += stride)
         f(i);
 }
 
@@ -37,7 +37,7 @@ reduce_kernel(size_t n, F f, double *part)
         acc[k] = 0.0;
     const size_t stride = static_cast<size_t>(gridDim.x) * blockDim.x;
     for (size_t i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
-         i < n; i += stride)
+        i < n; i += stride)
         f(i, acc);
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     const int nwarps = (blockDim.x + 31) >> 5;
@@ -99,7 +99,7 @@ reduce_min_kernel(size_t n, F f, double *part)
     double m = INFINITY;
     const size_t stride = static_cast<size_t>(gridDim.x) * blockDim.x;
     for (size_t i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
-         i < n; i += stride) {
+        i < n; i += stride) {
         const double v = f(i);
         m = v < m ? v : m;
     }
@@ -157,7 +157,8 @@ template <> struct Parallel<Cuda::Backend> {
     Parallel()
     {
         check(cudaMalloc(&dev, pdlp::kSlots * sizeof(double)), "cudaMalloc");
-        check(cudaMalloc(&part, kMaxBlocks * kMaxK * sizeof(double)), "cudaMalloc");
+        check(cudaMalloc(&part, kMaxBlocks * kMaxK * sizeof(double)),
+            "cudaMalloc");
         zero();
     }
     Parallel(const Parallel &) = delete;
@@ -193,9 +194,7 @@ template <> struct Parallel<Cuda::Backend> {
 
     void
     zero()
-    {
-        check(cudaMemset(dev, 0, pdlp::kSlots * sizeof(double)), "zero slots");
-    }
+    { check(cudaMemset(dev, 0, pdlp::kSlots * sizeof(double)), "zero slots"); }
 
     template <typename F>
     void
@@ -205,13 +204,15 @@ template <> struct Parallel<Cuda::Backend> {
         static_assert(F::K <= kMaxK, "too many reduction values");
         const int blocks = grid_for(n);
         pdlp::reduce_kernel<F::K, F><<<blocks, kBlock>>>(n, f, part);
-        pdlp::reduce_finish_kernel<F::K><<<1, kBlock>>>(part, blocks, dev + slot);
+        pdlp::reduce_finish_kernel<F::K>
+            <<<1, kBlock>>>(part, blocks, dev + slot);
     }
 
     void
     set_slot(int slot, double v)
     {
-        check(cudaMemcpy(dev + slot, &v, sizeof(double), cudaMemcpyHostToDevice),
+        check(
+            cudaMemcpy(dev + slot, &v, sizeof(double), cudaMemcpyHostToDevice),
             "set_slot");
     }
 
@@ -238,8 +239,10 @@ template <> struct Parallel<Cuda::Backend> {
     void
     copy(double *dst, const double *src, size_t n)
     {
-        if (n) check(cudaMemcpy(dst, src, n * sizeof(double),
-                         cudaMemcpyDeviceToDevice), "copy");
+        if (n)
+            check(cudaMemcpy(
+                      dst, src, n * sizeof(double), cudaMemcpyDeviceToDevice),
+                "copy");
     }
 };
 

@@ -158,17 +158,22 @@ class GPUMemoryPool {
         st_.bytes_cached = 0;
     }
 
-    Stats stats() const { return st_; }
+    Stats
+    stats() const
+    { return st_; }
 
     // Testing hook: treat any allocation that would make this pool hold more
     // than `bytes` of device memory as out of memory (0 = no limit).
-    void set_limit(size_t bytes) { limit_ = bytes; }
+    void
+    set_limit(size_t bytes)
+    { limit_ = bytes; }
 
 #if defined(CUSPARSE_WITH)
     cusparseHandle_t
     get_cusparse()
     {
-        if (!cusparse_ && cusparseCreate(&cusparse_) != CUSPARSE_STATUS_SUCCESS) {
+        if (!cusparse_ &&
+            cusparseCreate(&cusparse_) != CUSPARSE_STATUS_SUCCESS) {
             cusparse_ = nullptr;
             throw std::runtime_error("GPUMemoryPool: cusparseCreate failed");
         }
@@ -290,8 +295,8 @@ class GPUMemoryPool {
         ++st_.device_frees;
     }
 
-    std::multimap<size_t, void *> free_;       // cached blocks by size
-    std::unordered_map<void *, size_t> used_;  // live blocks -> size
+    std::multimap<size_t, void *> free_;      // cached blocks by size
+    std::unordered_map<void *, size_t> used_; // live blocks -> size
     Stats st_;
     size_t limit_ = 0;
 #if defined(CUSPARSE_WITH)

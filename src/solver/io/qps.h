@@ -27,7 +27,9 @@ read_qps(std::istream &in, bool fixed_format = false)
     b.reserve(quad.size());
     const double sgn = p.lp.maximize ? -1.0 : 1.0;
     for (const auto &e : quad)
-        if (e.v != 0) b.add(static_cast<size_t>(e.i), static_cast<size_t>(e.j), sgn * e.v);
+        if (e.v != 0)
+            b.add(
+                static_cast<size_t>(e.i), static_cast<size_t>(e.j), sgn * e.v);
     p.Q = b.build(true);
     return p;
 }

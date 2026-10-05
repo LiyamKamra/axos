@@ -8,8 +8,9 @@
 //
 //   map ops       void f(idx i, const Args &a)             writes outputs
 //   reduce ops    void f(idx i, const Args &a, double *acc) adds into acc[0..K)
-//                 (Args::K accumulators; bit k of Args::kMax set = max, else sum;
-//                 max-accumulators only see non-negative values, start at 0)
+//                 (Args::K accumulators; bit k of Args::kMax set = max, else
+//                 sum; max-accumulators only see non-negative values, start at
+//                 0)
 //   epilogues     void f(idx i, double s, const Args &a)   s = (M v)_i, run
 //                 for every row i of a sparse product (backend spmv_epi)
 //
@@ -34,14 +35,18 @@ typedef long long idx;
 using std::sqrt;
 #endif
 
-QP_HD inline double dmin(double a, double b) { return a < b ? a : b; }
-QP_HD inline double dmax(double a, double b) { return a > b ? a : b; }
-QP_HD inline double dabs(double a) { return a < 0 ? -a : a; }
+QP_HD inline double
+dmin(double a, double b)
+{ return a < b ? a : b; }
+QP_HD inline double
+dmax(double a, double b)
+{ return a > b ? a : b; }
+QP_HD inline double
+dabs(double a)
+{ return a < 0 ? -a : a; }
 QP_HD inline double
 clampd(double v, double lo, double hi)
-{
-    return v < lo ? lo : (v > hi ? hi : v);
-}
+{ return v < lo ? lo : (v > hi ? hi : v); }
 
 // ---- generic --------------------------------------------------------------
 
@@ -49,13 +54,17 @@ struct Fill {
     double *dst;
     double v;
 };
-QP_HD inline void fill(idx i, const Fill &a) { a.dst[i] = a.v; }
+QP_HD inline void
+fill(idx i, const Fill &a)
+{ a.dst[i] = a.v; }
 
 struct Copy {
     double *dst;
     const double *src;
 };
-QP_HD inline void copy(idx i, const Copy &a) { a.dst[i] = a.src[i]; }
+QP_HD inline void
+copy(idx i, const Copy &a)
+{ a.dst[i] = a.src[i]; }
 
 // dst = s * src
 struct Scale {
@@ -63,21 +72,27 @@ struct Scale {
     const double *src;
     double s;
 };
-QP_HD inline void scale(idx i, const Scale &a) { a.dst[i] = a.s * a.src[i]; }
+QP_HD inline void
+scale(idx i, const Scale &a)
+{ a.dst[i] = a.s * a.src[i]; }
 
 // dst = src / sqrt(*nrm2), with nrm2 on the device (power method)
 struct ScaleNorm {
     double *dst;
     const double *src, *nrm2;
 };
-QP_HD inline void scale_norm(idx i, const ScaleNorm &a) { a.dst[i] = a.src[i] / sqrt(*a.nrm2); }
+QP_HD inline void
+scale_norm(idx i, const ScaleNorm &a)
+{ a.dst[i] = a.src[i] / sqrt(*a.nrm2); }
 
 // out = a - b
 struct Diff {
     double *out;
     const double *a, *b;
 };
-QP_HD inline void diff(idx i, const Diff &p) { p.out[i] = p.a[i] - p.b[i]; }
+QP_HD inline void
+diff(idx i, const Diff &p)
+{ p.out[i] = p.a[i] - p.b[i]; }
 
 // sum a*b, sum a*a
 struct Dot2 {
@@ -92,33 +107,39 @@ dot2(idx i, const Dot2 &p, double *acc)
     acc[1] += p.a[i] * p.a[i];
 }
 
-// ---- HPR-QP iteration ---------------------------------------------------------
-// The scalars of a block of iterations live in device memory (written by
-// hpr_scalars once per block), so a block's kernels have fixed arguments and
-// can be replayed as a CUDA graph: sc[kSigma .. kInvRho] and, for the block's
-// iteration j (0 <= j < kMaxBlock), the Halpern weights
-// sc[kW + 2j] = (t+1)/(t+2) and sc[kW + 2j + 1] = 1/(t+2) with t = t0 + j.
-// No division is left in the per-element steps (FP64 division is slow on
-// consumer GPUs, whose FP64 rate is 1/32 to 1/64 of FP32).
+// ---- HPR-QP iteration
+// --------------------------------------------------------- The scalars of a
+// block of iterations live in device memory (written by hpr_scalars once per
+// block), so a block's kernels have fixed arguments and can be replayed as a
+// CUDA graph: sc[kSigma .. kInvRho] and, for the block's iteration j (0 <= j <
+// kMaxBlock), the Halpern weights sc[kW + 2j] = (t+1)/(t+2) and sc[kW + 2j + 1]
+// = 1/(t+2) with t = t0 + j. No division is left in the per-element steps (FP64
+// division is slow on consumer GPUs, whose FP64 rate is 1/32 to 1/64 of FP32).
 //
-// Most steps are epilogues of a sparse product, f(i, s, a) with s = (M v)_i:
-// the per-row update runs where the row's product is computed, so an
-// iteration is four kernels (Q xhat, A v, A^T ybar, Q d) plus, at the start
+// Most steps are epilogues of a sparse product, f(i, s, a) with s = (M v)_i, so
+// an iteration is four kernels (Q xhat, A v, A^T ybar, Q d) plus, at the start
 // of a block, one map (hpr_primal).
 enum HprScalar {
-    kSigma = 0, kA = 1, kBq = 2, kRho = 3, kKappa = 4, kInvRho = 5,
-    kW = 8, kMaxBlock = 64, kScalars = kW + 2 * kMaxBlock
+    kSigma = 0,
+    kA = 1,
+    kBq = 2,
+    kRho = 3,
+    kKappa = 4,
+    kInvRho = 5,
+    kW = 8,
+    kMaxBlock = 64,
+    kScalars = kW + 2 * kMaxBlock
 };
 
 // Factors of the two sGS half steps of w: whalf = a w + b xhat, and
-// wbar = whalf + kappa A^T(ybar - y). With the semi-proximal term
-// s (lq Q - Q^2) they are scalars (a = s lq / (1 + s lq), b = 1 / (1 + s lq),
-// kappa = s / (1 + s lq), in sc[]). A diagonal Q needs no proximal term:
-// the w step is exact, with lq replaced by q_i per element; then qb holds
-// b_i = 1 / (1 + s q_i) (hpr_qb, whenever s changes), a_i = 1 - b_i and
-// kappa_i = s b_i.
+// wbar = whalf + kappa A^T(ybar - y). With the semi-proximal term s (lq Q -
+// Q^2) they are scalars (a = s lq / (1 + s lq), b = 1 / (1 + s lq), kappa = s /
+// (1 + s lq), in sc[]). A diagonal Q needs no proximal term: the w step is
+// exact, with lq replaced by q_i per element; then qb holds b_i = 1 / (1 + s
+// q_i) (hpr_qb, whenever s changes), a_i = 1 - b_i and kappa_i = s b_i.
 QP_HD inline void
-hpr_factors(const double *sc, const double *qb, idx i, double &a, double &b, double &kappa)
+hpr_factors(const double *sc, const double *qb, idx i, double &a, double &b,
+    double &kappa)
 {
     if (qb) {
         b = qb[i];
@@ -165,19 +186,24 @@ struct HprQb {
     const double *q;
     double sigma;
 };
-QP_HD inline void hpr_qb(idx i, const HprQb &a) { a.qb[i] = 1.0 / (1.0 + a.sigma * a.q[i]); }
+QP_HD inline void
+hpr_qb(idx i, const HprQb &a)
+{ a.qb[i] = 1.0 / (1.0 + a.sigma * a.q[i]); }
 
 // plain product: y_i = s
 struct Store {
     double *y;
 };
-QP_HD inline void store(idx i, double s, const Store &a) { a.y[i] = s; }
+QP_HD inline void
+store(idx i, double s, const Store &a)
+{ a.y[i] = s; }
 
 // z and x: r = x + s (A^T y - Q w - c), xbar = P_C(r), xhat = 2 xbar - x,
 // zbar = (xbar - r) / s (only when zbar is set: the KKT check needs it).
 QP_HD inline void
-hpr_primal_at(idx i, double x, double qw, double aty, const double *c, const double *lb,
-    const double *ub, double sigma, double *xbar, double *xhat, double *zbar)
+hpr_primal_at(idx i, double x, double qw, double aty, const double *c,
+    const double *lb, const double *ub, double sigma, double *xbar,
+    double *xhat, double *zbar)
 {
     const double r = x + sigma * (aty - qw - c[i]);
     const double xb = clampd(r, lb[i], ub[i]);
@@ -193,14 +219,14 @@ struct HprPrimal {
 QP_HD inline void
 hpr_primal(idx i, const HprPrimal &a)
 {
-    hpr_primal_at(i, a.x[i], a.qw[i], a.aty[i], a.c, a.lb, a.ub, a.sc[kSigma], a.xbar, a.xhat,
-        a.zbar);
+    hpr_primal_at(i, a.x[i], a.qw[i], a.aty[i], a.c, a.lb, a.ub, a.sc[kSigma],
+        a.xbar, a.xhat, a.zbar);
 }
 
 // Epilogue of s = (Q xhat)_i, first sGS half of w (restricted to range(Q)
-// through Q w only): whalf = a w + b xhat, Q whalf = a Q w + b s with
-// a, b from hpr_factors; v = xhat + s (Q w - Q whalf)
-// is the point the y step multiplies by A.
+// through Q w only): whalf = a w + b xhat, Q whalf = a Q w + b s with a, b from
+// hpr_factors; v = xhat + s (Q w - Q whalf) is the point the y step multiplies
+// by A.
 struct HprWHalf {
     const double *w, *qw, *xhat;
     double *whalf, *qwhalf, *v;
@@ -218,8 +244,8 @@ hpr_whalf(idx i, double s, const HprWHalf &p)
 }
 
 // Epilogue of s = (A v)_i, the y step (linearized with the semi-proximal
-// term s (la I - A A^T)): r = s - rho y (rho = s la), ybar = (P_K(r) - r) / rho;
-// with halpern set, also the Halpern step y <- w1 (2 ybar - y) + w0 y0.
+// term s (la I - A A^T)): r = s - rho y (rho = s la), ybar = (P_K(r) - r) /
+// rho; with halpern set, also the Halpern step y <- w1 (2 ybar - y) + w0 y0.
 struct HprDual {
     double *y, *ybar;
     const double *l, *u, *y0, *sc;
@@ -256,7 +282,8 @@ hpr_aty(idx i, double s, const HprAty &a)
 // and, with next set, the z/x step of the next iteration (same sigma).
 struct HprHalpern {
     double *x, *w, *qw, *aty, *xbar, *xhat;
-    const double *whalf, *qwhalf, *d, *atybar, *x0, *w0, *qw0, *aty0, *c, *lb, *ub, *sc, *qb;
+    const double *whalf, *qwhalf, *d, *atybar, *x0, *w0, *qw0, *aty0, *c, *lb,
+        *ub, *sc, *qb;
     int j, next;
 };
 QP_HD inline void
@@ -274,21 +301,24 @@ hpr_halpern(idx i, double s, const HprHalpern &p)
     p.w[i] = w1 * (2.0 * wb - p.w[i]) + w0 * p.w0[i];
     p.qw[i] = qw;
     p.aty[i] = aty;
-    if (p.next) hpr_primal_at(i, x, qw, aty, p.c, p.lb, p.ub, p.sc[kSigma], p.xbar, p.xhat, nullptr);
+    if (p.next)
+        hpr_primal_at(i, x, qw, aty, p.c, p.lb, p.ub, p.sc[kSigma], p.xbar,
+            p.xhat, nullptr);
 }
 
-// The same step at a convergence check, as a reduction over the n-sized
-// parts (qd = Q d stored); also stores wbar, Q wbar (needed at restarts) and
+// The same step at a convergence check, as a reduction over the n-sized parts
+// (qd = Q d stored); also stores wbar, Q wbar (needed at restarts) and
 // accumulates the terms of the merit ||T(u) - u||_M, with ex = xbar - x,
 // ew = wbar - w, eq = Q ew, d = A^T(ybar - y):
 //   acc0 = |ex|^2, acc1 = <ew, eq>, acc2 = <eq, d>, acc3 = <d, Q d>,
 //   acc4 = |eq|^2, acc5 = <eq, ex>, acc6 = <d, ex>,
 //   acc7 = sum d_i (Q d)_i / (1 + s q_i)   (diagonal Q only)
-// (second_half = 0: the free-variable variant below, whose wbar and Q wbar
-// are whalf and qwhalf as they come.)
+// (second_half = 0: the free-variable variant below, whose wbar and Q wbar are
+// whalf and qwhalf as they come.)
 struct HprHalpernRed {
     double *x, *w, *qw, *aty, *wbar, *qwbar;
-    const double *xbar, *whalf, *qwhalf, *d, *qd, *atybar, *x0, *w0, *qw0, *aty0, *sc, *qb;
+    const double *xbar, *whalf, *qwhalf, *d, *qd, *atybar, *x0, *w0, *qw0,
+        *aty0, *sc, *qb;
     int j, second_half;
     static constexpr int K = 8;
     static constexpr unsigned kMax = 0;
@@ -323,8 +353,8 @@ hpr_halpern_red(idx i, const HprHalpernRed &p, double *acc)
 // ---- HPR-QP, variant for mostly free x --------------------------------------
 // When (nearly) no x has bounds, the authors' HPR-QP.jl sweeps w -> x -> y
 // without the second sGS half of w: three products per iteration instead of
-// four, A^T y (the x and w steps in its epilogue), Q wbar (the Q w update
-// and the point the y step multiplies by A) and A v (the y step, hpr_dual).
+// four, A^T y (the x and w steps in its epilogue), Q wbar (the Q w update and
+// the point the y step multiplies by A) and A v (the y step, hpr_dual).
 
 // Epilogue of s = (A^T y)_i, with the fresh A^T y: z/x step, wbar = a w +
 // b xhat, and with halpern set the Halpern steps on x and w.
@@ -467,10 +497,11 @@ kkt_cols(idx i, const KktCols &a, double *acc)
     acc[5] += z > 0 ? a.lb[i] * z : (z < 0 ? a.ub[i] * z : 0.0);
 }
 
-// ---- PDHCG iteration ------------------------------------------------------------
-// Primal subproblem  min_{x in C} 1/2 x^T Q x + (c - A^T y)^T x + |x - xk|^2 / (2 tau),
-// gradient (Q + I/tau) x + c - A^T y - xk/tau. The inner iterate xt starts at
-// xk; qxt = Q xt is carried along (Q xk + sum of Q s).
+// ---- PDHCG iteration
+// ------------------------------------------------------------ Primal
+// subproblem  min_{x in C} 1/2 x^T Q x + (c - A^T y)^T x + |x - xk|^2 / (2
+// tau), gradient (Q + I/tau) x + c - A^T y - xk/tau. The inner iterate xt
+// starts at xk; qxt = Q xt is carried along (Q xk + sum of Q s).
 
 // Start of the inner solve: xt = xk, qxt = Q xk, g = Q xk + c - A^T y
 // (the gradient at xk), and for CG r = p = -g.
@@ -571,7 +602,9 @@ struct PdCgDir {
     const double *r;
     double beta;
 };
-QP_HD inline void pd_cg_dir(idx i, const PdCgDir &a) { a.p[i] = a.r[i] + a.beta * a.p[i]; }
+QP_HD inline void
+pd_cg_dir(idx i, const PdCgDir &a)
+{ a.p[i] = a.r[i] + a.beta * a.p[i]; }
 
 // Dual step with extrapolation t = 2 A xt - A x (PDLP form):
 //   yn = max(0, y + s(l - t)) + min(0, y + s(u - t))
@@ -597,9 +630,7 @@ struct Halpern {
 };
 QP_HD inline void
 halpern(idx i, const Halpern &a)
-{
-    a.v[i] = a.w1 * (2.0 * a.vn[i] - a.v[i]) + a.w0c * a.v0[i];
-}
+{ a.v[i] = a.w1 * (2.0 * a.vn[i] - a.v[i]) + a.w0c * a.v0[i]; }
 
 // Halpern step on the n-sized PDHCG state (x, Q x, A^T y).
 struct PdHalpernN {
@@ -629,7 +660,8 @@ pd_kkt_cols(idx i, const PdKktCols &a, double *acc)
     const double ci = a.cinv[i], qx = a.qx[i], aty = a.aty[i];
     const double g = qx + a.c[i] - aty;
     const bool lo = a.lb[i] > -1e300, hi = a.ub[i] < 1e300;
-    const double z = (lo && hi) ? g : (lo ? dmax(g, 0.0) : (hi ? dmin(g, 0.0) : 0.0));
+    const double z =
+        (lo && hi) ? g : (lo ? dmax(g, 0.0) : (hi ? dmin(g, 0.0) : 0.0));
     acc[0] = dmax(acc[0], dabs(g - z) * ci);
     acc[1] = dmax(acc[1], dabs(qx) * ci);
     acc[2] = dmax(acc[2], dabs(aty) * ci);

@@ -14,9 +14,8 @@ template <> struct Kernels<Cpu::Backend> {
     // When beta == 0, y is not read (so it may hold NaN / garbage).
     template <typename M>
     static void
-    spmv(const M &A, const typename M::value_type *x,
-        typename M::value_type *y, typename M::value_type alpha,
-        typename M::value_type beta)
+    spmv(const M &A, const typename M::value_type *x, typename M::value_type *y,
+        typename M::value_type alpha, typename M::value_type beta)
     {
         using T = typename M::value_type;
         const auto *rp = A.row_ptr();
@@ -118,8 +117,7 @@ template <> struct Kernels<Cpu::Backend> {
             cnt[ci[k] + 1]++;
         for (size_t j = 0; j < n; ++j)
             cnt[j + 1] += cnt[j];
-        std::memcpy(B.row_ptr_mut(), cnt.data(),
-            (n + 1) * sizeof(Idx));
+        std::memcpy(B.row_ptr_mut(), cnt.data(), (n + 1) * sizeof(Idx));
         Idx *bci = B.col_ind_mut();
         T *bv = B.values_mut();
         std::vector<Idx> next(cnt.begin(), cnt.end() - 1);
@@ -169,8 +167,7 @@ template <> struct Kernels<Cpu::Backend> {
             rp[i + 1] += rp[i];
 
         M C(m, n, static_cast<size_t>(rp[m]));
-        std::memcpy(C.row_ptr_mut(), rp.data(),
-            (m + 1) * sizeof(Idx));
+        std::memcpy(C.row_ptr_mut(), rp.data(), (m + 1) * sizeof(Idx));
         Idx *cci = C.col_ind_mut();
         T *cv = C.values_mut();
 

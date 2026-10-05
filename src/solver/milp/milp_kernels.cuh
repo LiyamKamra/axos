@@ -31,32 +31,34 @@ typedef long long i64;
 
 __device__ __forceinline__ bool
 fin(double v)
-{
-    return fabs(v) < 1e20;
-}
+{ return fabs(v) < 1e20; }
 
 __device__ __forceinline__ double
 warp_sum(double v)
 {
-    for (int off = 16; off > 0; off >>= 1) v += __shfl_down_sync(0xffffffffu, v, off);
+    for (int off = 16; off > 0; off >>= 1)
+        v += __shfl_down_sync(0xffffffffu, v, off);
     return v;
 }
 
 __device__ __forceinline__ int
 warp_sum_i(int v)
 {
-    for (int off = 16; off > 0; off >>= 1) v += __shfl_down_sync(0xffffffffu, v, off);
+    for (int off = 16; off > 0; off >>= 1)
+        v += __shfl_down_sync(0xffffffffu, v, off);
     return v;
 }
 
-// ---- domain propagation ------------------------------------------------------
+// ---- domain propagation
+// ------------------------------------------------------
 
 // Min / max activity of every (row, batch), with counts of infinite terms.
 // A row whose finite min activity exceeds its upper side (or max activity is
 // below its lower side) marks its batch infeasible.
 extern "C" __global__ void
-prop_activity(int m, int n, int B, const int *rp, const int *ci, const double *va, const double *rlb,
-    const double *rub, const double *lb, const double *ub, double *minact, double *maxact, int *ninfmin,
+prop_activity(int m, int n, int B, const int *rp, const int *ci,
+    const double *va, const double *rlb, const double *rub, const double *lb,
+    const double *ub, double *minact, double *maxact, int *ninfmin,
     int *ninfmax, const int *active, int *infeas)
 {
     const int lane = threadIdx.x & 31;
@@ -71,8 +73,14 @@ prop_activity(int m, int n, int B, const int *rp, const int *ci, const double *v
         const double a = va[k];
         const int j = ci[k];
         const double lo = a > 0 ? L[j] : U[j], hi = a > 0 ? U[j] : L[j];
-        if (fin(lo)) smin += a * lo; else ++cmin;
-        if (fin(hi)) smax += a * hi; else ++cmax;
+        if (fin(lo))
+            smin += a * lo;
+        else
+            ++cmin;
+        if (fin(hi))
+            smax += a * hi;
+        else
+            ++cmax;
     }
     smin = warp_sum(smin);
     smax = warp_sum(smax);
@@ -95,9 +103,11 @@ prop_activity(int m, int n, int B, const int *rp, const int *ci, const double *v
 // the same rules and tolerances as propagate.h (integer rounding, no
 // creeping of continuous bounds by less than 1e-3 of their range).
 extern "C" __global__ void
-prop_tighten(int n, int m, int B, const int *cp, const int *ri, const double *cv, const double *rlb,
-    const double *rub, const double *minact, const double *maxact, const int *ninfmin, const int *ninfmax,
-    double *lb, double *ub, const unsigned char *isint, const int *active, int *changed, int *infeas)
+prop_tighten(int n, int m, int B, const int *cp, const int *ri,
+    const double *cv, const double *rlb, const double *rub,
+    const double *minact, const double *maxact, const int *ninfmin,
+    const int *ninfmax, double *lb, double *ub, const unsigned char *isint,
+    const int *active, int *changed, int *infeas)
 {
     const i64 t = (i64)blockIdx.x * blockDim.x + threadIdx.x;
     if (t >= (i64)n * B) return;
@@ -118,12 +128,18 @@ prop_tighten(int n, int m, int B, const int *cp, const int *ri, const double *cv
             const int c = ninfmin[q];
             double rest = 0;
             bool ok = true;
-            if (c == 0) rest = minact[q] - a * own;
-            else if (c == 1 && !fin(own)) rest = minact[q];
-            else ok = false;
+            if (c == 0)
+                rest = minact[q] - a * own;
+            else if (c == 1 && !fin(own))
+                rest = minact[q];
+            else
+                ok = false;
             if (ok) {
                 const double v = (u - rest) / a;
-                if (a > 0) nu = fmin(nu, v); else nl = fmax(nl, v);
+                if (a > 0)
+                    nu = fmin(nu, v);
+                else
+                    nl = fmax(nl, v);
             }
         }
         if (fin(l)) {
@@ -131,12 +147,18 @@ prop_tighten(int n, int m, int B, const int *cp, const int *ri, const double *cv
             const int c = ninfmax[q];
             double rest = 0;
             bool ok = true;
-            if (c == 0) rest = maxact[q] - a * own;
-            else if (c == 1 && !fin(own)) rest = maxact[q];
-            else ok = false;
+            if (c == 0)
+                rest = maxact[q] - a * own;
+            else if (c == 1 && !fin(own))
+                rest = maxact[q];
+            else
+                ok = false;
             if (ok) {
                 const double v = (l - rest) / a;
-                if (a > 0) nl = fmax(nl, v); else nu = fmin(nu, v);
+                if (a > 0)
+                    nl = fmax(nl, v);
+                else
+                    nu = fmin(nu, v);
             }
         }
     }
@@ -145,7 +167,8 @@ prop_tighten(int n, int m, int B, const int *cp, const int *ri, const double *cv
         nu = floor(nu + 1e-6);
     }
     const double range = fin(L) && fin(U) ? U - L : 1e300;
-    const double step = isint[j] ? 0.5 : 1e-3 * fmax(1.0, fmin(range, fabs(nl) + fabs(nu)));
+    const double step =
+        isint[j] ? 0.5 : 1e-3 * fmax(1.0, fmin(range, fabs(nl) + fabs(nu)));
     const bool up_l = nl > L + step && fabs(nl) < 1e15;
     const bool up_u = nu < U - step && fabs(nu) < 1e15;
     if (!up_l && !up_u) return;
@@ -163,8 +186,9 @@ prop_tighten(int n, int m, int B, const int *cp, const int *ri, const double *cv
 // Batch b <- base bounds with column fix_col[b] set to [fix_lo[b], fix_hi[b]]
 // (fix_col < 0: unchanged): the start of a probe or child.
 extern "C" __global__ void
-prop_init(int n, int B, const double *lb0, const double *ub0, const int *fix_col, const double *fix_lo,
-    const double *fix_hi, double *lb, double *ub, int *active, int *changed, int *infeas)
+prop_init(int n, int B, const double *lb0, const double *ub0,
+    const int *fix_col, const double *fix_lo, const double *fix_hi, double *lb,
+    double *ub, int *active, int *changed, int *infeas)
 {
     const i64 t = (i64)blockIdx.x * blockDim.x + threadIdx.x;
     if (t >= (i64)n * B) return;
@@ -188,8 +212,9 @@ prop_init(int n, int B, const double *lb0, const double *ub0, const int *fix_col
 // feasible probe when the other emptied the domain, else the weaker of the
 // two; the tightest over all pairs (each is valid on its own).
 extern "C" __global__ void
-probe_merge(int n, int K, const double *lb0, const double *ub0, const double *lb, const double *ub,
-    const int *infeas, double *out_lb, double *out_ub)
+probe_merge(int n, int K, const double *lb0, const double *ub0,
+    const double *lb, const double *ub, const int *infeas, double *out_lb,
+    double *out_ub)
 {
     const int t = blockIdx.x * blockDim.x + threadIdx.x;
     if (t >= n) return;
@@ -197,7 +222,8 @@ probe_merge(int n, int K, const double *lb0, const double *ub0, const double *lb
     for (int k = 0; k < K; ++k) {
         const int i0 = infeas[2 * k], i1 = infeas[2 * k + 1];
         const i64 o0 = (i64)(2 * k) * n + t, o1 = (i64)(2 * k + 1) * n + t;
-        if (i0 && i1) continue; // reported by the host: the problem is infeasible
+        if (i0 && i1)
+            continue; // reported by the host: the problem is infeasible
         if (i0) {
             L = fmax(L, lb[o1]);
             U = fmin(U, ub[o1]);
@@ -223,7 +249,8 @@ prop_next(int B, int *active, int *changed, const int *infeas)
     changed[b] = 0;
 }
 
-// ---- probing with frontiers -----------------------------------------------------
+// ---- probing with frontiers
+// -----------------------------------------------------
 //
 // B probe slots share one CSR/CSC matrix and a base domain. A slot's bounds
 // and row activities live in dense B x n / B x m arrays that hold the base
@@ -242,18 +269,19 @@ struct ProbeData {
     const double *cv;
     const double *rlb, *rub;
     const unsigned char *isint;
-    const double *blb, *bub;          // base bounds (n)
-    const double *bmin, *bmax;        // base activities (m)
+    const double *blb, *bub;   // base bounds (n)
+    const double *bmin, *bmax; // base activities (m)
     const int *bcmin, *bcmax;
-    double *lb, *ub;                  // B x n
-    double *mn, *mx;                  // B x m
+    double *lb, *ub; // B x n
+    double *mn, *mx; // B x m
     int *cmn, *cmx;
-    unsigned *rbits, *cbits;          // frontier membership (B m, B n bits)
-    unsigned *trbits, *tcbits;        // touched membership
-    unsigned *cf, *tc, *tr;           // column frontier, touched columns / rows (codes b*n+j, b*m+i)
-    unsigned *cnt;                    // [1] next row frontier, [2] column frontier, [3] tc, [4] tr
-    int *infeas;                      // B
-    double *out_lb, *out_ub;          // merged double-probing bounds (n)
+    unsigned *rbits, *cbits;   // frontier membership (B m, B n bits)
+    unsigned *trbits, *tcbits; // touched membership
+    unsigned *cf, *tc,
+        *tr; // column frontier, touched columns / rows (codes b*n+j, b*m+i)
+    unsigned *cnt; // [1] next row frontier, [2] column frontier, [3] tc, [4] tr
+    int *infeas;   // B
+    double *out_lb, *out_ub; // merged double-probing bounds (n)
 };
 
 __device__ __forceinline__ bool
@@ -265,29 +293,30 @@ set_bit(unsigned *bits, unsigned long long k) // true if it was clear
 
 __device__ __forceinline__ void
 clear_bit(unsigned *bits, unsigned long long k)
-{
-    atomicAnd(&bits[k >> 5], ~(1u << (k & 31)));
-}
+{ atomicAnd(&bits[k >> 5], ~(1u << (k & 31))); }
 
 __device__ __forceinline__ void
 push_rows_of(const ProbeData &d, int b, int j, unsigned *rf_next)
 {
     for (int k = d.cp[j]; k < d.cp[j + 1]; ++k) {
         const unsigned long long code = (unsigned long long)b * d.m + d.ri[k];
-        if (set_bit(d.rbits, code)) rf_next[atomicAdd(&d.cnt[1], 1u)] = (unsigned)code;
+        if (set_bit(d.rbits, code))
+            rf_next[atomicAdd(&d.cnt[1], 1u)] = (unsigned)code;
     }
 }
 
 __device__ __forceinline__ void
 touch_col(const ProbeData &d, unsigned long long code)
 {
-    if (set_bit(d.tcbits, code)) d.tc[atomicAdd(&d.cnt[3], 1u)] = (unsigned)code;
+    if (set_bit(d.tcbits, code))
+        d.tc[atomicAdd(&d.cnt[3], 1u)] = (unsigned)code;
 }
 
 // Slot b probes column pcol[b] within [plo[b], phi[b]]: its rows start the
 // row frontier (rf_next).
 extern "C" __global__ void
-pb_start(ProbeData d, const int *pcol, const double *plo, const double *phi, unsigned *rf_next)
+pb_start(ProbeData d, const int *pcol, const double *plo, const double *phi,
+    unsigned *rf_next)
 {
     const int b = blockIdx.x * blockDim.x + threadIdx.x;
     if (b >= d.B) return;
@@ -306,7 +335,8 @@ extern "C" __global__ void
 pb_rows(ProbeData d, const unsigned *rf, unsigned nrf)
 {
     const int lane = threadIdx.x & 31;
-    const unsigned long long e = ((unsigned long long)blockIdx.x * blockDim.x + threadIdx.x) >> 5;
+    const unsigned long long e =
+        ((unsigned long long)blockIdx.x * blockDim.x + threadIdx.x) >> 5;
     if (e >= nrf) return;
     const unsigned code = rf[e];
     const int b = (int)(code / (unsigned)d.m), i = (int)(code % (unsigned)d.m);
@@ -315,16 +345,24 @@ pb_rows(ProbeData d, const unsigned *rf, unsigned nrf)
         clear_bit(d.rbits, code);
         dead = d.infeas[b];
     }
-    if (__shfl_sync(0xffffffffu, dead, 0)) return; // uniform: the shuffles below need the whole warp
-    const double *L = d.lb + (unsigned long long)b * d.n, *U = d.ub + (unsigned long long)b * d.n;
+    if (__shfl_sync(0xffffffffu, dead, 0))
+        return; // uniform: the shuffles below need the whole warp
+    const double *L = d.lb + (unsigned long long)b * d.n,
+                 *U = d.ub + (unsigned long long)b * d.n;
     double smin = 0, smax = 0;
     int cmin = 0, cmax = 0;
     for (int k = d.rp[i] + lane; k < d.rp[i + 1]; k += 32) {
         const double a = d.va[k];
         const int j = d.ci[k];
         const double lo = a > 0 ? L[j] : U[j], hi = a > 0 ? U[j] : L[j];
-        if (fin(lo)) smin += a * lo; else ++cmin;
-        if (fin(hi)) smax += a * hi; else ++cmax;
+        if (fin(lo))
+            smin += a * lo;
+        else
+            ++cmin;
+        if (fin(hi))
+            smax += a * hi;
+        else
+            ++cmax;
     }
     smin = warp_sum(smin);
     smax = warp_sum(smax);
@@ -360,7 +398,8 @@ pb_rows(ProbeData d, const unsigned *rf, unsigned nrf)
 extern "C" __global__ void
 pb_cols(ProbeData d, unsigned ncf, unsigned *rf_next)
 {
-    const unsigned long long e = (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned long long e =
+        (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
     if (e >= ncf) return;
     const unsigned code = d.cf[e];
     clear_bit(d.cbits, code);
@@ -380,12 +419,18 @@ pb_cols(ProbeData d, unsigned ncf, unsigned *rf_next)
             const int c = d.cmn[q];
             double rest = 0;
             bool ok = true;
-            if (c == 0) rest = d.mn[q] - a * own;
-            else if (c == 1 && !fin(own)) rest = d.mn[q];
-            else ok = false;
+            if (c == 0)
+                rest = d.mn[q] - a * own;
+            else if (c == 1 && !fin(own))
+                rest = d.mn[q];
+            else
+                ok = false;
             if (ok) {
                 const double v = (u - rest) / a;
-                if (a > 0) nu = fmin(nu, v); else nl = fmax(nl, v);
+                if (a > 0)
+                    nu = fmin(nu, v);
+                else
+                    nl = fmax(nl, v);
             }
         }
         if (fin(l)) {
@@ -393,12 +438,18 @@ pb_cols(ProbeData d, unsigned ncf, unsigned *rf_next)
             const int c = d.cmx[q];
             double rest = 0;
             bool ok = true;
-            if (c == 0) rest = d.mx[q] - a * own;
-            else if (c == 1 && !fin(own)) rest = d.mx[q];
-            else ok = false;
+            if (c == 0)
+                rest = d.mx[q] - a * own;
+            else if (c == 1 && !fin(own))
+                rest = d.mx[q];
+            else
+                ok = false;
             if (ok) {
                 const double v = (l - rest) / a;
-                if (a > 0) nl = fmax(nl, v); else nu = fmin(nu, v);
+                if (a > 0)
+                    nl = fmax(nl, v);
+                else
+                    nu = fmin(nu, v);
             }
         }
     }
@@ -407,7 +458,8 @@ pb_cols(ProbeData d, unsigned ncf, unsigned *rf_next)
         nu = floor(nu + 1e-6);
     }
     const double range = fin(Lj) && fin(Uj) ? Uj - Lj : 1e300;
-    const double step = d.isint[j] ? 0.5 : 1e-3 * fmax(1.0, fmin(range, fabs(nl) + fabs(nu)));
+    const double step =
+        d.isint[j] ? 0.5 : 1e-3 * fmax(1.0, fmin(range, fabs(nl) + fabs(nu)));
     const bool up_l = nl > Lj + step && fabs(nl) < 1e15;
     const bool up_u = nu < Uj - step && fabs(nu) < 1e15;
     if (!up_l && !up_u) return;
@@ -428,7 +480,8 @@ atomic_max_d(double *a, double v)
 {
     unsigned long long *p = (unsigned long long *)a, old = *p;
     while (__longlong_as_double((long long)old) < v) {
-        const unsigned long long prev = atomicCAS(p, old, (unsigned long long)__double_as_longlong(v));
+        const unsigned long long prev =
+            atomicCAS(p, old, (unsigned long long)__double_as_longlong(v));
         if (prev == old) break;
         old = prev;
     }
@@ -439,7 +492,8 @@ atomic_min_d(double *a, double v)
 {
     unsigned long long *p = (unsigned long long *)a, old = *p;
     while (__longlong_as_double((long long)old) > v) {
-        const unsigned long long prev = atomicCAS(p, old, (unsigned long long)__double_as_longlong(v));
+        const unsigned long long prev =
+            atomicCAS(p, old, (unsigned long long)__double_as_longlong(v));
         if (prev == old) break;
         old = prev;
     }
@@ -452,7 +506,8 @@ atomic_min_d(double *a, double v)
 extern "C" __global__ void
 pb_merge(ProbeData d, unsigned ntc)
 {
-    const unsigned long long e = (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned long long e =
+        (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
     if (e >= ntc) return;
     const unsigned code = d.tc[e];
     const int b = (int)(code / (unsigned)d.n), j = (int)(code % (unsigned)d.n);
@@ -472,7 +527,8 @@ pb_merge(ProbeData d, unsigned ntc)
 extern "C" __global__ void
 pb_reset(ProbeData d, unsigned ntc, unsigned ntr)
 {
-    const unsigned long long e = (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned long long e =
+        (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
     if (e < ntc) {
         const unsigned code = d.tc[e];
         const int j = (int)(code % (unsigned)d.n);
@@ -495,8 +551,10 @@ pb_reset(ProbeData d, unsigned ntc, unsigned ntr)
 extern "C" __global__ void
 pb_fill(ProbeData d)
 {
-    const unsigned long long t = (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
-    const unsigned long long nn = (unsigned long long)d.B * d.n, mm = (unsigned long long)d.B * d.m;
+    const unsigned long long t =
+        (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned long long nn = (unsigned long long)d.B * d.n,
+                             mm = (unsigned long long)d.B * d.m;
     if (t < nn) {
         const int j = (int)(t % (unsigned long long)d.n);
         d.lb[t] = d.blb[j];
@@ -511,13 +569,14 @@ pb_fill(ProbeData d)
     }
 }
 
-// ---- feasibility jump ------------------------------------------------------------
+// ---- feasibility jump
+// ------------------------------------------------------------
 
 struct FjData {
     int n, m;
-    const int *rp, *ci;           // CSR
+    const int *rp, *ci; // CSR
     const double *va;
-    const int *cp, *ri;           // CSC
+    const int *cp, *ri; // CSC
     const double *cv;
     const double *rlb, *rub, *lb, *ub;
     const unsigned char *isint;
@@ -547,9 +606,7 @@ row_viol(double a, double l, double u)
 
 __device__ __forceinline__ bool
 violated(double a, double l, double u)
-{
-    return a > u + 1e-6 * (1 + fabs(u)) || a < l - 1e-6 * (1 + fabs(l));
-}
+{ return a > u + 1e-6 * (1 + fabs(u)) || a < l - 1e-6 * (1 + fabs(l)); }
 
 // Activities and violated-row lists of every walker (one block per walker).
 extern "C" __global__ void
@@ -563,7 +620,8 @@ fj_init(FjData d)
     __syncthreads();
     for (int i = threadIdx.x; i < d.m; i += blockDim.x) {
         double a = 0;
-        for (int k = d.rp[i]; k < d.rp[i + 1]; ++k) a += d.va[k] * x[d.ci[k]];
+        for (int k = d.rp[i]; k < d.rp[i + 1]; ++k)
+            a += d.va[k] * x[d.ci[k]];
         act[i] = a;
         wt[i] = 1.0;
         if (violated(a, d.rlb[i], d.rub[i])) {
@@ -584,7 +642,8 @@ extern "C" __global__ void
 fj_run(FjData d, int steps)
 {
     const int w = blockIdx.x;
-    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5, nwarps = blockDim.x >> 5;
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5,
+              nwarps = blockDim.x >> 5;
     double *x = d.x + (i64)w * d.n;
     double *act = d.act + (i64)w * d.m, *wt = d.wt + (i64)w * d.m;
     int *vl = d.vl + (i64)w * d.m, *vpos = d.vpos + (i64)w * d.m;
@@ -600,7 +659,8 @@ fj_run(FjData d, int steps)
             s_done = 0;
             s_row = -1;
             while (d.vcnt[w] > 0) {
-                const int p = (int)(xorshift(s_rng) % (unsigned long long)d.vcnt[w]);
+                const int p =
+                    (int)(xorshift(s_rng) % (unsigned long long)d.vcnt[w]);
                 const int r = vl[p];
                 if (violated(act[r], d.rlb[r], d.rub[r])) {
                     s_row = r;
@@ -618,10 +678,12 @@ fj_run(FjData d, int steps)
                 const int b0 = d.rp[s_row], len = d.rp[s_row + 1] - b0;
                 int k = 0;
                 if (len <= FJ_CAND) {
-                    for (int t = 0; t < len; ++t) s_cand[k++] = d.ci[b0 + t];
+                    for (int t = 0; t < len; ++t)
+                        s_cand[k++] = d.ci[b0 + t];
                 } else {
                     for (int t = 0; t < FJ_CAND; ++t)
-                        s_cand[k++] = d.ci[b0 + (int)(xorshift(s_rng) % (unsigned long long)len)];
+                        s_cand[k++] = d.ci[b0 + (int)(xorshift(s_rng) %
+                                                      (unsigned long long)len)];
                 }
                 s_ncand = k;
             }
@@ -656,20 +718,24 @@ fj_run(FjData d, int steps)
                     if (v0 >= 4 * nent) {
                         v = v0 == 4 * nent ? lj : uj;
                     } else {
-                        const int k = c0 + v0 / 4, side = (v0 / 2) & 1, rnd = v0 & 1;
+                        const int k = c0 + v0 / 4, side = (v0 / 2) & 1,
+                                  rnd = v0 & 1;
                         const int i = d.ri[k];
                         const double a = d.cv[k], rest = act[i] - a * xj;
                         const double rhs = side ? d.rub[i] : d.rlb[i];
                         v = fin(rhs) && fabs(a) > 1e-12 ? (rhs - rest) / a : xj;
-                        if (d.isint[j]) v = rnd ? ceil(v - 1e-9) : floor(v + 1e-9);
-                        else if (rnd) v = xj; // continuous: one value per side
+                        if (d.isint[j])
+                            v = rnd ? ceil(v - 1e-9) : floor(v + 1e-9);
+                        else if (rnd)
+                            v = xj; // continuous: one value per side
                     }
                     v = fmin(fmax(v, lj), uj);
                     if (!fin(v) || v == xj) continue;
                     double cost = 0;
                     for (int k = c0; k < c1; ++k) {
                         const int i = d.ri[k];
-                        cost += wt[i] * row_viol(act[i] + d.cv[k] * (v - xj), d.rlb[i], d.rub[i]);
+                        cost += wt[i] * row_viol(act[i] + d.cv[k] * (v - xj),
+                                            d.rlb[i], d.rub[i]);
                     }
                     if (cost < best_cost) {
                         best_cost = cost;
@@ -697,7 +763,8 @@ fj_run(FjData d, int steps)
             int bi = -1;
             double bs = 1e-9;
             for (int c = 0; c < s_ncand; ++c)
-                if (s_score[c] > bs || (s_score[c] == bs && bi >= 0 && (xorshift(s_rng) & 1))) {
+                if (s_score[c] > bs ||
+                    (s_score[c] == bs && bi >= 0 && (xorshift(s_rng) & 1))) {
                     bs = s_score[c];
                     bi = c;
                 }
@@ -710,7 +777,8 @@ fj_run(FjData d, int steps)
             const int j = s_cand[s_best];
             const double delta = s_val[s_best] - x[j];
             __syncthreads();
-            for (int k = d.cp[j] + threadIdx.x; k < d.cp[j + 1]; k += blockDim.x) {
+            for (int k = d.cp[j] + threadIdx.x; k < d.cp[j + 1];
+                k += blockDim.x) {
                 const int i = d.ri[k];
                 const double a = act[i] + d.cv[k] * delta;
                 act[i] = a;
@@ -731,14 +799,16 @@ fj_run(FjData d, int steps)
     if (threadIdx.x == 0) d.rng[w] = s_rng;
 }
 
-// ---- batched PDHG ----------------------------------------------------------------
+// ---- batched PDHG
+// ----------------------------------------------------------------
 
-// Primal step of every LP: x <- proj_[l,u](x - tau (c - A^T y)), xbar = 2 x+ - x,
-// and (eval) the column part of the Lagrangian bound of y into acc[b]
+// Primal step of every LP: x <- proj_[l,u](x - tau (c - A^T y)), xbar = 2 x+ -
+// x, and (eval) the column part of the Lagrangian bound of y into acc[b]
 // (bad[b] set when a needed bound is infinite). One warp per column.
 extern "C" __global__ void
-pd_primal(int n, int B, const int *cp, const int *ri, const double *cv, const double *c, const double *L,
-    const double *U, const double *y, double *x, double *xbar, double tau, int eval, double *acc, int *bad)
+pd_primal(int n, int B, const int *cp, const int *ri, const double *cv,
+    const double *c, const double *L, const double *U, const double *y,
+    double *x, double *xbar, double tau, int eval, double *acc, int *bad)
 {
     __shared__ double sh[MILP_BLOCK / 32][32];
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
@@ -747,15 +817,22 @@ pd_primal(int n, int B, const int *cp, const int *ri, const double *cv, const do
     if (j64 < n && lane < B) {
         const int j = (int)j64;
         double s = 0;
-        for (int k = cp[j]; k < cp[j + 1]; ++k) s += cv[k] * y[(i64)ri[k] * B + lane];
+        for (int k = cp[j]; k < cp[j + 1]; ++k)
+            s += cv[k] * y[(i64)ri[k] * B + lane];
         const double r = c[j] - s;
         const i64 o = (i64)j * B + lane;
         const double l = L[o], u = U[o];
         if (eval) {
             if (r > 0) {
-                if (fin(l)) contrib = r * l; else atomicOr(&bad[lane], 1);
+                if (fin(l))
+                    contrib = r * l;
+                else
+                    atomicOr(&bad[lane], 1);
             } else if (r < 0) {
-                if (fin(u)) contrib = r * u; else atomicOr(&bad[lane], 1);
+                if (fin(u))
+                    contrib = r * u;
+                else
+                    atomicOr(&bad[lane], 1);
             }
         }
         const double xo = x[o];
@@ -768,7 +845,8 @@ pd_primal(int n, int B, const int *cp, const int *ri, const double *cv, const do
     __syncthreads();
     if (warp == 0 && lane < B) {
         double s = 0;
-        for (int w = 0; w < (int)(blockDim.x >> 5); ++w) s += sh[w][lane];
+        for (int w = 0; w < (int)(blockDim.x >> 5); ++w)
+            s += sh[w][lane];
         atomicAdd(&acc[lane], s);
     }
 }
@@ -776,8 +854,9 @@ pd_primal(int n, int B, const int *cp, const int *ri, const double *cv, const do
 // Dual step of every LP: y <- prox(y - sigma A xbar) for rl <= A x <= ru, and
 // (eval) the row part of the Lagrangian bound of the old y into acc[b].
 extern "C" __global__ void
-pd_dual(int m, int B, const int *rp, const int *ci, const double *va, const double *rl, const double *ru,
-    const double *xbar, double *y, double sigma, int eval, double *acc)
+pd_dual(int m, int B, const int *rp, const int *ci, const double *va,
+    const double *rl, const double *ru, const double *xbar, double *y,
+    double sigma, int eval, double *acc)
 {
     __shared__ double sh[MILP_BLOCK / 32][32];
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
@@ -786,14 +865,17 @@ pd_dual(int m, int B, const int *rp, const int *ci, const double *va, const doub
     if (i64r < m && lane < B) {
         const int i = (int)i64r;
         double s = 0;
-        for (int k = rp[i]; k < rp[i + 1]; ++k) s += va[k] * xbar[(i64)ci[k] * B + lane];
+        for (int k = rp[i]; k < rp[i + 1]; ++k)
+            s += va[k] * xbar[(i64)ci[k] * B + lane];
         const i64 o = (i64)i * B + lane;
         const double yo = y[o], l = rl[i], u = ru[i];
         if (eval) contrib = yo > 0 ? yo * l : (yo < 0 ? yo * u : 0.0);
         const double v = yo - sigma * s;
         double yn = 0;
-        if (fin(l) && v + sigma * l > 0) yn = v + sigma * l;
-        else if (fin(u) && v + sigma * u < 0) yn = v + sigma * u;
+        if (fin(l) && v + sigma * l > 0)
+            yn = v + sigma * l;
+        else if (fin(u) && v + sigma * u < 0)
+            yn = v + sigma * u;
         y[o] = yn;
     }
     if (!eval) return;
@@ -801,7 +883,8 @@ pd_dual(int m, int B, const int *rp, const int *ci, const double *va, const doub
     __syncthreads();
     if (warp == 0 && lane < B) {
         double s = 0;
-        for (int w = 0; w < (int)(blockDim.x >> 5); ++w) s += sh[w][lane];
+        for (int w = 0; w < (int)(blockDim.x >> 5); ++w)
+            s += sh[w][lane];
         atomicAdd(&acc[lane], s);
     }
 }
