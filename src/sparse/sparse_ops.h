@@ -16,8 +16,8 @@ template <typename M, typename V>
 inline void
 check_same_backend()
 {
-    static_assert(std::is_same_v<typename M::backend_type,
-                      typename V::backend_type>,
+    static_assert(
+        std::is_same_v<typename M::backend_type, typename V::backend_type>,
         "sparse matrix and dense tensor must use the same backend");
 }
 } // namespace detail
@@ -29,8 +29,8 @@ spmv(const Csr<T, Idx, S> &A, const tensorET<1, T, VS> &x,
     tensorET<1, T, VS> &y, T alpha = T(1), T beta = T(0))
 {
     using M = Csr<T, Idx, S>;
-    static_assert(std::is_same_v<typename M::backend_type,
-                      typename VS::backend_type>,
+    static_assert(
+        std::is_same_v<typename M::backend_type, typename VS::backend_type>,
         "sparse matrix and dense tensor must use the same backend");
     if (x.size() != A.cols() || y.size() != A.rows())
         throw std::invalid_argument("spmv: dimension mismatch");
@@ -67,8 +67,8 @@ spmm(const Csr<T, Idx, S> &A, const tensorET<2, T, VS> &X,
     tensorET<2, T, VS> &Y, T alpha = T(1), T beta = T(0))
 {
     using M = Csr<T, Idx, S>;
-    static_assert(std::is_same_v<typename M::backend_type,
-                      typename VS::backend_type>,
+    static_assert(
+        std::is_same_v<typename M::backend_type, typename VS::backend_type>,
         "sparse matrix and dense tensor must use the same backend");
     if (X.size(0) != A.cols() || Y.size(0) != A.rows() ||
         X.size(1) != Y.size(1))
@@ -102,9 +102,7 @@ row_norms(const Csr<T, Idx, S> &A, real_of_t<T> *out, Norm p)
 template <typename T, typename Idx, template <typename> class S>
 void
 col_norms(const Csr<T, Idx, S> &A, real_of_t<T> *out, Norm p)
-{
-    row_norms(A.transposed(), out, p);
-}
+{ row_norms(A.transposed(), out, p); }
 
 // C = A * B
 template <typename T, typename Idx, template <typename> class S>

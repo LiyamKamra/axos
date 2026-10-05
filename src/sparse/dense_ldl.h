@@ -13,8 +13,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <type_traits>
 #include <vector>
 
@@ -34,9 +34,9 @@ namespace AXOS {
 namespace Sparse {
 namespace dense {
 
-inline constexpr int kMR = 8;   // rows per micro-tile
-inline constexpr int kNR = 4;   // columns per micro-tile
-inline constexpr int kKC = 256; // inner-dimension block
+inline constexpr int kMR = 8;      // rows per micro-tile
+inline constexpr int kNR = 4;      // columns per micro-tile
+inline constexpr int kKC = 256;    // inner-dimension block
 inline constexpr int kPanel = 128; // maximum panel width
 
 namespace packed {
@@ -49,8 +49,8 @@ inline constexpr int MRV = 3, NR = 4;
 #endif
 inline constexpr int MR = MRV * VW;
 inline constexpr int KC = 256;
-inline constexpr int MC = MR * 8;      // rows per A block
-inline constexpr int NCB = NR * 16;    // columns per task
+inline constexpr int MC = MR * 8;   // rows per A block
+inline constexpr int NCB = NR * 16; // columns per task
 #if defined(__GNUC__) || defined(__clang__)
 typedef double vd __attribute__((vector_size(VW * 8), aligned(8)));
 #else
@@ -61,22 +61,36 @@ struct vd {
     __m256d x;
     vd() : x(_mm256_setzero_pd()) {}
     vd(__m256d y) : x(y) {}
-    double operator[](int i) const
+    double
+    operator[](int i) const
     {
         alignas(32) double t[4];
         _mm256_store_pd(t, x);
         return t[i];
     }
-    vd &operator+=(vd o) { x = _mm256_add_pd(x, o.x); return *this; }
-    vd &operator-=(vd o) { x = _mm256_sub_pd(x, o.x); return *this; }
-    friend vd operator*(vd a, double b) { return vd(_mm256_mul_pd(a.x, _mm256_set1_pd(b))); }
+    vd &
+    operator+=(vd o)
+    {
+        x = _mm256_add_pd(x, o.x);
+        return *this;
+    }
+    vd &
+    operator-=(vd o)
+    {
+        x = _mm256_sub_pd(x, o.x);
+        return *this;
+    }
+    friend vd
+    operator*(vd a, double b)
+    { return vd(_mm256_mul_pd(a.x, _mm256_set1_pd(b))); }
 };
 #endif
 
 struct Aligned {
     double *p = nullptr;
     size_t cap = 0;
-    static void release(double *q)
+    static void
+    release(double *q)
     {
 #if defined(_MSC_VER)
         _aligned_free(q);
@@ -84,7 +98,9 @@ struct Aligned {
         std::free(q);
 #endif
     }
-    void reserve(size_t n) {
+    void
+    reserve(size_t n)
+    {
         if (n > cap) {
             release(p);
             const size_t bytes = ((n * 8 + 63) / 64) * 64;
@@ -99,21 +115,30 @@ struct Aligned {
     ~Aligned() { release(p); }
 };
 
-// pack rows [i0, i0+mr) x cols p in [0,kc) of L (col-major, ld) into MR-wide panel layout
-inline void pack_a(const double *L, int ld, int i0, int mr, int p0, int kc, int m, double *dst) {
+// pack rows [i0, i0+mr) x cols p in [0,kc) of L (col-major, ld) into MR-wide
+// panel layout
+inline void
+pack_a(
+    const double *L, int ld, int i0, int mr, int p0, int kc, int m, double *dst)
+{
     for (int ir = 0; ir < mr; ir += MR) {
         const int rows = std::min(MR, m - (i0 + ir));
         double *d = dst + static_cast<size_t>(ir) * kc;
         for (int p = 0; p < kc; ++p) {
             const double *src = L + static_cast<size_t>(p0 + p) * ld + i0 + ir;
             int r = 0;
-            for (; r < rows; ++r) d[p * MR + r] = src[r];
-            for (; r < MR; ++r) d[p * MR + r] = 0.0;
+            for (; r < rows; ++r)
+                d[p * MR + r] = src[r];
+            for (; r < MR; ++r)
+                d[p * MR + r] = 0.0;
         }
     }
 }
 // pack scaled columns: B[c][p] = L(j0+c, p0+p) * d[p0+p]; NR-wide panels
-inline void pack_b(const double *L, int ld, const double *d, int j0, int nc, int p0, int kc, int m, double *dst) {
+inline void
+pack_b(const double *L, int ld, const double *d, int j0, int nc, int p0, int kc,
+    int m, double *dst)
+{
     for (int jr = 0; jr < nc; jr += NR) {
         const int cols = std::min(NR, m - (j0 + jr));
         double *o = dst + static_cast<size_t>(jr) * kc;
@@ -121,22 +146,30 @@ inline void pack_b(const double *L, int ld, const double *d, int j0, int nc, int
             const double dp = d[p0 + p];
             const double *src = L + static_cast<size_t>(p0 + p) * ld + j0 + jr;
             int c = 0;
-            for (; c < cols; ++c) o[p * NR + c] = src[c] * dp;
-            for (; c < NR; ++c) o[p * NR + c] = 0.0;
+            for (; c < cols; ++c)
+                o[p * NR + c] = src[c] * dp;
+            for (; c < NR; ++c)
+                o[p * NR + c] = 0.0;
         }
     }
 }
 
-inline void micro(int kc, const double *Ap, const double *Bp, double *C, int ldc, int i0, int j0, int m) {
+inline void
+micro(int kc, const double *Ap, const double *Bp, double *C, int ldc, int i0,
+    int j0, int m)
+{
     vd acc[NR][MRV];
     for (int c = 0; c < NR; ++c)
-        for (int r = 0; r < MRV; ++r) acc[c][r] = vd{} ;
+        for (int r = 0; r < MRV; ++r)
+            acc[c][r] = vd{};
     for (int p = 0; p < kc; ++p) {
         vd a[MRV];
-        for (int r = 0; r < MRV; ++r) a[r] = *reinterpret_cast<const vd *>(Ap + r * VW);
+        for (int r = 0; r < MRV; ++r)
+            a[r] = *reinterpret_cast<const vd *>(Ap + r * VW);
         for (int c = 0; c < NR; ++c) {
             const double b = Bp[c];
-            for (int r = 0; r < MRV; ++r) acc[c][r] += a[r] * b;
+            for (int r = 0; r < MRV; ++r)
+                acc[c][r] += a[r] * b;
         }
         Ap += MR;
         Bp += NR;
@@ -163,7 +196,10 @@ inline void micro(int kc, const double *Ap, const double *Bp, double *C, int ldc
 
 // C(lower) -= L diag(d) L^T ; L is m x k, leading dimension ldl.
 // Column blocks of NCB columns are independent tasks (private packing buffers).
-inline void syrk_d_packed(int m, int k, const double *L, int ldl, const double *d, double *C, int ldc, bool allow_parallel) {
+inline void
+syrk_d_packed(int m, int k, const double *L, int ldl, const double *d,
+    double *C, int ldc, bool allow_parallel)
+{
     if (m <= 0 || k <= 0) return;
     const double flops = static_cast<double>(m) * m * k;
     bool par = allow_parallel && flops > 2e6;
@@ -194,8 +230,10 @@ inline void syrk_d_packed(int m, int k, const double *L, int ldl, const double *
                 for (int jr = 0; jr < nc; jr += NR) {
                     const double *Bp = Bt.p + static_cast<size_t>(jr) * kc;
                     for (int ir = 0; ir < mc; ir += MR) {
-                        if (ic + ir + MR - 1 < jc + jr) continue; // above the diagonal
-                        micro(kc, At.p + static_cast<size_t>(ir) * kc, Bp, C, ldc, ic + ir, jc + jr, m);
+                        if (ic + ir + MR - 1 < jc + jr)
+                            continue; // above the diagonal
+                        micro(kc, At.p + static_cast<size_t>(ir) * kc, Bp, C,
+                            ldc, ic + ir, jc + jr, m);
                     }
                 }
             }
@@ -204,11 +242,13 @@ inline void syrk_d_packed(int m, int k, const double *L, int ldl, const double *
 #ifdef _OPENMP
     if (par && njc > 1) {
 #pragma omp parallel for schedule(dynamic, 1)
-        for (int t = 0; t < njc; ++t) task(t); // early blocks have the most work and run first
+        for (int t = 0; t < njc; ++t)
+            task(t); // early blocks have the most work and run first
         return;
     }
 #endif
-    for (int jb = 0; jb < njc; ++jb) task(jb);
+    for (int jb = 0; jb < njc; ++jb)
+        task(jb);
 }
 } // namespace packed
 
@@ -231,7 +271,7 @@ syrk_d(int m, int k, const T *L, int ldl, const T *d, T *C, int ldc, T *work,
         const T dp = d[p];
         const T *lp = L + static_cast<size_t>(p) * ldl;
         T *wp = work + static_cast<size_t>(p) * m;
-AXOS_OMP_SIMD
+        AXOS_OMP_SIMD
         for (int i = 0; i < m; ++i)
             wp[i] = lp[i] * dp;
     }
@@ -247,19 +287,23 @@ AXOS_OMP_SIMD
                 T acc[kNR][kMR] = {};
                 if (mr == kMR && nr == kNR) {
                     for (int p = 0; p < kc; ++p) {
-                        const T *lp = L + static_cast<size_t>(p0 + p) * ldl + i0;
-                        const T *wp = work + static_cast<size_t>(p0 + p) * m + j0;
+                        const T *lp =
+                            L + static_cast<size_t>(p0 + p) * ldl + i0;
+                        const T *wp =
+                            work + static_cast<size_t>(p0 + p) * m + j0;
                         for (int c = 0; c < kNR; ++c) {
                             const T w = wp[c];
-AXOS_OMP_SIMD
+                            AXOS_OMP_SIMD
                             for (int r = 0; r < kMR; ++r)
                                 acc[c][r] += lp[r] * w;
                         }
                     }
                 } else {
                     for (int p = 0; p < kc; ++p) {
-                        const T *lp = L + static_cast<size_t>(p0 + p) * ldl + i0;
-                        const T *wp = work + static_cast<size_t>(p0 + p) * m + j0;
+                        const T *lp =
+                            L + static_cast<size_t>(p0 + p) * ldl + i0;
+                        const T *wp =
+                            work + static_cast<size_t>(p0 + p) * m + j0;
                         for (int c = 0; c < nr; ++c)
                             for (int r = 0; r < mr; ++r)
                                 acc[c][r] += lp[r] * wp[c];
@@ -291,13 +335,12 @@ AXOS_OMP_SIMD
 // Factors the leading ns columns of the fs x fs column-major lower front F
 // (leading dimension ldf): on return F(0:ns, 0:ns) holds the strictly lower
 // part of the unit L11, F(ns:fs, 0:ns) holds L21, d[0:ns) the pivots, and
-// F(ns:fs, ns:fs) (lower) the Schur complement F22 - L21 D L21^T.
-//
-// sign[j] (may be null) is the expected pivot sign of column j (+1/-1/0);
-// with eps > 0 a pivot whose sign*value is below eps is replaced by
-// sign*eps. `check(j, value)` must return false for an unacceptable pivot;
-// factorization then stops and the failing column index is returned in
-// *fail (else -1). Returns the number of regularized pivots.
+// F(ns:fs, ns:fs) (lower) the Schur complement F22 - L21 D L21^T. sign[j] (may
+// be null) is the expected pivot sign of column j (+1/-1/0); with eps > 0 a
+// pivot whose sign*value is below eps is replaced by sign*eps. `check(j,
+// value)` must return false for an unacceptable pivot; factorization then stops
+// and the failing column index goes to *fail (else -1). Returns the regularized
+// count.
 template <typename T, typename CheckFn>
 size_t
 partial_ldlt(int fs, int ns, T *F, int ldf, T *d, const signed char *sign,
@@ -316,9 +359,15 @@ partial_ldlt(int fs, int ns, T *F, int ldf, T *d, const signed char *sign,
             T piv = col[c];
             if (sign && sign[c] != 0) {
                 const T sg = static_cast<T>(sign[c]);
-                if (!(sg * piv >= eps)) { piv = sg * eps; ++nreg; }
+                if (!(sg * piv >= eps)) {
+                    piv = sg * eps;
+                    ++nreg;
+                }
             }
-            if (!check(c, piv)) { *fail = c; return nreg; }
+            if (!check(c, piv)) {
+                *fail = c;
+                return nreg;
+            }
             d[c] = piv;
             for (int cj = c + 1; cj < jend; ++cj) {
                 T *colj = F + static_cast<size_t>(cj) * ldf;
@@ -329,7 +378,8 @@ partial_ldlt(int fs, int ns, T *F, int ldf, T *d, const signed char *sign,
             for (int i = c + 1; i < jend; ++i)
                 col[i] /= piv;
         }
-        // ---- rows below the block: L21 = A21 (L11 D)^-T, independent row chunks
+        // ---- rows below the block: L21 = A21 (L11 D)^-T, independent row
+        // chunks
         if (jend < fs) {
             auto chunk = [&](int ra, int rb) {
                 for (int c = j0; c < jend; ++c) {
@@ -337,12 +387,12 @@ partial_ldlt(int fs, int ns, T *F, int ldf, T *d, const signed char *sign,
                     for (int p = j0; p < c; ++p) {
                         const T *cp = F + static_cast<size_t>(p) * ldf;
                         const T t = d[p] * cp[c]; // d_p L(c, p)
-AXOS_OMP_SIMD
+                        AXOS_OMP_SIMD
                         for (int i = ra; i < rb; ++i)
                             col[i] -= t * cp[i];
                     }
                     const T inv = T(1) / d[c];
-AXOS_OMP_SIMD
+                    AXOS_OMP_SIMD
                     for (int i = ra; i < rb; ++i)
                         col[i] *= inv;
                 }
@@ -355,7 +405,8 @@ AXOS_OMP_SIMD
                 const int nch = (nrows + kChunk - 1) / kChunk;
 #pragma omp parallel for schedule(static)
                 for (int ch = 0; ch < nch; ++ch)
-                    chunk(jend + ch * kChunk, std::min(fs, jend + (ch + 1) * kChunk));
+                    chunk(jend + ch * kChunk,
+                        std::min(fs, jend + (ch + 1) * kChunk));
             } else
 #endif
             {

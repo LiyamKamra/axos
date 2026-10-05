@@ -4,9 +4,10 @@
 // elements live in the memory of Storage (docs/TENSOR_SPEC.md §5).
 //
 //   tensorET<1, double> v({n}, 0.0);          // host vector, zero-filled
-//   tensorET<2, float> A({m, k});              // uninitialized (no page touched)
-//   tensorET<1, double, Cuda::CudaStorage<double>> d(v);   // one upload
-//   tensorET<1, double> h(d);                              // one download
+//   tensorET<2, float> A({m, k});              // uninitialized (no page
+//   touched) tensorET<1, double, Cuda::CudaStorage<double>> d(v);   // one
+//   upload tensorET<1, double> h(d);                              // one
+//   download
 //
 // Layout and ownership:
 //   - `data` (a public field) points at element 0 in the storage's memory
@@ -58,10 +59,18 @@ template <int DIM> class Domain {
         size_t extent;
         long long start, end;
     };
-    size_t extent(int d) const { return ext_.at(d); }
-    long long start(int d) const { return lo_.at(d); }
-    long long end(int d) const { return hi_.at(d); }
-    Dim operator[](int d) const { return {extent(d), start(d), end(d)}; }
+    size_t
+    extent(int d) const
+    { return ext_.at(d); }
+    long long
+    start(int d) const
+    { return lo_.at(d); }
+    long long
+    end(int d) const
+    { return hi_.at(d); }
+    Dim
+    operator[](int d) const
+    { return {extent(d), start(d), end(d)}; }
     static constexpr int rank = DIM;
 
   private:
@@ -82,9 +91,7 @@ using tensor_base_t = std::conditional_t<Host, Expr<T, Self>, no_expr_base>;
 
 [[noreturn]] inline void
 tensor_error(const std::string &what)
-{
-    throw std::runtime_error("tensorET: " + what);
-}
+{ throw std::runtime_error("tensorET: " + what); }
 
 inline std::uint64_t
 mix_seed(std::uint64_t x)
@@ -98,9 +105,8 @@ mix_seed(std::uint64_t x)
 } // namespace detail
 
 template <int DIM, typename T, typename Storage = Cpu::HostStorage<T>>
-class tensorET
-    : public detail::tensor_base_t<is_host_storage_v<Storage>, T,
-          tensorET<DIM, T, Storage>> {
+class tensorET : public detail::tensor_base_t<is_host_storage_v<Storage>, T,
+                     tensorET<DIM, T, Storage>> {
     static_assert(DIM >= 1, "tensorET: DIM must be at least 1");
     static_assert(is_tensor_element_v<T>,
         "tensorET: unsupported element type; allowed are float, double, "
@@ -126,11 +132,10 @@ class tensorET
     tensorET() noexcept = default;
 
     // Shape `dims`, contents unspecified. Throws if dims.size() != DIM.
-    tensorET(std::initializer_list<size_t> dims) { init_owned_(checked_(dims)); }
+    tensorET(std::initializer_list<size_t> dims)
+    { init_owned_(checked_(dims)); }
     tensorET(std::initializer_list<size_t> dims, T x)
-    {
-        init_owned_(checked_(dims), &x);
-    }
+    { init_owned_(checked_(dims), &x); }
     explicit tensorET(const shape_type &dims) { init_owned_(dims); }
     tensorET(const shape_type &dims, T x) { init_owned_(dims, &x); }
 
@@ -141,14 +146,10 @@ class tensorET
     // Array forms: size_t dims[DIM].
     template <class P, std::enable_if_t<detail::is_dims_ptr_v<P>, int> = 0>
     explicit tensorET(P dims)
-    {
-        init_owned_(from_ptr_(dims));
-    }
+    { init_owned_(from_ptr_(dims)); }
     template <class P, std::enable_if_t<detail::is_dims_ptr_v<P>, int> = 0>
     tensorET(P dims, T x)
-    {
-        init_owned_(from_ptr_(dims), &x);
-    }
+    { init_owned_(from_ptr_(dims), &x); }
 
     // View of an existing buffer in Storage's memory space. With own ==
     // true the tensor frees the buffer through Storage (it must come from
@@ -188,9 +189,7 @@ class tensorET
         : storage_(o.storage_), size_(o.size_), dims_(o.dims_),
           strides_(o.strides_), dlo_(o.dlo_), dhi_(o.dhi_),
           custom_domain_(o.custom_domain_)
-    {
-        data = storage_.data();
-    }
+    { data = storage_.data(); }
 
     tensorET(tensorET &&o) noexcept
         : storage_(std::move(o.storage_)), size_(o.size_), dims_(o.dims_),
@@ -205,7 +204,8 @@ class tensorET
     operator=(const tensorET &o)
     {
         if (this != &o) {
-            storage_ = o.storage_; // deep copy (reusing a same-size buffer) or alias
+            storage_ =
+                o.storage_; // deep copy (reusing a same-size buffer) or alias
             copy_meta_(o);
             data = storage_.data();
         }
@@ -294,7 +294,9 @@ class tensorET
 
     // ---- size queries ---------------------------------------------------
 
-    size_t size() const noexcept { return size_; }
+    size_t
+    size() const noexcept
+    { return size_; }
 
     size_t
     size(int d) const
@@ -310,10 +312,18 @@ class tensorET
         return strides_[d];
     }
 
-    const shape_type &shape() const noexcept { return dims_; }
-    const shape_type &strides() const noexcept { return strides_; }
-    bool empty() const noexcept { return size_ == 0; }
-    bool owns_memory() const noexcept { return storage_.owns(); }
+    const shape_type &
+    shape() const noexcept
+    { return dims_; }
+    const shape_type &
+    strides() const noexcept
+    { return strides_; }
+    bool
+    empty() const noexcept
+    { return size_ == 0; }
+    bool
+    owns_memory() const noexcept
+    { return storage_.owns(); }
 
     bool
     is_contiguous() const noexcept
@@ -336,28 +346,20 @@ class tensorET
     template <bool H = on_host, std::enable_if_t<H, int> = 0>
     T &
     operator[](size_t i) noexcept
-    {
-        return data[i];
-    }
+    { return data[i]; }
     template <bool H = on_host, std::enable_if_t<H, int> = 0>
     const T &
     operator[](size_t i) const noexcept
-    {
-        return data[i];
-    }
+    { return data[i]; }
     template <bool H = on_host, std::enable_if_t<!H, int> = 0>
     ro_t
     operator[](size_t i) const
-    {
-        return backend_type::read_element(*this, i);
-    }
+    { return backend_type::read_element(*this, i); }
 
     template <bool H = on_host, std::enable_if_t<H, int> = 0>
     T &
     value(size_t i) noexcept
-    {
-        return data[i];
-    }
+    { return data[i]; }
     ro_t
     value(size_t i) const
     {
@@ -374,9 +376,7 @@ class tensorET
         bool H = on_host, std::enable_if_t<H, int> = 0>
     T &
     operator()(I... idx) noexcept
-    {
-        return data[offset_(idx...)];
-    }
+    { return data[offset_(idx...)]; }
     template <class... I,
         std::enable_if_t<sizeof...(I) == DIM &&
                              std::conjunction_v<std::is_integral<I>...>,
@@ -384,9 +384,7 @@ class tensorET
         bool H = on_host, std::enable_if_t<H, int> = 0>
     const T &
     operator()(I... idx) const noexcept
-    {
-        return data[offset_(idx...)];
-    }
+    { return data[offset_(idx...)]; }
     template <class... I,
         std::enable_if_t<sizeof...(I) == DIM &&
                              std::conjunction_v<std::is_integral<I>...>,
@@ -394,22 +392,22 @@ class tensorET
         bool H = on_host, std::enable_if_t<!H, int> = 0>
     ro_t
     operator()(I... idx) const
-    {
-        return backend_type::read_element(*this, offset_(idx...));
-    }
+    { return backend_type::read_element(*this, offset_(idx...)); }
 
     // ---- expression protocol (tensor/expr.h) ----------------------------
 
     static constexpr int cost = 0;
     static constexpr bool packet_ok = true;
-    bool contiguous() const noexcept { return is_contiguous(); }
-    T lvalue(size_t i) const { return data[detail::logical_offset(*this, i)]; }
+    bool
+    contiguous() const noexcept
+    { return is_contiguous(); }
+    T
+    lvalue(size_t i) const
+    { return data[detail::logical_offset(*this, i)]; }
     template <class P>
     AXOS_INLINE typename P::reg
     packet(size_t i) const
-    {
-        return P::loadu(data + i);
-    }
+    { return P::loadu(data + i); }
 
     // ---- views (valid while the source memory lives) --------------------
 
@@ -456,9 +454,7 @@ class tensorET
 
     tensorET<1, T, Storage>
     flatten() const
-    {
-        return reshape<1>(std::array<size_t, 1>{size_});
-    }
+    { return reshape<1>(std::array<size_t, 1>{size_}); }
 
     // ---- domain ---------------------------------------------------------
 
@@ -469,8 +465,8 @@ class tensorET
         for (int d = 0; d < DIM; ++d) {
             r.ext_[d] = dims_[d];
             r.lo_[d] = custom_domain_ ? dlo_[d] : 0;
-            r.hi_[d] = custom_domain_ ? dhi_[d]
-                                      : static_cast<long long>(dims_[d]) - 1;
+            r.hi_[d] =
+                custom_domain_ ? dhi_[d] : static_cast<long long>(dims_[d]) - 1;
         }
         return r;
     }
@@ -490,7 +486,8 @@ class tensorET
     // into the caller's m*m row-major buffer, zero outside the matrix, and
     // returns a non-owning m x m view of buf.
     tensorET<2, T, Storage>
-    blockCopy(size_t i, size_t j, size_t m, T *buf, bool transpose = false) const
+    blockCopy(
+        size_t i, size_t j, size_t m, T *buf, bool transpose = false) const
     {
         static_assert(DIM == 2 && on_host, "blockCopy needs a host matrix");
         std::fill(buf, buf + m * m, T(0));
@@ -523,43 +520,44 @@ class tensorET
     template <class S2>
     void
     blockWriteBack(size_t i, size_t j, size_t m, const tensorET<2, T, S2> &tile)
-    {
-        write_back_(i, j, m, tile, false);
-    }
+    { write_back_(i, j, m, tile, false); }
     template <class S2>
     void
-    blockAddWriteBack(size_t i, size_t j, size_t m, const tensorET<2, T, S2> &tile)
-    {
-        write_back_(i, j, m, tile, true);
-    }
+    blockAddWriteBack(
+        size_t i, size_t j, size_t m, const tensorET<2, T, S2> &tile)
+    { write_back_(i, j, m, tile, true); }
 
     // ---- random fill ----------------------------------------------------
-    // i.i.d. samples; without a seed the values are non-deterministic. With
-    // a seed they depend only on the seed (not on the thread count).
-    // Complex types draw real and imaginary parts independently from the
-    // real parts of the bounds / mean.
+    // i.i.d. samples; without a seed the values are non-deterministic, with a
+    // seed they depend only on the seed (not on the thread count). Complex
+    // types draw real and imaginary parts independently from the real parts of
+    // the bounds / mean.
 
     static tensorET
     uniform(const shape_type &dims, T lo = T(0), T hi = T(1),
         std::optional<std::uint64_t> seed = std::nullopt)
     {
-        return random_(dims, seed, [lo, hi](std::mt19937_64 &g, T *p, size_t n) {
-            if constexpr (std::is_integral_v<T>) {
-                std::uniform_int_distribution<T> d(lo, hi);
-                for (size_t i = 0; i < n; ++i) p[i] = d(g);
-            } else if constexpr (is_complex_v<T>) {
-                using R = real_type_t<T>;
-                std::uniform_real_distribution<R> d(std::real(lo), std::real(hi));
-                for (size_t i = 0; i < n; ++i) {
-                    const R re = d(g);
-                    p[i] = T(re, d(g));
+        return random_(
+            dims, seed, [lo, hi](std::mt19937_64 &g, T *p, size_t n) {
+                if constexpr (std::is_integral_v<T>) {
+                    std::uniform_int_distribution<T> d(lo, hi);
+                    for (size_t i = 0; i < n; ++i)
+                        p[i] = d(g);
+                } else if constexpr (is_complex_v<T>) {
+                    using R = real_type_t<T>;
+                    std::uniform_real_distribution<R> d(
+                        std::real(lo), std::real(hi));
+                    for (size_t i = 0; i < n; ++i) {
+                        const R re = d(g);
+                        p[i] = T(re, d(g));
+                    }
+                } else {
+                    std::uniform_real_distribution<double> d(
+                        static_cast<double>(lo), static_cast<double>(hi));
+                    for (size_t i = 0; i < n; ++i)
+                        p[i] = static_cast<T>(d(g));
                 }
-            } else {
-                std::uniform_real_distribution<double> d(static_cast<double>(lo),
-                    static_cast<double>(hi));
-                for (size_t i = 0; i < n; ++i) p[i] = static_cast<T>(d(g));
-            }
-        });
+            });
     }
 
     static tensorET
@@ -568,19 +566,21 @@ class tensorET
     {
         static_assert(!std::is_integral_v<T>,
             "gaussian needs a floating-point or complex element type");
-        return random_(dims, seed,
-            [mean, stddev](std::mt19937_64 &g, T *p, size_t n) {
+        return random_(
+            dims, seed, [mean, stddev](std::mt19937_64 &g, T *p, size_t n) {
                 if constexpr (is_complex_v<T>) {
                     using R = real_type_t<T>;
-                    std::normal_distribution<R> d(std::real(mean), std::real(stddev));
+                    std::normal_distribution<R> d(
+                        std::real(mean), std::real(stddev));
                     for (size_t i = 0; i < n; ++i) {
                         const R re = d(g);
                         p[i] = T(re, d(g));
                     }
                 } else {
-                    std::normal_distribution<double> d(static_cast<double>(mean),
-                        static_cast<double>(stddev));
-                    for (size_t i = 0; i < n; ++i) p[i] = static_cast<T>(d(g));
+                    std::normal_distribution<double> d(
+                        static_cast<double>(mean), static_cast<double>(stddev));
+                    for (size_t i = 0; i < n; ++i)
+                        p[i] = static_cast<T>(d(g));
                 }
             });
     }
@@ -633,7 +633,8 @@ class tensorET
     expr_shape_(const E &x)
     {
         if constexpr (detail::has_rank<E>::value)
-            static_assert(E::rank == DIM, "tensorET(expression): rank mismatch");
+            static_assert(
+                E::rank == DIM, "tensorET(expression): rank mismatch");
         shape_type s;
         for (int d = 0; d < DIM; ++d)
             s[d] = x.size(d);
@@ -687,7 +688,8 @@ class tensorET
     {
         if (d < 0 || d >= DIM)
             detail::tensor_error("dimension " + std::to_string(d) +
-                                 " out of range for rank " + std::to_string(DIM));
+                                 " out of range for rank " +
+                                 std::to_string(DIM));
     }
 
     template <class... I>
@@ -725,8 +727,8 @@ class tensorET
 
     template <class S2>
     void
-    write_back_(size_t i, size_t j, size_t m, const tensorET<2, T, S2> &tile,
-        bool add)
+    write_back_(
+        size_t i, size_t j, size_t m, const tensorET<2, T, S2> &tile, bool add)
     {
         static_assert(DIM == 2 && on_host && is_host_storage_v<S2>,
             "blockWriteBack needs host matrices");
@@ -738,7 +740,8 @@ class tensorET
             const T *src = tile.data + r * tile.stride(0);
             T *dst = data + (r0 + r) * strides_[0] + c0;
             if (add)
-                for (size_t c = 0; c < nc; ++c) dst[c] += src[c];
+                for (size_t c = 0; c < nc; ++c)
+                    dst[c] += src[c];
             else
                 std::copy(src, src + nc, dst);
         }
@@ -767,13 +770,17 @@ class tensorET
         constexpr size_t kBlock = size_t(1) << 16; // values per engine
         const size_t n = h.size(), nb = (n + kBlock - 1) / kBlock;
         T *p = h.data;
-        detail::parallel_for(nb, 1, [&](size_t b0, size_t b1) {
-            for (size_t b = b0; b < b1; ++b) {
-                std::mt19937_64 g(detail::mix_seed(base ^ detail::mix_seed(b)));
-                const size_t s = b * kBlock;
-                fill(g, p + s, std::min(n, s + kBlock) - s);
-            }
-        }, 1);
+        detail::parallel_for(
+            nb, 1,
+            [&](size_t b0, size_t b1) {
+                for (size_t b = b0; b < b1; ++b) {
+                    std::mt19937_64 g(
+                        detail::mix_seed(base ^ detail::mix_seed(b)));
+                    const size_t s = b * kBlock;
+                    fill(g, p + s, std::min(n, s + kBlock) - s);
+                }
+            },
+            1);
         if constexpr (on_host)
             return h;
         else

@@ -48,8 +48,12 @@ inline constexpr bool is_supported_value_v =
     std::is_same_v<T, std::complex<float>> ||
     std::is_same_v<T, std::complex<double>>;
 
-template <typename T> struct real_of { using type = T; };
-template <typename R> struct real_of<std::complex<R>> { using type = R; };
+template <typename T> struct real_of {
+    using type = T;
+};
+template <typename R> struct real_of<std::complex<R>> {
+    using type = R;
+};
 template <typename T> using real_of_t = typename real_of<T>::type;
 
 enum class Norm { L1, L2, Linf };
@@ -78,8 +82,8 @@ host_to_store(S<U> &dst, const U *src, size_t n)
         std::memcpy(dst.data(), src, n * sizeof(U));
     } else {
 #if defined(__CUDACC__) || defined(AXOS_ENABLE_CUDA)
-        cudaError_t e = cudaMemcpy(
-            dst.data(), src, n * sizeof(U), cudaMemcpyHostToDevice);
+        cudaError_t e =
+            cudaMemcpy(dst.data(), src, n * sizeof(U), cudaMemcpyHostToDevice);
         if (e != cudaSuccess)
             throw std::runtime_error(
                 std::string("Csr upload failed: ") + cudaGetErrorString(e));
@@ -98,8 +102,8 @@ store_to_host(U *dst, const S<U> &src, size_t n)
         std::memcpy(dst, src.data(), n * sizeof(U));
     } else {
 #if defined(__CUDACC__) || defined(AXOS_ENABLE_CUDA)
-        cudaError_t e = cudaMemcpy(
-            dst, src.data(), n * sizeof(U), cudaMemcpyDeviceToHost);
+        cudaError_t e =
+            cudaMemcpy(dst, src.data(), n * sizeof(U), cudaMemcpyDeviceToHost);
         if (e != cudaSuccess)
             throw std::runtime_error(
                 std::string("Csr download failed: ") + cudaGetErrorString(e));
@@ -153,7 +157,8 @@ class Csr {
 
     // Allocates arrays (uninitialized) for a rows x cols matrix with nnz
     // stored entries. row_ptr is zero-filled only when nnz == 0.
-    Csr(size_t rows, size_t cols, size_t nnz) : rows_(rows), cols_(cols), nnz_(nnz)
+    Csr(size_t rows, size_t cols, size_t nnz)
+        : rows_(rows), cols_(cols), nnz_(nnz)
     {
         row_ptr_ = Store<Idx>(rows + 1);
         col_ind_ = Store<Idx>(nnz);
@@ -226,18 +231,40 @@ class Csr {
         return *this;
     }
 
-    size_t rows() const { return rows_; }
-    size_t cols() const { return cols_; }
-    size_t nnz() const { return nnz_; }
+    size_t
+    rows() const
+    { return rows_; }
+    size_t
+    cols() const
+    { return cols_; }
+    size_t
+    nnz() const
+    { return nnz_; }
 
-    const Idx *row_ptr() const { return row_ptr_.data(); }
-    const Idx *col_ind() const { return col_ind_.data(); }
-    const T *values() const { return vals_.data(); }
+    const Idx *
+    row_ptr() const
+    { return row_ptr_.data(); }
+    const Idx *
+    col_ind() const
+    { return col_ind_.data(); }
+    const T *
+    values() const
+    { return vals_.data(); }
 
     // Pattern arrays for kernels that build a matrix in place. The caller
     // must keep the Csr invariants.
-    Idx *row_ptr_mut() { values_changed(); return row_ptr_.data(); }
-    Idx *col_ind_mut() { values_changed(); return col_ind_.data(); }
+    Idx *
+    row_ptr_mut()
+    {
+        values_changed();
+        return row_ptr_.data();
+    }
+    Idx *
+    col_ind_mut()
+    {
+        values_changed();
+        return col_ind_.data();
+    }
 
     // Mutable access to the stored values. Any call drops the cached
     // transpose, since it would be stale once the values are written.
@@ -259,7 +286,9 @@ class Csr {
     }
 
     // Call after writing through a pointer obtained earlier.
-    void values_changed() const { t_cache_.reset(); }
+    void
+    values_changed() const
+    { t_cache_.reset(); }
 
     // Cached transpose (CSR of A^T). Built on first use, dropped whenever
     // the values are accessed mutably.
@@ -267,24 +296,20 @@ class Csr {
     transposed() const
     {
         if (!t_cache_)
-            t_cache_ = std::make_shared<Csr>(
-                Kernels<backend_type>::transpose(*this));
+            t_cache_ =
+                std::make_shared<Csr>(Kernels<backend_type>::transpose(*this));
         return *t_cache_;
     }
 
     // Uncached transpose.
     Csr
     transpose() const
-    {
-        return Kernels<backend_type>::transpose(*this);
-    }
+    { return Kernels<backend_type>::transpose(*this); }
 
     // Deep copy of the matrix on the host.
     Csr<T, Idx, Cpu::HostStorage>
     to_host() const
-    {
-        return Csr<T, Idx, Cpu::HostStorage>(*this);
-    }
+    { return Csr<T, Idx, Cpu::HostStorage>(*this); }
 
     // Structural / ordering invariants. Returns an empty string when valid.
     std::string
@@ -341,8 +366,8 @@ class Csr {
     // Dense -> CSR (through the host). Entries with |v| <= drop_tol are
     // dropped. Result is on the host; convert with Csr<..., CudaStorage>(h).
     template <typename S>
-    static Csr<T, Idx, Cpu::HostStorage>
-    from_dense(const tensorET<2, T, S> &A, real_of_t<T> drop_tol = 0);
+    static Csr<T, Idx, Cpu::HostStorage> from_dense(
+        const tensorET<2, T, S> &A, real_of_t<T> drop_tol = 0);
 
     // Stack B's rows below this matrix's rows (same column count). Used to
     // add cuts / constraints. Returns a new matrix (rebuilds the pattern).
@@ -361,14 +386,17 @@ class Csr {
         ci.insert(ci.end(), a.col_ind(), a.col_ind() + a.nnz());
         v.insert(v.end(), a.values(), a.values() + a.nnz());
         for (size_t i = 0; i < b.rows(); ++i)
-            rp[a.rows() + 1 + i] = static_cast<Idx>(a.nnz()) + b.row_ptr()[i + 1];
+            rp[a.rows() + 1 + i] =
+                static_cast<Idx>(a.nnz()) + b.row_ptr()[i + 1];
         ci.insert(ci.end(), b.col_ind(), b.col_ind() + b.nnz());
         v.insert(v.end(), b.values(), b.values() + b.nnz());
         return Csr(a.rows() + b.rows(), cols_, rp, ci, v);
     }
 
     // Backend-specific per-matrix cache (descriptors, workspaces).
-    detail::DeviceCache *device_cache() const { return dev_.get(); }
+    detail::DeviceCache *
+    device_cache() const
+    { return dev_.get(); }
     void
     set_device_cache(std::shared_ptr<detail::DeviceCache> c) const
     { dev_ = std::move(c); }
@@ -411,7 +439,9 @@ template <typename T, typename Idx = int32_t> class CooBuilder {
         v_.push_back(v);
     }
 
-    size_t size() const { return v_.size(); }
+    size_t
+    size() const
+    { return v_.size(); }
 
     Csr<T, Idx, Cpu::HostStorage>
     build(bool drop_zeros = false) const
@@ -434,8 +464,8 @@ template <typename T, typename Idx = int32_t> class CooBuilder {
         for (size_t r = 0; r < rows_; ++r) {
             auto first = perm.begin() + start[r];
             auto last = perm.begin() + start[r + 1];
-            std::stable_sort(first, last,
-                [&](size_t a, size_t b) { return j_[a] < j_[b]; });
+            std::stable_sort(
+                first, last, [&](size_t a, size_t b) { return j_[a] < j_[b]; });
             size_t row_begin = ci.size();
             for (auto it = first; it != last; ++it) {
                 if (ci.size() > row_begin && ci.back() == j_[*it]) {
@@ -471,7 +501,8 @@ template <typename T, typename Idx = int32_t> class CooBuilder {
 template <typename T, typename Idx, template <typename> class Store>
 template <typename S>
 Csr<T, Idx, Cpu::HostStorage>
-Csr<T, Idx, Store>::from_dense(const tensorET<2, T, S> &A, real_of_t<T> drop_tol)
+Csr<T, Idx, Store>::from_dense(
+    const tensorET<2, T, S> &A, real_of_t<T> drop_tol)
 {
     tensorET<2, T> H(A); // host copy (no-op copy for host storage)
     const size_t m = H.size(0), n = H.size(1);

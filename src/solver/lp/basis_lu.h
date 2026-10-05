@@ -33,27 +33,56 @@ struct SVec {
     std::vector<int> idx;
     std::vector<char> flag;
 
-    void init(int n) { v.assign(n, 0.0); flag.assign(n, 0); idx.clear(); }
-    int size() const { return static_cast<int>(v.size()); }
-    void clear() {
-        for (int i : idx) { v[i] = 0.0; flag[i] = 0; }
+    void
+    init(int n)
+    {
+        v.assign(n, 0.0);
+        flag.assign(n, 0);
+        idx.clear();
+    }
+    int
+    size() const
+    { return static_cast<int>(v.size()); }
+    void
+    clear()
+    {
+        for (int i : idx) {
+            v[i] = 0.0;
+            flag[i] = 0;
+        }
         idx.clear();
     }
     // v[i] += a, tracking the pattern
-    void add(int i, double a) {
-        if (!flag[i]) { flag[i] = 1; idx.push_back(i); }
+    void
+    add(int i, double a)
+    {
+        if (!flag[i]) {
+            flag[i] = 1;
+            idx.push_back(i);
+        }
         v[i] += a;
     }
-    void set(int i, double a) {
-        if (!flag[i]) { flag[i] = 1; idx.push_back(i); }
+    void
+    set(int i, double a)
+    {
+        if (!flag[i]) {
+            flag[i] = 1;
+            idx.push_back(i);
+        }
         v[i] = a;
     }
     // rebuild the pattern from the dense values
-    void rebuild_pattern() {
-        for (int i : idx) flag[i] = 0;
+    void
+    rebuild_pattern()
+    {
+        for (int i : idx)
+            flag[i] = 0;
         idx.clear();
         for (int i = 0; i < size(); ++i)
-            if (v[i] != 0.0) { flag[i] = 1; idx.push_back(i); }
+            if (v[i] != 0.0) {
+                flag[i] = 1;
+                idx.push_back(i);
+            }
     }
 };
 
@@ -67,12 +96,12 @@ class BasisFactor {
     };
 
     // Factor the m x m matrix whose k-th column is cols[k]. Returns the number
-    // of singular pivots; for each, singular_pos[i] is the basis position of the
-    // dependent column and free_row[i] a row that was left without a pivot
-    // (the caller substitutes the slack of that row).
+    // of singular pivots; for each, singular_pos[i] is the basis position of
+    // the dependent column and free_row[i] a row left without a pivot (the
+    // caller substitutes the slack of that row).
     int
-    factor(int m, const std::vector<Column> &cols, std::vector<int> &singular_pos,
-        std::vector<int> &free_row)
+    factor(int m, const std::vector<Column> &cols,
+        std::vector<int> &singular_pos, std::vector<int> &free_row)
     {
         m_ = m;
         n_updates_ = 0;
@@ -87,25 +116,33 @@ class BasisFactor {
         // row counts of the original matrix (sparsity tie-break)
         std::vector<int> rowcnt(m, 0);
         for (int k = 0; k < m; ++k)
-            for (int t = 0; t < cols[k].nnz; ++t) rowcnt[cols[k].idx[t]]++;
+            for (int t = 0; t < cols[k].nnz; ++t)
+                rowcnt[cols[k].idx[t]]++;
         // column order: fewest nonzeros first
         q_.resize(m);
-        for (int k = 0; k < m; ++k) q_[k] = k;
+        for (int k = 0; k < m; ++k)
+            q_[k] = k;
         std::stable_sort(q_.begin(), q_.end(),
             [&](int a, int b) { return cols[a].nnz < cols[b].nnz; });
 
-        lp_.assign(1, 0); li_.clear(); lx_.clear();
-        up_.assign(1, 0); ui_.clear(); ux_.clear();
+        lp_.assign(1, 0);
+        li_.clear();
+        lx_.clear();
+        up_.assign(1, 0);
+        ui_.clear();
+        ux_.clear();
         udiag_.assign(m, 1.0);
-        prow_.assign(m, -1);       // prow[k] = row pivoted at step k
+        prow_.assign(m, -1);          // prow[k] = row pivoted at step k
         std::vector<int> pinv(m, -1); // pinv[row] = step, -1 if not pivoted
         std::vector<double> x(m, 0.0);
-        std::vector<int> xi;       // nonzero pattern in topological order
+        std::vector<int> xi; // nonzero pattern in topological order
         std::vector<int> stack, pstack, mark(m, -1);
-        std::vector<int> lcol_row;  // L entries use ORIGINAL row ids until the end
+        std::vector<int>
+            lcol_row; // L entries use ORIGINAL row ids until the end
         int nsing = 0;
         std::vector<int> failed_steps;
-        // L columns are stored by step; entries below the pivot in original rows
+        // L columns are stored by step; entries below the pivot in original
+        // rows
         std::vector<int> lstart{0};
         std::vector<int> l_orig_idx;
         std::vector<double> l_val;
@@ -147,8 +184,10 @@ class BasisFactor {
                     }
                 }
             }
-            // xi is in reverse topological order (finish order): process reversed
-            for (int t = 0; t < c.nnz; ++t) x[c.idx[t]] = c.val[t];
+            // xi is in reverse topological order (finish order): process
+            // reversed
+            for (int t = 0; t < c.nnz; ++t)
+                x[c.idx[t]] = c.val[t];
             for (int t = static_cast<int>(xi.size()) - 1; t >= 0; --t) {
                 int r = xi[t];
                 int step = pinv[r];
@@ -171,7 +210,8 @@ class BasisFactor {
                     if (pinv[r] >= 0) continue;
                     double a = std::abs(x[r]);
                     if (a < thresh) continue;
-                    if (rowcnt[r] < best_cnt || (rowcnt[r] == best_cnt && a > best_abs)) {
+                    if (rowcnt[r] < best_cnt ||
+                        (rowcnt[r] == best_cnt && a > best_abs)) {
                         best_cnt = rowcnt[r];
                         best_abs = a;
                         piv = r;
@@ -182,8 +222,10 @@ class BasisFactor {
                 ++nsing;
                 failed_steps.push_back(k);
                 singular_pos.push_back(q_[k]);
-                for (int r : xi) x[r] = 0.0;
-                for (int t = 0; t < c.nnz; ++t) x[c.idx[t]] = 0.0;
+                for (int r : xi)
+                    x[r] = 0.0;
+                for (int t = 0; t < c.nnz; ++t)
+                    x[c.idx[t]] = 0.0;
                 // record an empty step; pinv stays -1 (row remains free)
                 lstart.push_back(static_cast<int>(l_orig_idx.size()));
                 up_.push_back(static_cast<int>(ui_.size()));
@@ -197,7 +239,10 @@ class BasisFactor {
             prow_[k] = piv;
             // U column: entries at already pivoted rows (steps < k)
             for (int r : xi) {
-                if (r == piv) { x[r] = 0.0; continue; }
+                if (r == piv) {
+                    x[r] = 0.0;
+                    continue;
+                }
                 if (pinv[r] >= 0 && pinv[r] < k) {
                     if (x[r] != 0.0) {
                         ui_.push_back(pinv[r]);
@@ -209,7 +254,8 @@ class BasisFactor {
                 }
                 x[r] = 0.0;
             }
-            for (int t = 0; t < c.nnz; ++t) x[c.idx[t]] = 0.0;
+            for (int t = 0; t < c.nnz; ++t)
+                x[c.idx[t]] = 0.0;
             up_.push_back(static_cast<int>(ui_.size()));
             lstart.push_back(static_cast<int>(l_orig_idx.size()));
         }
@@ -222,10 +268,12 @@ class BasisFactor {
                 free_row.push_back(unp[t]);
             }
         }
-        // ---- convert L row ids to pivot steps ---------------------------------
+        // ---- convert L row ids to pivot steps
+        // ---------------------------------
         lp_ = lstart;
         li_.resize(l_orig_idx.size());
-        for (size_t p = 0; p < l_orig_idx.size(); ++p) li_[p] = pinv[l_orig_idx[p]];
+        for (size_t p = 0; p < l_orig_idx.size(); ++p)
+            li_[p] = pinv[l_orig_idx[p]];
         lx_ = l_val;
         // entries whose row is still unpivoted (only when singular) are dropped
         if (nsing > 0) {
@@ -235,7 +283,8 @@ class BasisFactor {
         singular_ = nsing;
         pinv_ = pinv;
         qinv_.assign(m, 0);
-        for (int k = 0; k < m; ++k) qinv_[q_[k]] = k;
+        for (int k = 0; k < m; ++k)
+            qinv_[q_[k]] = k;
         mark_.assign(m, 0);
         stamp_ = 0;
         w_.assign(m, 0.0);
@@ -252,20 +301,25 @@ class BasisFactor {
     {
         const int m = m_;
         w_.assign(m, 0.0);
-        for (int k = 0; k < m; ++k) w_[k] = prow_[k] >= 0 ? b[prow_[k]] : 0.0;
+        for (int k = 0; k < m; ++k)
+            w_[k] = prow_[k] >= 0 ? b[prow_[k]] : 0.0;
         for (int k = 0; k < m; ++k) { // L
             double yk = w_[k];
             if (yk == 0.0) continue;
-            for (int p = lp_[k]; p < lp_[k + 1]; ++p) w_[li_[p]] -= lx_[p] * yk;
+            for (int p = lp_[k]; p < lp_[k + 1]; ++p)
+                w_[li_[p]] -= lx_[p] * yk;
         }
         for (int k = m - 1; k >= 0; --k) { // U (upper triangular in step order)
             double zk = w_[k] / udiag_[k];
             w_[k] = zk;
             if (zk == 0.0) continue;
-            for (int p = up_[k]; p < up_[k + 1]; ++p) w_[ui_[p]] -= ux_[p] * zk;
+            for (int p = up_[k]; p < up_[k + 1]; ++p)
+                w_[ui_[p]] -= ux_[p] * zk;
         }
-        for (int k = 0; k < m; ++k) b[q_[k]] = w_[k];
-        std::fill(w_.begin(), w_.end(), 0.0); // the sparse solves expect w_ == 0
+        for (int k = 0; k < m; ++k)
+            b[q_[k]] = w_[k];
+        std::fill(
+            w_.begin(), w_.end(), 0.0); // the sparse solves expect w_ == 0
         // eta file, oldest first
         for (int e = 0; e < n_updates_; ++e) {
             const int r = eta_pos_[e];
@@ -290,27 +344,31 @@ class BasisFactor {
             c[r] = s;
         }
         w_.assign(m, 0.0);
-        for (int k = 0; k < m; ++k) w_[k] = c[q_[k]];
+        for (int k = 0; k < m; ++k)
+            w_[k] = c[q_[k]];
         for (int i = 0; i < m; ++i) { // U^T z = w, row-wise sweep
             const double zi = w_[i] / udiag_[i];
             w_[i] = zi;
             if (zi == 0.0) continue;
-            for (int p = urp_[i]; p < urp_[i + 1]; ++p) w_[uci_[p]] -= urx_[p] * zi;
+            for (int p = urp_[i]; p < urp_[i + 1]; ++p)
+                w_[uci_[p]] -= urx_[p] * zi;
         }
         for (int i = m - 1; i >= 0; --i) { // L^T v = z, row-wise sweep
             const double vi = w_[i];
             if (vi == 0.0) continue;
-            for (int p = lrp_[i]; p < lrp_[i + 1]; ++p) w_[lci_[p]] -= lrx_[p] * vi;
+            for (int p = lrp_[i]; p < lrp_[i + 1]; ++p)
+                w_[lci_[p]] -= lrx_[p] * vi;
         }
         for (int k = 0; k < m; ++k)
             if (prow_[k] >= 0) c[prow_[k]] = w_[k];
         std::fill(w_.begin(), w_.end(), 0.0);
     }
 
-    // ---- hypersparse solves ---------------------------------------------------
-    // Same operations as ftran/btran, on a sparse vector: the triangular solves
-    // visit only the nonzero pattern of the result (symbolic reach by DFS), and
-    // fall back to the dense loops when the vector is not sparse.
+    // ---- hypersparse solves
+    // --------------------------------------------------- Same operations as
+    // ftran/btran, on a sparse vector: the triangular solves visit only the
+    // nonzero pattern of the result (symbolic reach by DFS), and fall back to
+    // the dense loops when the vector is not sparse.
 
     // Solve B x = b: b indexed by row on input, by basis position on output.
     void
@@ -327,27 +385,30 @@ class BasisFactor {
         for (int i : b.idx) {
             const int k = pinv_[i];
             const double val = b.v[i];
-            b.v[i] = 0.0; b.flag[i] = 0;
+            b.v[i] = 0.0;
+            b.flag[i] = 0;
             if (k < 0 || val == 0.0) continue;
             w_[k] = val;
             starts_.push_back(k);
         }
         b.idx.clear();
-        reach(lp_, li_, starts_, order_);       // L: edges step -> larger steps
+        reach(lp_, li_, starts_, order_); // L: edges step -> larger steps
         for (int t = static_cast<int>(order_.size()) - 1; t >= 0; --t) {
             const int k = order_[t];
             const double yk = w_[k];
             if (yk == 0.0) continue;
-            for (int p = lp_[k]; p < lp_[k + 1]; ++p) w_[li_[p]] -= lx_[p] * yk;
+            for (int p = lp_[k]; p < lp_[k + 1]; ++p)
+                w_[li_[p]] -= lx_[p] * yk;
         }
         starts_.assign(order_.begin(), order_.end());
-        reach(up_, ui_, starts_, order2_);      // U: edges step -> smaller steps
+        reach(up_, ui_, starts_, order2_); // U: edges step -> smaller steps
         for (int t = static_cast<int>(order2_.size()) - 1; t >= 0; --t) {
             const int k = order2_[t];
             const double zk = w_[k] / udiag_[k];
             w_[k] = zk;
             if (zk == 0.0) continue;
-            for (int p = up_[k]; p < up_[k + 1]; ++p) w_[ui_[p]] -= ux_[p] * zk;
+            for (int p = up_[k]; p < up_[k + 1]; ++p)
+                w_[ui_[p]] -= ux_[p] * zk;
         }
         for (int k : order2_) {
             const double val = w_[k];
@@ -388,28 +449,33 @@ class BasisFactor {
         starts_.clear();
         for (int pos : c.idx) {
             const double val = c.v[pos];
-            c.v[pos] = 0.0; c.flag[pos] = 0;
+            c.v[pos] = 0.0;
+            c.flag[pos] = 0;
             if (val == 0.0) continue;
             const int k = qinv_[pos];
             w_[k] = val;
             starts_.push_back(k);
         }
         c.idx.clear();
-        reach(urp_, uci_, starts_, order_);     // U^T: row-wise U, edges to larger steps
+        reach(urp_, uci_, starts_,
+            order_); // U^T: row-wise U, edges to larger steps
         for (int t = static_cast<int>(order_.size()) - 1; t >= 0; --t) {
             const int i = order_[t];
             const double zi = w_[i] / udiag_[i];
             w_[i] = zi;
             if (zi == 0.0) continue;
-            for (int p = urp_[i]; p < urp_[i + 1]; ++p) w_[uci_[p]] -= urx_[p] * zi;
+            for (int p = urp_[i]; p < urp_[i + 1]; ++p)
+                w_[uci_[p]] -= urx_[p] * zi;
         }
         starts_.assign(order_.begin(), order_.end());
-        reach(lrp_, lci_, starts_, order2_);    // L^T: row-wise L, edges to smaller steps
+        reach(lrp_, lci_, starts_,
+            order2_); // L^T: row-wise L, edges to smaller steps
         for (int t = static_cast<int>(order2_.size()) - 1; t >= 0; --t) {
             const int i = order2_[t];
             const double vi = w_[i];
             if (vi == 0.0) continue;
-            for (int p = lrp_[i]; p < lrp_[i + 1]; ++p) w_[lci_[p]] -= lrx_[p] * vi;
+            for (int p = lrp_[i]; p < lrp_[i + 1]; ++p)
+                w_[lci_[p]] -= lrx_[p] * vi;
         }
         for (int k : order2_) {
             const double val = w_[k];
@@ -461,11 +527,19 @@ class BasisFactor {
         return true;
     }
 
-    int updates() const { return n_updates_; }
+    int
+    updates() const
+    { return n_updates_; }
     // true when the eta file has grown larger than the factors it extends
-    bool eta_heavy(double factor) const { return eta_idx_.size() > factor * (li_.size() + ui_.size() + m_); }
-    size_t nnz() const { return li_.size() + ui_.size() + eta_idx_.size() + m_; }
-    int size() const { return m_; }
+    bool
+    eta_heavy(double factor) const
+    { return eta_idx_.size() > factor * (li_.size() + ui_.size() + m_); }
+    size_t
+    nnz() const
+    { return li_.size() + ui_.size() + eta_idx_.size() + m_; }
+    int
+    size() const
+    { return m_; }
 
   private:
     // The L/U triangular part of btran on a dense-ish SVec (no eta file).
@@ -474,17 +548,20 @@ class BasisFactor {
     {
         const int m = m_;
         w_.assign(m, 0.0);
-        for (int k = 0; k < m; ++k) w_[k] = c.v[q_[k]];
+        for (int k = 0; k < m; ++k)
+            w_[k] = c.v[q_[k]];
         for (int i = 0; i < m; ++i) {
             const double zi = w_[i] / udiag_[i];
             w_[i] = zi;
             if (zi == 0.0) continue;
-            for (int p = urp_[i]; p < urp_[i + 1]; ++p) w_[uci_[p]] -= urx_[p] * zi;
+            for (int p = urp_[i]; p < urp_[i + 1]; ++p)
+                w_[uci_[p]] -= urx_[p] * zi;
         }
         for (int i = m - 1; i >= 0; --i) {
             const double vi = w_[i];
             if (vi == 0.0) continue;
-            for (int p = lrp_[i]; p < lrp_[i + 1]; ++p) w_[lci_[p]] -= lrx_[p] * vi;
+            for (int p = lrp_[i]; p < lrp_[i + 1]; ++p)
+                w_[lci_[p]] -= lrx_[p] * vi;
         }
         c.clear();
         for (int k = 0; k < m; ++k)
@@ -499,7 +576,10 @@ class BasisFactor {
         const std::vector<int> &starts, std::vector<int> &out) const
     {
         out.clear();
-        if (++stamp_ == 0x7fffffff) { std::fill(mark_.begin(), mark_.end(), 0); stamp_ = 1; }
+        if (++stamp_ == 0x7fffffff) {
+            std::fill(mark_.begin(), mark_.end(), 0);
+            stamp_ = 1;
+        }
         for (int s0 : starts) {
             if (mark_[s0] == stamp_) continue;
             mark_[s0] = stamp_;
@@ -519,7 +599,11 @@ class BasisFactor {
                         break;
                     }
                 }
-                if (!pushed) { out.push_back(node); stk_.pop_back(); pst_.pop_back(); }
+                if (!pushed) {
+                    out.push_back(node);
+                    stk_.pop_back();
+                    pst_.pop_back();
+                }
             }
         }
     }
@@ -528,13 +612,15 @@ class BasisFactor {
     // indices idx[ptr[k]..ptr[k+1])).
     void
     transpose(const std::vector<int> &ptr, const std::vector<int> &idx,
-        const std::vector<double> &val, std::vector<int> &rp, std::vector<int> &ci,
-        std::vector<double> &rx) const
+        const std::vector<double> &val, std::vector<int> &rp,
+        std::vector<int> &ci, std::vector<double> &rx) const
     {
         const int m = m_;
         rp.assign(m + 1, 0);
-        for (size_t p = 0; p < idx.size(); ++p) ++rp[idx[p] + 1];
-        for (int i = 0; i < m; ++i) rp[i + 1] += rp[i];
+        for (size_t p = 0; p < idx.size(); ++p)
+            ++rp[idx[p] + 1];
+        for (int i = 0; i < m; ++i)
+            rp[i + 1] += rp[i];
         ci.resize(idx.size());
         rx.resize(idx.size());
         std::vector<int> pos(rp.begin(), rp.end() - 1);

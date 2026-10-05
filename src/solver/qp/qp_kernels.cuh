@@ -21,13 +21,13 @@ using namespace axos_qp;
 
 #define QP_BLOCK 256
 
-#define QP_MAP_KERNEL(f, Args)                                                 \
-    extern "C" __global__ void k_##f(idx n, Args a)                           \
-    {                                                                          \
-        const idx stride = (idx)gridDim.x * blockDim.x;                        \
-        for (idx i = (idx)blockIdx.x * blockDim.x + threadIdx.x; i < n;       \
-             i += stride)                                                      \
-            f(i, a);                                                           \
+#define QP_MAP_KERNEL(f, Args) \
+    extern "C" __global__ void k_##f(idx n, Args a) \
+    { \
+        const idx stride = (idx)gridDim.x * blockDim.x; \
+        for (idx i = (idx)blockIdx.x * blockDim.x + threadIdx.x; i < n; \
+            i += stride) \
+            f(i, a); \
     }
 
 // Block reduction of K accumulators: warp shuffles, then one warp folds the
@@ -61,16 +61,17 @@ block_reduce(double (&acc)[K], unsigned kmax, double *out)
     }
 }
 
-#define QP_REDUCE_KERNEL(f, Args)                                              \
-    extern "C" __global__ void k_##f(idx n, Args a, double *part)             \
-    {                                                                          \
-        double acc[Args::K];                                                   \
-        _Pragma("unroll") for (int k = 0; k < Args::K; ++k) acc[k] = 0.0;      \
-        const idx stride = (idx)gridDim.x * blockDim.x;                        \
-        for (idx i = (idx)blockIdx.x * blockDim.x + threadIdx.x; i < n;       \
-             i += stride)                                                      \
-            f(i, a, acc);                                                      \
-        block_reduce<Args::K>(acc, Args::kMax, part + (idx)blockIdx.x * Args::K); \
+#define QP_REDUCE_KERNEL(f, Args) \
+    extern "C" __global__ void k_##f(idx n, Args a, double *part) \
+    { \
+        double acc[Args::K]; \
+        _Pragma("unroll") for (int k = 0; k < Args::K; ++k) acc[k] = 0.0; \
+        const idx stride = (idx)gridDim.x * blockDim.x; \
+        for (idx i = (idx)blockIdx.x * blockDim.x + threadIdx.x; i < n; \
+            i += stride) \
+            f(i, a, acc); \
+        block_reduce<Args::K>( \
+            acc, Args::kMax, part + (idx)blockIdx.x * Args::K); \
     }
 
 // One block folds nblocks x K partials into out[0..K).
@@ -104,17 +105,19 @@ k_finish(int nblocks, int K, unsigned kmax, const double *part, double *out)
     }
 }
 
-// ---- sparse products with epilogues --------------------------------------------
-// s = sum of v[k] x[ci[k]] over [b, e), computed by the T threads of a group
-// (T a power of two <= 32); lane 0 of the group ends up with the sum. Every
-// thread of the warp must call it (idle groups pass b == e), so the
-// full-mask shuffles are safe.
+// ---- sparse products with epilogues
+// -------------------------------------------- s = sum of v[k] x[ci[k]] over
+// [b, e), computed by the T threads of a group (T a power of two <= 32); lane 0
+// of the group ends up with the sum. Every thread of the warp must call it
+// (idle groups pass b == e), so the full-mask shuffles are safe.
 template <int T>
 __device__ double
-group_dot(int b, int e, int lane, const int *ci, const double *v, const double *x)
+group_dot(
+    int b, int e, int lane, const int *ci, const double *v, const double *x)
 {
     double s = 0.0;
-    for (int k = b + lane; k < e; k += T) s += v[k] * x[ci[k]];
+    for (int k = b + lane; k < e; k += T)
+        s += v[k] * x[ci[k]];
     for (int off = T / 2; off > 0; off >>= 1)
         s += __shfl_down_sync(0xffffffffu, s, off, T);
     return s;
@@ -124,76 +127,77 @@ group_dot(int b, int e, int lane, const int *ci, const double *v, const double *
 // covers QP_BLOCK / T consecutive rows; with T > 1 the row sums go through
 // shared memory so that the epilogues (which touch many vectors per row) run
 // on consecutive threads, with coalesced loads, instead of on one thread in T.
-#define QP_SPMV_EPI_T(f, Args, T)                                              \
-    extern "C" __global__ void __launch_bounds__(QP_BLOCK)                    \
-    k_##f##_##T(idx rows, const int *rp, const int *ci, const double *v,      \
-        const double *x, Args a)                                               \
-    {                                                                          \
-        __shared__ double sums[QP_BLOCK / T];                                  \
-        const idx base = (idx)blockIdx.x * (QP_BLOCK / T);                     \
-        const int g = threadIdx.x / T, lane = threadIdx.x % T;                 \
-        const idx row = base + g;                                              \
-        int b = 0, e = 0;                                                      \
-        if (row < rows) {                                                      \
-            b = rp[row];                                                       \
-            e = rp[row + 1];                                                   \
-        }                                                                      \
-        const double s = group_dot<T>(b, e, lane, ci, v, x);                   \
-        if (T == 1) {                                                          \
-            if (row < rows) f(row, s, a);                                      \
-            return;                                                            \
-        }                                                                      \
-        if (lane == 0) sums[g] = s;                                            \
-        __syncthreads();                                                       \
-        if (threadIdx.x < QP_BLOCK / T && base + threadIdx.x < rows)           \
-            f(base + threadIdx.x, sums[threadIdx.x], a);                       \
+#define QP_SPMV_EPI_T(f, Args, T) \
+    extern "C" __global__ void __launch_bounds__(QP_BLOCK) \
+        k_##f##_##T(idx rows, const int *rp, const int *ci, const double *v, \
+            const double *x, Args a) \
+    { \
+        __shared__ double sums[QP_BLOCK / T]; \
+        const idx base = (idx)blockIdx.x * (QP_BLOCK / T); \
+        const int g = threadIdx.x / T, lane = threadIdx.x % T; \
+        const idx row = base + g; \
+        int b = 0, e = 0; \
+        if (row < rows) { \
+            b = rp[row]; \
+            e = rp[row + 1]; \
+        } \
+        const double s = group_dot<T>(b, e, lane, ci, v, x); \
+        if (T == 1) { \
+            if (row < rows) f(row, s, a); \
+            return; \
+        } \
+        if (lane == 0) sums[g] = s; \
+        __syncthreads(); \
+        if (threadIdx.x < QP_BLOCK / T && base + threadIdx.x < rows) \
+            f(base + threadIdx.x, sums[threadIdx.x], a); \
     }
 
 // k_<f>_fin: rows split into chunks (see k_chunks_<T>): s = sum of the row's
 // chunk partials part[rcp[row] .. rcp[row+1]), then f(row, s, a).
 // k_<f>_vec: f(row, s[row], a) for given row sums.
-#define QP_SPMV_EPI_KERNEL(f, Args)                                            \
-    QP_SPMV_EPI_T(f, Args, 1)                                                  \
-    QP_SPMV_EPI_T(f, Args, 2)                                                  \
-    QP_SPMV_EPI_T(f, Args, 4)                                                  \
-    QP_SPMV_EPI_T(f, Args, 8)                                                  \
-    QP_SPMV_EPI_T(f, Args, 16)                                                 \
-    QP_SPMV_EPI_T(f, Args, 32)                                                 \
-    extern "C" __global__ void k_##f##_fin(idx rows, const int *rcp,          \
-        const double *part, Args a)                                            \
-    {                                                                          \
-        const idx stride = (idx)gridDim.x * blockDim.x;                        \
-        for (idx r = (idx)blockIdx.x * blockDim.x + threadIdx.x; r < rows;    \
-             r += stride) {                                                    \
-            double s = 0.0;                                                    \
-            for (int c = rcp[r]; c < rcp[r + 1]; ++c) s += part[c];            \
-            f(r, s, a);                                                        \
-        }                                                                      \
-    }                                                                          \
+#define QP_SPMV_EPI_KERNEL(f, Args) \
+    QP_SPMV_EPI_T(f, Args, 1) \
+    QP_SPMV_EPI_T(f, Args, 2) \
+    QP_SPMV_EPI_T(f, Args, 4) \
+    QP_SPMV_EPI_T(f, Args, 8) \
+    QP_SPMV_EPI_T(f, Args, 16) \
+    QP_SPMV_EPI_T(f, Args, 32) \
+    extern "C" __global__ void k_##f##_fin( \
+        idx rows, const int *rcp, const double *part, Args a) \
+    { \
+        const idx stride = (idx)gridDim.x * blockDim.x; \
+        for (idx r = (idx)blockIdx.x * blockDim.x + threadIdx.x; r < rows; \
+            r += stride) { \
+            double s = 0.0; \
+            for (int c = rcp[r]; c < rcp[r + 1]; ++c) \
+                s += part[c]; \
+            f(r, s, a); \
+        } \
+    } \
     extern "C" __global__ void k_##f##_vec(idx rows, const double *s, Args a) \
-    {                                                                          \
-        const idx stride = (idx)gridDim.x * blockDim.x;                        \
-        for (idx r = (idx)blockIdx.x * blockDim.x + threadIdx.x; r < rows;    \
-             r += stride)                                                      \
-            f(r, s[r], a);                                                     \
+    { \
+        const idx stride = (idx)gridDim.x * blockDim.x; \
+        for (idx r = (idx)blockIdx.x * blockDim.x + threadIdx.x; r < rows; \
+            r += stride) \
+            f(r, s[r], a); \
     }
 
 // Partial products of the chunks of a row-split matrix: chunk c covers the
 // nonzeros [cp[c], cp[c+1]) of one row; T threads per chunk.
-#define QP_CHUNK_KERNEL(T)                                                     \
-    extern "C" __global__ void k_chunks_##T(idx nch, const int *cp,           \
-        const int *ci, const double *v, const double *x, double *part)        \
-    {                                                                          \
-        const idx tid = (idx)blockIdx.x * blockDim.x + threadIdx.x;            \
-        const idx c = tid / T;                                                 \
-        const int lane = (int)(tid % T);                                       \
-        int b = 0, e = 0;                                                      \
-        if (c < nch) {                                                         \
-            b = cp[c];                                                         \
-            e = cp[c + 1];                                                     \
-        }                                                                      \
-        const double s = group_dot<T>(b, e, lane, ci, v, x);                   \
-        if (c < nch && lane == 0) part[c] = s;                                 \
+#define QP_CHUNK_KERNEL(T) \
+    extern "C" __global__ void k_chunks_##T(idx nch, const int *cp, \
+        const int *ci, const double *v, const double *x, double *part) \
+    { \
+        const idx tid = (idx)blockIdx.x * blockDim.x + threadIdx.x; \
+        const idx c = tid / T; \
+        const int lane = (int)(tid % T); \
+        int b = 0, e = 0; \
+        if (c < nch) { \
+            b = cp[c]; \
+            e = cp[c + 1]; \
+        } \
+        const double s = group_dot<T>(b, e, lane, ci, v, x); \
+        if (c < nch && lane == 0) part[c] = s; \
     }
 QP_CHUNK_KERNEL(1)
 QP_CHUNK_KERNEL(2)
@@ -202,7 +206,8 @@ QP_CHUNK_KERNEL(8)
 QP_CHUNK_KERNEL(16)
 QP_CHUNK_KERNEL(32)
 
-// ---- instantiations -----------------------------------------------------------
+// ---- instantiations
+// -----------------------------------------------------------
 QP_MAP_KERNEL(fill, Fill)
 QP_MAP_KERNEL(copy, Copy)
 QP_MAP_KERNEL(scale, Scale)

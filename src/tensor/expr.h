@@ -30,9 +30,9 @@
 // (split across threads above a size threshold) with no temporaries.
 #pragma once
 
+#include "storage/host_storage.h"
 #include "tensor/parallel.h"
 #include "tensor/simd.h"
-#include "storage/host_storage.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -45,15 +45,16 @@ namespace AXOS {
 
 template <typename T, typename E> struct Expr {
     using value_type = T;
-    const E &self() const noexcept { return static_cast<const E &>(*this); }
+    const E &
+    self() const noexcept
+    { return static_cast<const E &>(*this); }
 };
 
 template <int DIM, typename T, typename Storage> class tensorET;
 
 namespace detail {
 
-template <class E>
-struct is_tensor : std::false_type {};
+template <class E> struct is_tensor : std::false_type {};
 template <int D, class T, class S>
 struct is_tensor<tensorET<D, T, S>> : std::true_type {};
 template <class E> inline constexpr bool is_tensor_v = is_tensor<E>::value;
@@ -80,10 +81,12 @@ struct has_lvalue<E,
 
 template <class, class = void> struct has_prepare : std::false_type {};
 template <class E>
-struct has_prepare<E, std::void_t<decltype(std::declval<const E &>().prepare())>>
+struct has_prepare<E,
+    std::void_t<decltype(std::declval<const E &>().prepare())>>
     : std::true_type {};
 
-template <class, class, class = void> struct has_assign_into : std::false_type {};
+template <class, class, class = void>
+struct has_assign_into : std::false_type {};
 template <class E, class T>
 struct has_assign_into<E, T,
     std::void_t<decltype(std::declval<const E &>().assign_into(
@@ -95,7 +98,8 @@ struct has_cost<E, std::void_t<decltype(E::cost)>> : std::true_type {};
 
 template <class, class = void> struct has_packet_ok : std::false_type {};
 template <class E>
-struct has_packet_ok<E, std::void_t<decltype(E::packet_ok)>> : std::true_type {};
+struct has_packet_ok<E, std::void_t<decltype(E::packet_ok)>> : std::true_type {
+};
 
 template <class E>
 constexpr int
@@ -149,9 +153,7 @@ expr_lvalue(const E &e, size_t i)
 template <class E>
 constexpr size_t
 expr_grain()
-{
-    return std::max<size_t>(1024, size_t(65536) / size_t(expr_cost<E>()));
-}
+{ return std::max<size_t>(1024, size_t(65536) / size_t(expr_cost<E>())); }
 
 // Outputs at least this large are written with non-temporal stores: they
 // would not stay in cache anyway, and streaming skips the read-for-ownership
@@ -200,9 +202,10 @@ check_expr_shape(const Dst &dst, const E &e)
     for (int d = 0; d < Dst::rank; ++d)
         if (e.size(d) != dst.size(d))
             throw std::runtime_error("tensorET = expression: shape mismatch "
-                                     "in dimension " + std::to_string(d) +
-                                     " (" + std::to_string(dst.size(d)) +
-                                     " vs " + std::to_string(e.size(d)) + ")");
+                                     "in dimension " +
+                                     std::to_string(d) + " (" +
+                                     std::to_string(dst.size(d)) + " vs " +
+                                     std::to_string(e.size(d)) + ")");
 }
 
 // dst = e, element-wise, into dst's existing buffer.
@@ -213,8 +216,8 @@ assign_expr(Dst &dst, const E &e)
     using T = typename Dst::value_type;
     static_assert(Dst::on_host, "expressions are evaluated on the host only");
     if constexpr (has_rank<E>::value)
-        static_assert(E::rank == Dst::rank,
-            "tensorET = expression: rank mismatch");
+        static_assert(
+            E::rank == Dst::rank, "tensorET = expression: rank mismatch");
     check_expr_shape(dst, e);
     const size_t n = dst.size();
     if (n == 0) return;

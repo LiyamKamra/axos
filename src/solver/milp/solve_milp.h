@@ -3,11 +3,11 @@
 // solve_milp(problem, options): the AXOS MILP solver.
 //
 //   1. presolve: the LP presolve (presolve/presolve.h: empty, fixed and
-//      singleton rows / columns, duplicate rows), integrality carried to
-//      the reduced columns through its column map, integer bounds rounded
+//      singleton rows / columns, duplicate rows), integrality carried to the
+//      reduced columns through its column map, integer bounds rounded
 //   2. branch and cut on the reduced problem (bnb.h)
-//   3. postsolve of the best solution and a feasibility check on the
-//      ORIGINAL problem (check_milp): a solution failing it is not reported
+//   3. postsolve of the best solution and a feasibility check on the ORIGINAL
+//      problem (check_milp): a solution failing it is not reported
 //
 // Objective values and bounds are in minimization form (io/mps.h negates the
 // costs of a maximization problem and sets maximize): negate them for output
@@ -23,13 +23,12 @@
 namespace AXOS {
 namespace Solver {
 
-// MIP coefficient tightening (M. Savelsbergh, "Preprocessing and probing
-// techniques for mixed integer programming problems", ORSA J. Computing 6,
-// 1994) on one-sided rows a x <= b: when a binary x_k leaves the row
-// redundant at one of its values (the largest activity then stays below b by
-// d > 0), its coefficient moves toward zero by d (and b by d when a_k > 0).
-// The integer points are unchanged; the LP relaxation gets tighter. Returns
-// the number of coefficients changed.
+// MIP coefficient tightening (M. Savelsbergh, ORSA J. Computing 6, 1994) on
+// one-sided rows a x <= b: when a binary x_k leaves the row redundant at one of
+// its values (the largest activity then stays below b by d > 0), its
+// coefficient moves toward zero by d (and b by d when a_k > 0). The integer
+// points are unchanged; the LP relaxation gets tighter. Returns the number of
+// changes.
 inline int
 tighten_coefficients(LpProblem &p)
 {
@@ -41,7 +40,7 @@ tighten_coefficients(LpProblem &p)
     int changed = 0;
     for (size_t i = 0; i < m; ++i) {
         const bool lf = fin(p.row_lb[i]), uf = fin(p.row_ub[i]);
-        if (lf == uf) continue; // ranged, equality or free
+        if (lf == uf) continue;             // ranged, equality or free
         const double sgn = uf ? 1.0 : -1.0; // sgn a x <= b
         double b = uf ? p.row_ub[i] : -p.row_lb[i];
         double maxact = 0;
@@ -50,8 +49,10 @@ tighten_coefficients(LpProblem &p)
             const double a = sgn * va[k];
             const int j = ci[k];
             const double bd = a > 0 ? p.col_ub[j] : p.col_lb[j];
-            if (!fin(bd)) finite = false;
-            else maxact += a * bd;
+            if (!fin(bd))
+                finite = false;
+            else
+                maxact += a * bd;
         }
         if (!finite) continue;
         for (int32_t k = rp[i]; k < rp[i + 1]; ++k) {
@@ -74,8 +75,10 @@ tighten_coefficients(LpProblem &p)
                 }
             }
         }
-        if (uf) p.row_ub[i] = b;
-        else p.row_lb[i] = -b;
+        if (uf)
+            p.row_ub[i] = b;
+        else
+            p.row_lb[i] = -b;
     }
     if (changed) p.A = HostMatrix(m, n, rp, ci, va);
     return changed;
@@ -86,7 +89,9 @@ solve_milp(const LpProblem &orig, const MilpOptions &opt)
 {
     const auto t0 = std::chrono::steady_clock::now();
     auto elapsed = [&] {
-        return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        return std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - t0)
+            .count();
     };
     MilpSolution out;
     const std::string bad = orig.validate();
@@ -104,7 +109,8 @@ solve_milp(const LpProblem &orig, const MilpOptions &opt)
         work = pre->reduced();
         work.is_integer.assign(work.cols(), 0);
         if (!orig.is_integer.empty())
-            for (size_t k = 0; k < work.cols(); ++k) work.is_integer[k] = orig.is_integer[pre->col_map()[k]];
+            for (size_t k = 0; k < work.cols(); ++k)
+                work.is_integer[k] = orig.is_integer[pre->col_map()[k]];
     } else {
         work = orig;
         if (work.is_integer.empty()) work.is_integer.assign(work.cols(), 0);
@@ -122,7 +128,8 @@ solve_milp(const LpProblem &orig, const MilpOptions &opt)
 
     const int tightened = opt.presolve ? tighten_coefficients(work) : 0;
     if (opt.verbose && tightened)
-        std::printf("[milp] coefficient tightening changed %d coefficients\n", tightened);
+        std::printf("[milp] coefficient tightening changed %d coefficients\n",
+            tightened);
 
     MilpSolution s;
     if (work.cols() == 0 || work.rows() == 0) {
@@ -132,7 +139,8 @@ solve_milp(const LpProblem &orig, const MilpOptions &opt)
         for (size_t j = 0; j < work.cols(); ++j) {
             const double c = work.c[j];
             double v = c > 0 ? work.col_lb[j] : (c < 0 ? work.col_ub[j] : 0.0);
-            if (c == 0) v = std::min(std::max(0.0, work.col_lb[j]), work.col_ub[j]);
+            if (c == 0)
+                v = std::min(std::max(0.0, work.col_lb[j]), work.col_ub[j]);
             if (!std::isfinite(v)) unbounded = true;
             x[j] = v;
         }
@@ -169,10 +177,12 @@ solve_milp(const LpProblem &orig, const MilpOptions &opt)
             out.x = x;
             out.objective = c.objective;
         } else if (opt.verbose) {
-            std::printf("[milp] postsolved solution fails the check: bounds %.2e rows %.2e integrality %.2e\n",
+            std::printf("[milp] postsolved solution fails the check: bounds "
+                        "%.2e rows %.2e integrality %.2e\n",
                 c.bound_viol, c.row_viol, c.int_viol);
         }
-        if (out.x.empty() && out.status == Status::Optimal) out.status = Status::NumericalError;
+        if (out.x.empty() && out.status == Status::Optimal)
+            out.status = Status::NumericalError;
     }
     out.seconds = elapsed();
     return out;

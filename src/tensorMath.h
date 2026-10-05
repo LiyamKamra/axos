@@ -92,7 +92,8 @@ void
 check_same_shape(const L &l, const R &r)
 {
     if constexpr (has_rank<L>::value && has_rank<R>::value) {
-        static_assert(L::rank == R::rank, "element-wise operation: rank mismatch");
+        static_assert(
+            L::rank == R::rank, "element-wise operation: rank mismatch");
         for (int d = 0; d < L::rank; ++d)
             if (l.size(d) != r.size(d))
                 throw std::runtime_error(
@@ -114,30 +115,50 @@ namespace op {
 struct Add {
     static constexpr int cost = 1;
     static constexpr bool has_packet = true;
-    template <class T> static T apply(const T &a, const T &b) { return a + b; }
+    template <class T>
+    static T
+    apply(const T &a, const T &b)
+    { return a + b; }
     template <class P, class R>
-    static AXOS_INLINE R packet(R a, R b) { return P::add(a, b); }
+    static AXOS_INLINE R
+    packet(R a, R b)
+    { return P::add(a, b); }
 };
 struct Sub {
     static constexpr int cost = 1;
     static constexpr bool has_packet = true;
-    template <class T> static T apply(const T &a, const T &b) { return a - b; }
+    template <class T>
+    static T
+    apply(const T &a, const T &b)
+    { return a - b; }
     template <class P, class R>
-    static AXOS_INLINE R packet(R a, R b) { return P::sub(a, b); }
+    static AXOS_INLINE R
+    packet(R a, R b)
+    { return P::sub(a, b); }
 };
 struct Mul {
     static constexpr int cost = 1;
     static constexpr bool has_packet = true;
-    template <class T> static T apply(const T &a, const T &b) { return a * b; }
+    template <class T>
+    static T
+    apply(const T &a, const T &b)
+    { return a * b; }
     template <class P, class R>
-    static AXOS_INLINE R packet(R a, R b) { return P::mul(a, b); }
+    static AXOS_INLINE R
+    packet(R a, R b)
+    { return P::mul(a, b); }
 };
 struct Div {
     static constexpr int cost = 4;
     static constexpr bool has_packet = true;
-    template <class T> static T apply(const T &a, const T &b) { return a / b; }
+    template <class T>
+    static T
+    apply(const T &a, const T &b)
+    { return a / b; }
     template <class P, class R>
-    static AXOS_INLINE R packet(R a, R b) { return P::div(a, b); }
+    static AXOS_INLINE R
+    packet(R a, R b)
+    { return P::div(a, b); }
 };
 
 // Scalar math that also works for half types (through float) and
@@ -154,16 +175,16 @@ via(T x, F f)
         return f(x);
 }
 
-#define AXOS_UNARY_FN(Name, expr, Cost, Packet)                                \
-    struct Name {                                                              \
-        static constexpr int cost = Cost;                                      \
-        static constexpr bool has_packet = Packet;                             \
-        template <class T>                                                     \
-        static T                                                               \
-        apply(const T &x)                                                      \
-        {                                                                      \
-            return via(x, [](auto v) { return expr; });                        \
-        }                                                                      \
+#define AXOS_UNARY_FN(Name, expr, Cost, Packet) \
+    struct Name { \
+        static constexpr int cost = Cost; \
+        static constexpr bool has_packet = Packet; \
+        template <class T> \
+        static T \
+        apply(const T &x) \
+        { \
+            return via(x, [](auto v) { return expr; }); \
+        } \
     };
 AXOS_UNARY_FN(Exp, std::exp(v), 20, false)
 AXOS_UNARY_FN(Log, std::log(v), 20, false)
@@ -184,7 +205,10 @@ struct Sqrt {
     {
         return via(x, [](auto v) { return std::sqrt(v); });
     }
-    template <class P, class R> static AXOS_INLINE R packet(R a) { return P::sqrt(a); }
+    template <class P, class R>
+    static AXOS_INLINE R
+    packet(R a)
+    { return P::sqrt(a); }
 };
 struct Fabs {
     static constexpr int cost = 1;
@@ -198,13 +222,22 @@ struct Fabs {
         else
             return via(x, [](auto v) { return std::abs(v); });
     }
-    template <class P, class R> static AXOS_INLINE R packet(R a) { return P::abs(a); }
+    template <class P, class R>
+    static AXOS_INLINE R
+    packet(R a)
+    { return P::abs(a); }
 };
 struct Neg {
     static constexpr int cost = 1;
     static constexpr bool has_packet = true;
-    template <class T> static T apply(const T &x) { return -x; }
-    template <class P, class R> static AXOS_INLINE R packet(R a) { return P::neg(a); }
+    template <class T>
+    static T
+    apply(const T &x)
+    { return -x; }
+    template <class P, class R>
+    static AXOS_INLINE R
+    packet(R a)
+    { return P::neg(a); }
 };
 
 } // namespace op
@@ -218,25 +251,27 @@ class BinaryExpr : public Expr<T, BinaryExpr<T, L, R, Op>>,
   public:
     static constexpr int cost =
         detail::raw_cost<L>() + detail::raw_cost<R>() + Op::cost;
-    static constexpr bool packet_ok =
-        Op::has_packet && detail::packet_ok_of<L>() && detail::packet_ok_of<R>();
+    static constexpr bool packet_ok = Op::has_packet &&
+                                      detail::packet_ok_of<L>() &&
+                                      detail::packet_ok_of<R>();
 
     BinaryExpr(const L &l, const R &r) : l_(l), r_(r)
-    {
-        detail::check_same_shape(l, r);
-    }
+    { detail::check_same_shape(l, r); }
 
-    T value(size_t i) const { return Op::apply(T(l_.value(i)), T(r_.value(i))); }
-    size_t size(int d) const { return l_.size(d); }
+    T
+    value(size_t i) const
+    { return Op::apply(T(l_.value(i)), T(r_.value(i))); }
+    size_t
+    size(int d) const
+    { return l_.size(d); }
     bool
     contiguous() const
-    {
-        return detail::expr_contiguous(l_) && detail::expr_contiguous(r_);
-    }
+    { return detail::expr_contiguous(l_) && detail::expr_contiguous(r_); }
     T
     lvalue(size_t i) const
     {
-        return Op::apply(T(detail::expr_lvalue(l_, i)), T(detail::expr_lvalue(r_, i)));
+        return Op::apply(
+            T(detail::expr_lvalue(l_, i)), T(detail::expr_lvalue(r_, i)));
     }
     void
     prepare() const
@@ -263,15 +298,26 @@ class ScalarExpr : public Expr<T, ScalarExpr<T, E, Op, Left>>,
                    public detail::rank_from<E> {
   public:
     static constexpr int cost = detail::raw_cost<E>() + Op::cost;
-    static constexpr bool packet_ok = Op::has_packet && detail::packet_ok_of<E>();
+    static constexpr bool packet_ok =
+        Op::has_packet && detail::packet_ok_of<E>();
 
     ScalarExpr(const E &e, T s) : e_(e), s_(s) {}
 
-    T value(size_t i) const { return apply(T(e_.value(i))); }
-    size_t size(int d) const { return e_.size(d); }
-    bool contiguous() const { return detail::expr_contiguous(e_); }
-    T lvalue(size_t i) const { return apply(T(detail::expr_lvalue(e_, i))); }
-    void prepare() const { detail::expr_prepare(e_); }
+    T
+    value(size_t i) const
+    { return apply(T(e_.value(i))); }
+    size_t
+    size(int d) const
+    { return e_.size(d); }
+    bool
+    contiguous() const
+    { return detail::expr_contiguous(e_); }
+    T
+    lvalue(size_t i) const
+    { return apply(T(detail::expr_lvalue(e_, i))); }
+    void
+    prepare() const
+    { detail::expr_prepare(e_); }
     template <class P>
     AXOS_INLINE typename P::reg
     packet(size_t i) const
@@ -298,24 +344,34 @@ class ScalarExpr : public Expr<T, ScalarExpr<T, E, Op, Left>>,
 };
 
 template <class T, class E, class F>
-class UnaryExpr : public Expr<T, UnaryExpr<T, E, F>>, public detail::rank_from<E> {
+class UnaryExpr : public Expr<T, UnaryExpr<T, E, F>>,
+                  public detail::rank_from<E> {
   public:
     static constexpr int cost = detail::raw_cost<E>() + F::cost;
-    static constexpr bool packet_ok = F::has_packet && detail::packet_ok_of<E>();
+    static constexpr bool packet_ok =
+        F::has_packet && detail::packet_ok_of<E>();
 
     explicit UnaryExpr(const E &e) : e_(e) {}
 
-    T value(size_t i) const { return F::apply(T(e_.value(i))); }
-    size_t size(int d) const { return e_.size(d); }
-    bool contiguous() const { return detail::expr_contiguous(e_); }
-    T lvalue(size_t i) const { return F::apply(T(detail::expr_lvalue(e_, i))); }
-    void prepare() const { detail::expr_prepare(e_); }
+    T
+    value(size_t i) const
+    { return F::apply(T(e_.value(i))); }
+    size_t
+    size(int d) const
+    { return e_.size(d); }
+    bool
+    contiguous() const
+    { return detail::expr_contiguous(e_); }
+    T
+    lvalue(size_t i) const
+    { return F::apply(T(detail::expr_lvalue(e_, i))); }
+    void
+    prepare() const
+    { detail::expr_prepare(e_); }
     template <class P>
     AXOS_INLINE typename P::reg
     packet(size_t i) const
-    {
-        return F::template packet<P>(e_.template packet<P>(i));
-    }
+    { return F::template packet<P>(e_.template packet<P>(i)); }
 
   private:
     detail::nested_t<E> e_;
@@ -323,25 +379,19 @@ class UnaryExpr : public Expr<T, UnaryExpr<T, E, F>>, public detail::rank_from<E
 
 // ---- operators ------------------------------------------------------------
 
-#define AXOS_BINARY_OPERATOR(sym, Op)                                          \
-    template <class T, class L, class R>                                       \
-    BinaryExpr<T, L, R, detail::op::Op>                                        \
-    operator sym(const Expr<T, L> &l, const Expr<T, R> &r)                     \
-    {                                                                          \
-        return BinaryExpr<T, L, R, detail::op::Op>(l.self(), r.self());        \
-    }                                                                          \
-    template <class T, class L>                                                \
-    ScalarExpr<T, L, detail::op::Op, false>                                    \
-    operator sym(const Expr<T, L> &l, detail::scalar_arg_t<T> s)               \
-    {                                                                          \
-        return ScalarExpr<T, L, detail::op::Op, false>(l.self(), s);           \
-    }                                                                          \
-    template <class T, class R>                                                \
-    ScalarExpr<T, R, detail::op::Op, true>                                     \
-    operator sym(detail::scalar_arg_t<T> s, const Expr<T, R> &r)               \
-    {                                                                          \
-        return ScalarExpr<T, R, detail::op::Op, true>(r.self(), s);            \
-    }
+#define AXOS_BINARY_OPERATOR(sym, Op) \
+    template <class T, class L, class R> \
+    BinaryExpr<T, L, R, detail::op::Op> operator sym( \
+        const Expr<T, L> &l, const Expr<T, R> &r) \
+    { return BinaryExpr<T, L, R, detail::op::Op>(l.self(), r.self()); } \
+    template <class T, class L> \
+    ScalarExpr<T, L, detail::op::Op, false> operator sym( \
+        const Expr<T, L> &l, detail::scalar_arg_t<T> s) \
+    { return ScalarExpr<T, L, detail::op::Op, false>(l.self(), s); } \
+    template <class T, class R> \
+    ScalarExpr<T, R, detail::op::Op, true> operator sym( \
+        detail::scalar_arg_t<T> s, const Expr<T, R> &r) \
+    { return ScalarExpr<T, R, detail::op::Op, true>(r.self(), s); }
 AXOS_BINARY_OPERATOR(+, Add)
 AXOS_BINARY_OPERATOR(-, Sub)
 AXOS_BINARY_OPERATOR(*, Mul)
@@ -351,17 +401,12 @@ AXOS_BINARY_OPERATOR(/, Div)
 template <class T, class E>
 UnaryExpr<T, E, detail::op::Neg>
 operator-(const Expr<T, E> &e)
-{
-    return UnaryExpr<T, E, detail::op::Neg>(e.self());
-}
+{ return UnaryExpr<T, E, detail::op::Neg>(e.self()); }
 
-#define AXOS_UNARY_FUNCTION(name, F)                                           \
-    template <class T, class E>                                                \
-    UnaryExpr<T, E, detail::op::F>                                             \
-    name(const Expr<T, E> &e)                                                  \
-    {                                                                          \
-        return UnaryExpr<T, E, detail::op::F>(e.self());                       \
-    }
+#define AXOS_UNARY_FUNCTION(name, F) \
+    template <class T, class E> \
+    UnaryExpr<T, E, detail::op::F> name(const Expr<T, E> &e) \
+    { return UnaryExpr<T, E, detail::op::F>(e.self()); }
 AXOS_UNARY_FUNCTION(sqrt, Sqrt)
 AXOS_UNARY_FUNCTION(exp, Exp)
 AXOS_UNARY_FUNCTION(Log, Log)
@@ -429,7 +474,9 @@ class MatMulExpr : public Expr<T, MatMulExpr<T, SA, SB>> {
                                      std::to_string(B.size(0)) + ")");
     }
 
-    size_t size(int d) const { return d == 0 ? A_.size(0) : B_.size(1); }
+    size_t
+    size(int d) const
+    { return d == 0 ? A_.size(0) : B_.size(1); }
 
     T
     value(size_t i) const
@@ -454,9 +501,7 @@ class MatMulExpr : public Expr<T, MatMulExpr<T, SA, SB>> {
     template <class P>
     AXOS_INLINE typename P::reg
     packet(size_t i) const
-    {
-        return P::loadu(cache_.data + i);
-    }
+    { return P::loadu(cache_.data + i); }
 
     // Direct evaluation into a contiguous m x n destination, unless it
     // overlaps an operand.
@@ -475,8 +520,8 @@ class MatMulExpr : public Expr<T, MatMulExpr<T, SA, SB>> {
     void
     run(T *dst) const
     {
-        kernels::gemm<T>(false, false, A_.size(0), B_.size(1), A_.size(1),
-            T(1), A_.data, A_.stride(0), B_.data, B_.stride(0), T(0), dst,
+        kernels::gemm<T>(false, false, A_.size(0), B_.size(1), A_.size(1), T(1),
+            A_.data, A_.stride(0), B_.data, B_.stride(0), T(0), dst,
             B_.size(1));
     }
     const MA &A_;
@@ -503,13 +548,14 @@ gemv(const tensorET<2, T, SA> &A, const tensorET<1, T, SX> &x,
     const size_t m = A.size(0), n = A.size(1);
     if (x.size() != (trans ? m : n) || y.size() != (trans ? n : m))
         throw std::runtime_error("gemv: dimension mismatch");
-    kernels::gemv<T>(trans, m, n, alpha, A.data, A.stride(0), x.data, beta,
-        y.data);
+    kernels::gemv<T>(
+        trans, m, n, alpha, A.data, A.stride(0), x.data, beta, y.data);
 }
 
 template <class T, class SA, class SX>
 tensorET<1, T>
-matVec(const tensorET<2, T, SA> &A, const tensorET<1, T, SX> &x, bool trans = false)
+matVec(const tensorET<2, T, SA> &A, const tensorET<1, T, SX> &x,
+    bool trans = false)
 {
     tensorET<1, T> y(trans ? A.size(1) : A.size(0));
     gemv(A, x, y, T(1), T(0), trans);
@@ -526,8 +572,8 @@ matMulTile(const tensorET<2, T, SA> &A, const tensorET<2, T, SB> &B)
         throw std::runtime_error("matMulTile: inner dimensions differ");
     tensorET<2, T> C(std::array<size_t, 2>{m, n});
     if (n == 1 && B.is_contiguous())
-        kernels::gemv<T>(false, m, k, T(1), A.data, A.stride(0), B.data, T(0),
-            C.data);
+        kernels::gemv<T>(
+            false, m, k, T(1), A.data, A.stride(0), B.data, T(0), C.data);
     else
         kernels::gemm<T>(false, false, m, n, k, T(1), A.data, A.stride(0),
             B.data, B.stride(0), T(0), C.data, n);
@@ -537,9 +583,7 @@ matMulTile(const tensorET<2, T, SA> &A, const tensorET<2, T, SB> &B)
 template <class T, class SA, class SX>
 tensorET<1, T>
 matMulTile(const tensorET<2, T, SA> &A, const tensorET<1, T, SX> &x)
-{
-    return matVec(A, x);
-}
+{ return matVec(A, x); }
 
 // C = alpha op(A) op(B) + beta bias   (accumulate: C += the same).
 // C is allocated when empty; otherwise its shape must match. `m` is a
@@ -568,16 +612,19 @@ matMulBlocked(const tensorET<2, T, SA> &A, const tensorET<2, T, SB> &B,
         throw std::runtime_error("matMulBlocked: C has the wrong shape");
     if (bias && (bias->size(0) != M || bias->size(1) != N))
         throw std::runtime_error("matMulBlocked: bias has the wrong shape");
-    if (detail::overlaps(C, A) || detail::overlaps(C, B)) { // C aliases an operand
+    if (detail::overlaps(C, A) ||
+        detail::overlaps(C, B)) { // C aliases an operand
         tensorET<2, T> tmp = C.clone();
-        matMulBlocked(A, B, tmp, m, alpha, bias, beta, transA, transB, accumulate);
+        matMulBlocked(
+            A, B, tmp, m, alpha, bias, beta, transA, transB, accumulate);
         Cpu::Backend::copy_data(C, tmp);
         return;
     }
     T cbeta = accumulate ? T(1) : T(0);
     if (bias) {
         const size_t ldc = C.stride(0), ldb = bias->stride(0);
-        detail::parallel_for(M, std::max<size_t>(1, 32768 / std::max<size_t>(N, 1)),
+        detail::parallel_for(
+            M, std::max<size_t>(1, 32768 / std::max<size_t>(N, 1)),
             [&](size_t r0, size_t r1) {
                 for (size_t i = r0; i < r1; ++i) {
                     T *c = C.data + i * ldc;
@@ -585,7 +632,8 @@ matMulBlocked(const tensorET<2, T, SA> &A, const tensorET<2, T, SB> &B,
                     for (size_t j = 0; j < N; ++j)
                         c[j] = accumulate ? c[j] + beta * b[j] : beta * b[j];
                 }
-            }, 1);
+            },
+            1);
         cbeta = T(1);
     }
     kernels::gemm<T>(transA, transB, M, N, K, alpha, A.data, A.stride(0),
@@ -598,7 +646,8 @@ template <int R, class T, class SA, class SB>
 tensorET<R, T>
 matMulND(const tensorET<R, T, SA> &A, const tensorET<R, T, SB> &B)
 {
-    static_assert(R >= 3, "matMulND needs rank >= 3 (use matMulTile for matrices)");
+    static_assert(
+        R >= 3, "matMulND needs rank >= 3 (use matMulTile for matrices)");
     std::array<size_t, R> shape{};
     size_t batch = 1;
     for (int d = 0; d < R - 2; ++d) {
@@ -620,11 +669,16 @@ matMulND(const tensorET<R, T, SA> &A, const tensorET<R, T, SB> &B)
             B.data + b * k * n, n, T(0), C.data + b * m * n, n);
     };
     if (double(m) * n * k < kernels::blas_detail::kParallelFma && batch > 1)
-        detail::parallel_for(batch, 1, [&](size_t b0, size_t b1) {
-            for (size_t b = b0; b < b1; ++b) one(b);
-        }, 1);
+        detail::parallel_for(
+            batch, 1,
+            [&](size_t b0, size_t b1) {
+                for (size_t b = b0; b < b1; ++b)
+                    one(b);
+            },
+            1);
     else
-        for (size_t b = 0; b < batch; ++b) one(b);
+        for (size_t b = 0; b < batch; ++b)
+            one(b);
     return C;
 }
 
@@ -690,8 +744,8 @@ transpose(const tensorET<2, T, S> &A)
 {
     static_assert(is_host_storage_v<S>, "transpose works on host tensors");
     tensorET<2, T> B(std::array<size_t, 2>{A.size(1), A.size(0)});
-    kernels::transpose<T>(A.size(0), A.size(1), A.data, A.stride(0), B.data,
-        A.size(0));
+    kernels::transpose<T>(
+        A.size(0), A.size(1), A.data, A.stride(0), B.data, A.size(0));
     return B;
 }
 

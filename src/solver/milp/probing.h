@@ -4,12 +4,12 @@
 // binaries at once, is gpu::probe_binaries in milp_cuda.h).
 //
 // Each binary x_j is propagated at 0 and at 1 (propagate.h). A probe that
-// empties the domain fixes x_j the other way (and keeps that probe's
+// empties the domain fixes x_j the other way (keeping that probe's
 // implications); otherwise, for every other column, the weaker of the two
 // probes' bounds holds whichever value x_j takes ("double probing") and
-// replaces the global bound when tighter. Both probes empty: infeasible.
-// The work per probe is that of its propagation: only the columns a probe
-// changed (its trail) are compared.
+// replaces the global bound when tighter. Both probes empty: infeasible. The
+// work per probe is that of its propagation: only the columns the probe changed
+// (its trail) are compared.
 #pragma once
 
 #include "solver/milp/milp_model.h"
@@ -28,16 +28,23 @@ struct ProbingStats {
 };
 
 inline ProbingStats
-probe_binaries_cpu(Propagator &prop, const LpProblem &p, std::vector<double> &lb, std::vector<double> &ub,
-    double seconds)
+probe_binaries_cpu(Propagator &prop, const LpProblem &p,
+    std::vector<double> &lb, std::vector<double> &ub, double seconds)
 {
     const auto t0 = std::chrono::steady_clock::now();
-    auto elapsed = [&] { return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(); };
+    auto elapsed = [&] {
+        return std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - t0)
+            .count();
+    };
     ProbingStats st;
     const size_t n = p.cols();
-    std::vector<double> wl = lb, wu = ub; // working domain, equal to lb/ub between probes
+    std::vector<double> wl = lb,
+                        wu =
+                            ub; // working domain, equal to lb/ub between probes
     std::vector<int> mark(n, -1), c0;
-    std::vector<double> pl(n), pu(n);    // probe 0 bounds of the columns it changed
+    std::vector<double> pl(n),
+        pu(n); // probe 0 bounds of the columns it changed
     std::vector<int> changed(1);
     std::vector<std::pair<int, std::pair<double, double>>> upd;
     Trail tr;
@@ -93,17 +100,21 @@ probe_binaries_cpu(Propagator &prop, const LpProblem &p, std::vector<double> &lb
             ++st.fixed;
             continue;
         }
-        // both feasible: the weaker bound of the two probes, where both moved it
+        // both feasible: the weaker bound of the two probes, where both moved
+        // it
         upd.clear();
         for (int t : tr.col) {
             if (t == j || mark[t] != j) continue;
-            const double l2 = std::min(pl[t], wl[t]), u2 = std::max(pu[t], wu[t]);
-            if (l2 > lb[t] + 1e-9 || u2 < ub[t] - 1e-9) upd.push_back({t, {l2, u2}});
+            const double l2 = std::min(pl[t], wl[t]),
+                         u2 = std::max(pu[t], wu[t]);
+            if (l2 > lb[t] + 1e-9 || u2 < ub[t] - 1e-9)
+                upd.push_back({t, {l2, u2}});
         }
         tr.undo(0, wl, wu);
         for (auto &e : upd) {
             const int t = e.first;
-            if (mark[t] == -2 - j) continue; // the trail may list a column twice
+            if (mark[t] == -2 - j)
+                continue; // the trail may list a column twice
             mark[t] = -2 - j;
             if (e.second.first > lb[t] + 1e-9) {
                 lb[t] = wl[t] = e.second.first;

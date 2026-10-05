@@ -122,7 +122,7 @@ build/bench_lp: build/bench_lp.o | build
 
 benchmark_lp: build/bench_lp
 	./build/bench_lp | tee build/bench_lp_axos.txt
-	~/python_junk/.venv/bin/python benchmarks/solver/bench_highs.py | tee build/bench_lp_highs.txt
+	/home/a/programs/python/.venv/bin/python benchmarks/solver/bench_highs.py | tee build/bench_lp_highs.txt
 
 # ── run_mps (real LP instances: netlib, Mittelmann) ──────────────────────────
 build/run_mps.o: benchmarks/solver/run_mps.cpp $(SOLVER_HDRS) | build
@@ -142,8 +142,8 @@ build/bench_sparse: build/bench_sparse.o | build
 
 benchmark_sparse: build/bench_sparse
 	./build/bench_sparse | tee build/bench_sparse_axos.txt
-	~/python_junk/.venv/bin/python benchmarks/sparse/bench_torch.py | tee build/bench_sparse_torch.txt
-	~/python_junk/.venv/bin/python benchmarks/sparse/report.py build/bench_sparse_axos.txt build/bench_sparse_torch.txt
+	/home/a/programs/python/.venv/bin/python benchmarks/sparse/bench_torch.py | tee build/bench_sparse_torch.txt
+	/home/a/programs/python/.venv/bin/python benchmarks/sparse/report.py build/bench_sparse_axos.txt build/bench_sparse_torch.txt
 
 # ── QP: HPR-QP / PDHCG (GPU kernels compiled at run time by NVRTC, no nvcc) ──
 # run_qp: bash benchmarks/qp/build.sh (also on Windows / Git Bash with MSVC).

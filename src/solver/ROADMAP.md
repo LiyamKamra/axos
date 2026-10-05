@@ -32,7 +32,7 @@ src/solver/
   presolve/          reductions + postsolve stack
   lp/pdlp.h          stage 1b
   lp/ipm.h           stage 1c
-  lp/dual_simplex.h  stage 1d
+  lp/simplex.h       stage 1d
   mip/               stage 2
   qp/                stage 3
   nlp/               stage 5

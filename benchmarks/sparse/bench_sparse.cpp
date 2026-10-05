@@ -140,14 +140,15 @@ export_matrix(const std::string &dir, const std::string &name, const HostCsr &A)
 // ─── operation benchmarks ────────────────────────────────────────────────────
 template <typename Csr_, typename VS>
 static void
-bench_axos_ops(const char *lib, const std::string &name, const HostCsr &H,
-    bool do_spgemm)
+bench_axos_ops(
+    const char *lib, const std::string &name, const HostCsr &H, bool do_spgemm)
 {
     using S = tensorET<1, double, VS>;
     Csr_ A(H);
     const size_t m = H.rows(), n = H.cols(), k = 16;
     tensorET<1, double> hx({n}, 0.0);
-    for (size_t i = 0; i < n; ++i) hx.data[i] = std::sin(0.001 * i);
+    for (size_t i = 0; i < n; ++i)
+        hx.data[i] = std::sin(0.001 * i);
     S x(hx), y({m}, 0.0), yt({n}, 0.0);
     tensorET<2, double> hX({n, k}, 0.5);
     tensorET<2, double, VS> X(hX), Y({m, k}, 0.0);
@@ -161,10 +162,13 @@ bench_axos_ops(const char *lib, const std::string &name, const HostCsr &H,
         (void)T;
     }));
     if (do_spgemm)
-        result(lib, "spgemm", name, bench([&] {
-            Csr_ C = spgemm(A, A);
-            (void)C;
-        }, 0.4, 3, 50));
+        result(lib, "spgemm", name,
+            bench(
+                [&] {
+                    Csr_ C = spgemm(A, A);
+                    (void)C;
+                },
+                0.4, 3, 50));
 }
 
 static void
@@ -173,9 +177,10 @@ bench_eigen_ops(const std::string &name, const HostCsr &H, bool do_spgemm)
     EMapSp A(H.rows(), H.cols(), H.nnz(), H.row_ptr(), H.col_ind(), H.values());
     const size_t m = H.rows(), n = H.cols(), k = 16;
     Eigen::VectorXd x(n), y(m), yt(n);
-    for (size_t i = 0; i < n; ++i) x(i) = std::sin(0.001 * i);
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> X =
-        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
+    for (size_t i = 0; i < n; ++i)
+        x(i) = std::sin(0.001 * i);
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+        X = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
             Eigen::RowMajor>::Constant(n, k, 0.5),
         Y(m, k);
     result("eigen", "spmv", name, bench([&] { y.noalias() = A * x; }));
@@ -187,10 +192,13 @@ bench_eigen_ops(const std::string &name, const HostCsr &H, bool do_spgemm)
         (void)T;
     }));
     if (do_spgemm)
-        result("eigen", "spgemm", name, bench([&] {
-            ESp C = A * A;
-            (void)C;
-        }, 0.4, 3, 50));
+        result("eigen", "spgemm", name,
+            bench(
+                [&] {
+                    ESp C = A * A;
+                    (void)C;
+                },
+                0.4, 3, 50));
 }
 
 // Cross-check AXOS and Eigen results on one matrix so the timings compare
@@ -202,7 +210,8 @@ check_agreement(const std::string &name, const HostCsr &H, bool do_spgemm)
     const size_t n = H.cols();
     tensorET<1, double> x({n}, 0.0), y({H.rows()}, 0.0);
     Eigen::VectorXd ex(n);
-    for (size_t i = 0; i < n; ++i) x.data[i] = ex(i) = std::sin(0.001 * i);
+    for (size_t i = 0; i < n; ++i)
+        x.data[i] = ex(i) = std::sin(0.001 * i);
     spmv(H, x, y);
     Eigen::VectorXd ey = A * ex;
     double e = 0;
@@ -238,8 +247,8 @@ bench_ldl(const char *lib, const std::string &name, const HostCsr &H,
 static void
 bench_eigen_ldl(const std::string &name, const HostCsr &H)
 {
-    Eigen::SparseMatrix<double> A = EMapSp(H.rows(), H.cols(), H.nnz(),
-        H.row_ptr(), H.col_ind(), H.values());
+    Eigen::SparseMatrix<double> A = EMapSp(
+        H.rows(), H.cols(), H.nnz(), H.row_ptr(), H.col_ind(), H.values());
     Eigen::VectorXd b = Eigen::VectorXd::Ones(H.rows()), x;
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower,
         Eigen::AMDOrdering<int>>
@@ -247,7 +256,8 @@ bench_eigen_ldl(const std::string &name, const HostCsr &H)
     double t0 = now_ms();
     s.analyzePattern(A);
     result("eigen", "ldl_analyze", name, now_ms() - t0);
-    result("eigen", "ldl_factor", name, bench([&] { s.factorize(A); }, 0.4, 3, 30));
+    result("eigen", "ldl_factor", name,
+        bench([&] { s.factorize(A); }, 0.4, 3, 30));
     result("eigen", "ldl_solve", name, bench([&] { x = s.solve(b); }));
 }
 
@@ -265,7 +275,11 @@ main(int argc, char **argv)
     mkdir("build", 0755);
     mkdir(dir.c_str(), 0755);
 
-    struct Item { std::string name; HostCsr A; bool spgemm; };
+    struct Item {
+        std::string name;
+        HostCsr A;
+        bool spgemm;
+    };
     std::vector<Item> items;
     items.push_back({"rand20k", gen_random(20000, 10, 1), true});
     items.push_back({"lap300", gen_laplacian(300), true});
@@ -278,8 +292,10 @@ main(int argc, char **argv)
     ldl_items.push_back({"lap200", gen_laplacian(200), false});
     ldl_items.push_back({"lap400", gen_laplacian(400), false});
 
-    for (auto &it : items) export_matrix(dir, it.name, it.A);
-    for (auto &it : ldl_items) export_matrix(dir, it.name, it.A);
+    for (auto &it : items)
+        export_matrix(dir, it.name, it.A);
+    for (auto &it : ldl_items)
+        export_matrix(dir, it.name, it.A);
 
     printf("# matrices:");
     for (auto &it : items)
@@ -304,11 +320,12 @@ main(int argc, char **argv)
             HostCsr &A = it.A;
             bench_ldl<SparseLdlt<double, int32_t, Cpu::HostStorage>,
                 tensorET<1, double>>("axos_cpu", it.name, A, A, true);
-            {   // the scalar up-looking factorization, for comparison
+            { // the scalar up-looking factorization, for comparison
                 using Simp = SparseLdlt<double, int32_t, Cpu::HostStorage>;
                 const size_t n = A.rows();
                 tensorET<1, double> hb({n}, 1.0), x({n}, 0.0);
-                Simp s(Symmetry::SPD, Ordering::MinDegree, Factorization::Simplicial);
+                Simp s(Symmetry::SPD, Ordering::MinDegree,
+                    Factorization::Simplicial);
                 s.analyze(A);
                 if (n <= 50000) {
                     result("axos_cpu_simplicial", "ldl_factor", it.name,

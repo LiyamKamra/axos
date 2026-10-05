@@ -3,11 +3,11 @@
 // SparseLdlt on the GPU, built on NVIDIA cuDSS. Same interface as the CPU
 // solver in sparse_ldl.h. Requires -DCUDSS_WITH and -lcudss.
 //
-// analyze() runs cuDSS's reordering + symbolic phases, factorize() the
-// numeric phase (the first call factorizes, later calls refactorize with the
-// stored analysis), and solve() the triangular/diagonal solves. The matrix
-// values are read from the Csr each time, so a new Csr with the same pattern
-// can be passed to factorize().
+// analyze() runs cuDSS's reordering + symbolic phases, factorize() the numeric
+// phase (the first call factorizes, later calls refactorize with the stored
+// analysis), and solve() the triangular/diagonal solves. The values are read
+// from the Csr each time, so a new Csr with the same pattern can be passed to
+// factorize().
 #pragma once
 
 #include "sparse/sparse_ldl.h"
@@ -25,46 +25,45 @@ inline void
 check(cudssStatus_t s, const char *what)
 {
     if (s != CUDSS_STATUS_SUCCESS)
-        throw std::runtime_error(
-            std::string("cuDSS error in ") + what + " (status " +
-            std::to_string(static_cast<int>(s)) + ")");
+        throw std::runtime_error(std::string("cuDSS error in ") + what +
+                                 " (status " +
+                                 std::to_string(static_cast<int>(s)) + ")");
 }
 
-template <typename Idx> constexpr cudssDataType_t
+template <typename Idx>
+constexpr cudssDataType_t
 index_dt()
-{
-    return sizeof(Idx) == 4 ? CUDSS_R_32I : CUDSS_R_64I;
-}
+{ return sizeof(Idx) == 4 ? CUDSS_R_32I : CUDSS_R_64I; }
 
-template <typename T> constexpr cudssDataType_t
+template <typename T>
+constexpr cudssDataType_t
 value_dt()
-{
-    return std::is_same_v<T, float> ? CUDSS_R_32F : CUDSS_R_64F;
-}
+{ return std::is_same_v<T, float> ? CUDSS_R_32F : CUDSS_R_64F; }
 
 } // namespace cudss_detail
 
 template <typename T, typename Idx>
 class SparseLdlt<T, Idx, Cuda::CudaStorage> {
-    static_assert(std::is_floating_point_v<T>,
-        "SparseLdlt supports float and double");
+    static_assert(
+        std::is_floating_point_v<T>, "SparseLdlt supports float and double");
 
   public:
     using matrix_type = Csr<T, Idx, Cuda::CudaStorage>;
     using vector_type = tensorET<1, T, Cuda::CudaStorage<T>>;
 
-    explicit SparseLdlt(Symmetry kind = Symmetry::SPD,
-        Ordering ord = Ordering::MinDegree)
+    explicit SparseLdlt(
+        Symmetry kind = Symmetry::SPD, Ordering ord = Ordering::MinDegree)
         : kind_(kind)
     {
         using namespace cudss_detail;
         check(cudssConfigCreate(&config_), "cudssConfigCreate");
         if (ord == Ordering::MinDegree || ord == Ordering::NestedDissection) {
-            cudssReorderingAlg_t alg = ord == Ordering::MinDegree
-                                           ? CUDSS_REORDERING_ALG_AMD
-                                           : CUDSS_REORDERING_ALG_NESTED_DISSECTION;
-            check(cudssConfigSet(config_, CUDSS_CONFIG_REORDERING_ALG, &alg,
-                      sizeof(alg)),
+            cudssReorderingAlg_t alg =
+                ord == Ordering::MinDegree
+                    ? CUDSS_REORDERING_ALG_AMD
+                    : CUDSS_REORDERING_ALG_NESTED_DISSECTION;
+            check(cudssConfigSet(
+                      config_, CUDSS_CONFIG_REORDERING_ALG, &alg, sizeof(alg)),
                 "cudssConfigSet(reordering)");
         }
         check(cudssDataCreate(handle(), &data_), "cudssDataCreate");
@@ -93,11 +92,11 @@ class SparseLdlt<T, Idx, Cuda::CudaStorage> {
         // real vectors are bound in solve() with cudssMatrixSetValues.
         scratch_ = Cuda::CudaStorage<T>(2 * n_);
         T *bp = scratch_.data(), *xp = scratch_.data() + n_;
-        check(cudssMatrixCreateDn(&b_, n_, 1, n_, bp, value_dt<T>(),
-                  CUDSS_LAYOUT_COL_MAJOR),
+        check(cudssMatrixCreateDn(
+                  &b_, n_, 1, n_, bp, value_dt<T>(), CUDSS_LAYOUT_COL_MAJOR),
             "cudssMatrixCreateDn(b)");
-        check(cudssMatrixCreateDn(&x_, n_, 1, n_, xp, value_dt<T>(),
-                  CUDSS_LAYOUT_COL_MAJOR),
+        check(cudssMatrixCreateDn(
+                  &x_, n_, 1, n_, xp, value_dt<T>(), CUDSS_LAYOUT_COL_MAJOR),
             "cudssMatrixCreateDn(x)");
         check(cudssMatrixCreateCsr(&a_, n_, n_, nnz_, A.row_ptr(), nullptr,
                   A.col_ind(), const_cast<T *>(A.values()), index_dt<Idx>(),
@@ -106,8 +105,8 @@ class SparseLdlt<T, Idx, Cuda::CudaStorage> {
                                          : CUDSS_MTYPE_SYMMETRIC,
                   CUDSS_MVIEW_FULL, CUDSS_BASE_ZERO),
             "cudssMatrixCreateCsr");
-        check(cudssExecute(handle(), CUDSS_PHASE_ANALYSIS, config_, data_, a_,
-                  x_, b_),
+        check(cudssExecute(
+                  handle(), CUDSS_PHASE_ANALYSIS, config_, data_, a_, x_, b_),
             "cudssExecute(analysis)");
         analyzed_ = true;
         factored_ = false;
@@ -154,8 +153,8 @@ class SparseLdlt<T, Idx, Cuda::CudaStorage> {
         check(cudssMatrixSetValues(b_, const_cast<T *>(b.data)),
             "cudssMatrixSetValues(b)");
         check(cudssMatrixSetValues(x_, x.data), "cudssMatrixSetValues(x)");
-        check(cudssExecute(handle(), CUDSS_PHASE_SOLVE, config_, data_, a_,
-                  x_, b_),
+        check(cudssExecute(
+                  handle(), CUDSS_PHASE_SOLVE, config_, data_, a_, x_, b_),
             "cudssExecute(solve)");
         cudaDeviceSynchronize();
     }
@@ -166,29 +165,40 @@ class SparseLdlt<T, Idx, Cuda::CudaStorage> {
         int64_t v = 0;
         size_t written = 0;
         if (analyzed_)
-            cudssDataGet(handle(), data_, CUDSS_DATA_LU_NNZ, &v, sizeof(v),
-                &written);
+            cudssDataGet(
+                handle(), data_, CUDSS_DATA_LU_NNZ, &v, sizeof(v), &written);
         return static_cast<size_t>(v);
     }
 
     // Not implemented for cuDSS (it has its own pivot handling); no-op so
     // generic code can call it.
-    void set_pivot_regularization(std::vector<signed char>, T) {}
-    size_t regularized_pivots() const { return 0; }
-    void print_profile() const {}
+    void
+    set_pivot_regularization(std::vector<signed char>, T)
+    {
+    }
+    size_t
+    regularized_pivots() const
+    { return 0; }
+    void
+    print_profile() const
+    {
+    }
 
     // cuDSS reports a status code rather than a pivot index.
-    long failed_pivot() const { return failed_; }
+    long
+    failed_pivot() const
+    { return failed_; }
 
     // Positive / negative eigenvalue counts as reported by cuDSS for
     // indefinite matrices (zero is n - pos - neg).
     void
     inertia(size_t &pos, size_t &neg, size_t &zero) const
     {
-        Idx v[2] = {0, 0}; // cuDSS: {positive, negative}, same width as the index
+        Idx v[2] = {
+            0, 0}; // cuDSS: {positive, negative}, same width as the index
         size_t written = 0;
-        cudss_detail::check(cudssDataGet(handle(), data_, CUDSS_DATA_INERTIA,
-                                v, sizeof(v), &written),
+        cudss_detail::check(cudssDataGet(handle(), data_, CUDSS_DATA_INERTIA, v,
+                                sizeof(v), &written),
             "cudssDataGet(inertia)");
         pos = static_cast<size_t>(v[0]);
         neg = static_cast<size_t>(v[1]);
@@ -196,7 +206,9 @@ class SparseLdlt<T, Idx, Cuda::CudaStorage> {
     }
 
   private:
-    static cudssHandle_t handle() { return GPUMemoryPool::get().get_cudss(); }
+    static cudssHandle_t
+    handle()
+    { return GPUMemoryPool::get().get_cudss(); }
 
     void
     destroy_matrices()

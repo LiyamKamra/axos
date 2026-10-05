@@ -45,9 +45,12 @@ int
 main(int argc, char **argv)
 {
     if (argc < 2) {
-        std::fprintf(stderr, "usage: %s <file.mps|dir> [--time-limit s] [--gap g] [--no-cuts] "
-                             "[--no-heuristics] [--no-presolve] [--no-propagation] [--verbose v] "
-                             "[--out file.csv] [--only a,b] [--sol dir]\n", argv[0]);
+        std::fprintf(stderr,
+            "usage: %s <file.mps|dir> [--time-limit s] [--gap g] [--no-cuts] "
+            "[--no-heuristics] [--no-presolve] [--no-propagation] [--verbose "
+            "v] "
+            "[--out file.csv] [--only a,b] [--sol dir]\n",
+            argv[0]);
         return 2;
     }
     MilpOptions opt;
@@ -57,25 +60,39 @@ main(int argc, char **argv)
     for (int i = 2; i < argc; ++i) {
         const std::string a = argv[i];
         auto next = [&]() -> std::string {
-            if (i + 1 >= argc) throw std::runtime_error("missing value after " + a);
+            if (i + 1 >= argc)
+                throw std::runtime_error("missing value after " + a);
             return argv[++i];
         };
-        if (a == "--time-limit") opt.time_limit = std::stod(next());
-        else if (a == "--gap") opt.gap_rel = std::stod(next());
-        else if (a == "--no-cuts") opt.cuts = false;
-        else if (a == "--no-heuristics") opt.heuristics = false;
-        else if (a == "--no-presolve") opt.presolve = false;
-        else if (a == "--no-propagation") opt.propagation = false;
-        else if (a == "--no-probing") opt.probing = false;
-        else if (a == "--gpu") opt.gpu = true;
-        else if (a == "--gpu-min-nnz") opt.gpu_min_nnz = std::stol(next());
-        else if (a == "--verbose") opt.verbose = std::stoi(next());
-        else if (a == "--out") out_path = next();
-        else if (a == "--sol") sol_dir = next();
+        if (a == "--time-limit")
+            opt.time_limit = std::stod(next());
+        else if (a == "--gap")
+            opt.gap_rel = std::stod(next());
+        else if (a == "--no-cuts")
+            opt.cuts = false;
+        else if (a == "--no-heuristics")
+            opt.heuristics = false;
+        else if (a == "--no-presolve")
+            opt.presolve = false;
+        else if (a == "--no-propagation")
+            opt.propagation = false;
+        else if (a == "--no-probing")
+            opt.probing = false;
+        else if (a == "--gpu")
+            opt.gpu = true;
+        else if (a == "--gpu-min-nnz")
+            opt.gpu_min_nnz = std::stol(next());
+        else if (a == "--verbose")
+            opt.verbose = std::stoi(next());
+        else if (a == "--out")
+            out_path = next();
+        else if (a == "--sol")
+            sol_dir = next();
         else if (a == "--only") {
             std::stringstream ss(next());
             std::string t;
-            while (std::getline(ss, t, ',')) only.insert(t);
+            while (std::getline(ss, t, ','))
+                only.insert(t);
         } else {
             std::fprintf(stderr, "unknown option %s\n", a.c_str());
             return 2;
@@ -87,15 +104,17 @@ main(int argc, char **argv)
         for (auto &e : fs::directory_iterator(target)) {
             const std::string ext = e.path().extension().string();
             if (ext == ".mps" || ext == ".MPS")
-                if (only.empty() || only.count(e.path().stem().string())) files.push_back(e.path());
+                if (only.empty() || only.count(e.path().stem().string()))
+                    files.push_back(e.path());
         }
         std::sort(files.begin(), files.end());
     } else {
         files.push_back(target);
     }
-    const std::string header =
-        "problem,n,m,nnz,nint,solver,status,seconds,objective,bound,gap,nodes,lp_iterations,"
-        "first_solution_seconds,root_bound,cuts,incumbent_source,feasible,read_seconds,notes";
+    const std::string header = "problem,n,m,nnz,nint,solver,status,seconds,"
+                               "objective,bound,gap,nodes,lp_iterations,"
+                               "first_solution_seconds,root_bound,cuts,"
+                               "incumbent_source,feasible,read_seconds,notes";
     std::printf("%s\n", header.c_str());
     std::ofstream out;
     if (!out_path.empty()) {
@@ -109,9 +128,12 @@ main(int argc, char **argv)
         try {
             const auto t0 = std::chrono::steady_clock::now();
             const LpProblem p = read_mps_file(f.string());
-            const double read_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+            const double read_s = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - t0)
+                                      .count();
             size_t nint = 0;
-            for (auto v : p.is_integer) nint += v ? 1 : 0;
+            for (auto v : p.is_integer)
+                nint += v ? 1 : 0;
             const MilpSolution s = solve_milp(p, opt);
             const double sense = p.maximize ? -1.0 : 1.0;
             bool feas = false;
@@ -120,27 +142,33 @@ main(int argc, char **argv)
             std::replace(src.begin(), src.end(), ',', ';');
             std::replace(notes.begin(), notes.end(), ',', ';');
             std::snprintf(line, sizeof line,
-                "%s,%zu,%zu,%zu,%zu,%s,%s,%.4f,%.12e,%.12e,%.3e,%ld,%ld,%.4f,%.12e,%d,%s,%d,%.3f,%s",
-                name.c_str(), p.cols(), p.rows(), p.A.nnz(), nint, opt.gpu ? "axos-milp-gpu" : "axos-milp",
-                status_name(s.status).c_str(),
-                s.seconds, s.has_solution() ? sense * s.objective : std::nan(""),
-                sense * s.bound, s.gap(), s.nodes, s.lp_iterations, s.first_solution_seconds,
-                sense * s.root_bound, s.cuts, src.c_str(), feas ? 1 : 0, read_s, notes.c_str());
+                "%s,%zu,%zu,%zu,%zu,%s,%s,%.4f,%.12e,%.12e,%.3e,%ld,%ld,%.4f,%."
+                "12e,%d,%s,%d,%.3f,%s",
+                name.c_str(), p.cols(), p.rows(), p.A.nnz(), nint,
+                opt.gpu ? "axos-milp-gpu" : "axos-milp",
+                status_name(s.status).c_str(), s.seconds,
+                s.has_solution() ? sense * s.objective : std::nan(""),
+                sense * s.bound, s.gap(), s.nodes, s.lp_iterations,
+                s.first_solution_seconds, sense * s.root_bound, s.cuts,
+                src.c_str(), feas ? 1 : 0, read_s, notes.c_str());
             if (!sol_dir.empty() && s.has_solution()) {
                 fs::create_directories(sol_dir);
-                std::ofstream so((fs::path(sol_dir) / (name + ".sol")).string());
+                std::ofstream so(
+                    (fs::path(sol_dir) / (name + ".sol")).string());
                 so.precision(17);
                 for (size_t j = 0; j < s.x.size(); ++j)
                     if (s.x[j] != 0)
-                        so << (j < p.col_names.size() ? p.col_names[j] : "x" + std::to_string(j)) << " "
-                           << s.x[j] << "\n";
+                        so << (j < p.col_names.size() ? p.col_names[j]
+                                                      : "x" + std::to_string(j))
+                           << " " << s.x[j] << "\n";
             }
         } catch (const std::exception &e) {
             std::string msg = e.what();
             std::replace(msg.begin(), msg.end(), ',', ';');
             std::replace(msg.begin(), msg.end(), '\n', ' ');
-            std::snprintf(line, sizeof line, "%s,,,,,%s,error,,,,,,,,,,%s,0,,", name.c_str(),
-                opt.gpu ? "axos-milp-gpu" : "axos-milp", msg.substr(0, 300).c_str());
+            std::snprintf(line, sizeof line, "%s,,,,,%s,error,,,,,,,,,,%s,0,,",
+                name.c_str(), opt.gpu ? "axos-milp-gpu" : "axos-milp",
+                msg.substr(0, 300).c_str());
         }
         std::printf("%s\n", line);
         std::fflush(stdout);

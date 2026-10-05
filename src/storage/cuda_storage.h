@@ -97,10 +97,10 @@ fill(T *p, size_t n, const T &x)
 }
 #endif
 
-// Visits the 2-D planes (last two dimensions) of t in row-major logical
-// order: f(offset, flat, height, width, pitch), with the plane starting at
-// t.data + offset, holding logical elements [flat, flat + height * width),
-// rows `pitch` elements apart. A contiguous tensor is a single plane.
+// Visits the 2-D planes (last two dimensions) of t in row-major logical order:
+// f(offset, flat, height, width, pitch), with the plane starting at
+// t.data + offset, holding logical elements [flat, flat + height * width), rows
+// `pitch` elements apart. A contiguous tensor is a single plane.
 template <class Tensor, class F>
 void
 for_each_plane(const Tensor &t, F &&f)
@@ -134,9 +134,8 @@ for_each_plane(const Tensor &t, F &&f)
 } // namespace cuda_detail
 
 // Backend tag for device memory. All transfers are blocking and move exactly
-// t.size() elements (views are copied in row-major logical order).
-// read_element is a one-element device-to-host copy (about 10 us): do not
-// use it in loops.
+// t.size() elements (views copied in row-major logical order). read_element is
+// a one-element device-to-host copy (about 10 us): do not use it in loops.
 struct Backend {
     static constexpr bool is_host = false;
 
@@ -144,7 +143,8 @@ struct Backend {
     static auto
     read_element(const Tensor &t, size_t i)
     {
-        using T = std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
+        using T =
+            std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
         T v{};
 #if defined(AXOS_CUDA_STORAGE)
         cuda_detail::copy(&v, t.data + i, sizeof(T), cudaMemcpyDeviceToHost);
@@ -190,7 +190,8 @@ struct Backend {
     copy_to_host(const Tensor &t, U *host_dst)
     {
 #if defined(AXOS_CUDA_STORAGE)
-        using T = std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
+        using T =
+            std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
         if constexpr (!std::is_same_v<T, U>) {
             std::vector<T> tmp(t.size());
             copy_to_host(t, tmp.data());
@@ -214,7 +215,8 @@ struct Backend {
     copy_from_host(Tensor &t, const U *host_src)
     {
 #if defined(AXOS_CUDA_STORAGE)
-        using T = std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
+        using T =
+            std::remove_cv_t<std::remove_reference_t<decltype(t.data[0])>>;
         if constexpr (!std::is_same_v<T, U>) {
             std::vector<T> tmp(t.size());
             AXOS::detail::convert_n(tmp.data(), host_src, tmp.size());
@@ -246,13 +248,12 @@ struct Backend {
             return;
         }
         std::vector<T> plane;
-        cuda_detail::for_each_plane(t,
-            [&](size_t off, size_t, size_t h, size_t w, size_t pitch) {
-                plane.assign(h * w, v);
-                cuda_detail::copy2d(t.data + off, pitch * sizeof(T),
-                    plane.data(), w * sizeof(T), w * sizeof(T), h,
-                    cudaMemcpyHostToDevice);
-            });
+        cuda_detail::for_each_plane(t, [&](size_t off, size_t, size_t h,
+                                           size_t w, size_t pitch) {
+            plane.assign(h * w, v);
+            cuda_detail::copy2d(t.data + off, pitch * sizeof(T), plane.data(),
+                w * sizeof(T), w * sizeof(T), h, cudaMemcpyHostToDevice);
+        });
 #else
         (void)t, (void)x;
         cuda_detail::no_cuda();
@@ -270,7 +271,9 @@ template <typename T> class CudaStorage {
 
     CudaStorage() noexcept = default;
 
-    explicit CudaStorage(size_t n) : ptr_(allocate_raw(n)), n_(n), own_(n > 0) {}
+    explicit CudaStorage(size_t n) : ptr_(allocate_raw(n)), n_(n), own_(n > 0)
+    {
+    }
 
     CudaStorage(size_t n, T x) : CudaStorage(n)
     {
@@ -342,10 +345,18 @@ template <typename T> class CudaStorage {
         own_ = n > 0;
     }
 
-    T *data() noexcept { return ptr_; }
-    const T *data() const noexcept { return ptr_; }
-    size_t size() const noexcept { return n_; }
-    bool owns() const noexcept { return own_; }
+    T *
+    data() noexcept
+    { return ptr_; }
+    const T *
+    data() const noexcept
+    { return ptr_; }
+    size_t
+    size() const noexcept
+    { return n_; }
+    bool
+    owns() const noexcept
+    { return own_; }
 
     void
     swap(CudaStorage &o) noexcept

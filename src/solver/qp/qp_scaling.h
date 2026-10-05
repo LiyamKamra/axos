@@ -28,9 +28,9 @@ namespace qp_scaling_detail {
 
 // Row / column infinity (p = 0) or l1 (p = 1) norms of the scaled K blocks.
 inline void
-kkt_norms(const HostMatrix &Q, const HostMatrix &A, const std::vector<double> &d,
-    const std::vector<double> &e, bool l1, std::vector<double> &cn,
-    std::vector<double> &rn)
+kkt_norms(const HostMatrix &Q, const HostMatrix &A,
+    const std::vector<double> &d, const std::vector<double> &e, bool l1,
+    std::vector<double> &cn, std::vector<double> &rn)
 {
     const size_t n = d.size(), m = e.size();
     cn.assign(n, 0.0);
@@ -58,7 +58,8 @@ kkt_norms(const HostMatrix &Q, const HostMatrix &A, const std::vector<double> &d
 } // namespace qp_scaling_detail
 
 inline QpScaling
-compute_qp_scaling(const QpProblem &p, int ruiz_iterations, double pock_chambolle_alpha)
+compute_qp_scaling(
+    const QpProblem &p, int ruiz_iterations, double pock_chambolle_alpha)
 {
     using namespace qp_scaling_detail;
     const size_t n = p.cols(), m = p.rows();
@@ -94,14 +95,16 @@ apply_qp_scaling(const QpProblem &p, const QpScaling &s)
         const auto *rp = q.lp.A.row_ptr();
         const auto *ci = q.lp.A.col_ind();
         for (size_t i = 0; i < m; ++i)
-            for (int k = rp[i]; k < rp[i + 1]; ++k) v[k] *= s.row[i] * s.col[ci[k]];
+            for (int k = rp[i]; k < rp[i + 1]; ++k)
+                v[k] *= s.row[i] * s.col[ci[k]];
     }
     if (q.Q.nnz()) {
         double *v = q.Q.values_mut();
         const auto *rp = q.Q.row_ptr();
         const auto *ci = q.Q.col_ind();
         for (size_t i = 0; i < n; ++i)
-            for (int k = rp[i]; k < rp[i + 1]; ++k) v[k] *= s.col[i] * s.col[ci[k]];
+            for (int k = rp[i]; k < rp[i + 1]; ++k)
+                v[k] *= s.col[i] * s.col[ci[k]];
     }
     for (size_t j = 0; j < n; ++j) {
         q.lp.c[j] *= s.col[j];

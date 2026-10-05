@@ -44,18 +44,26 @@ class Presolve {
   public:
     Presolve(const LpProblem &p, const PresolveOptions &opt = {})
         : orig_(p), opt_(opt)
-    {
-        run();
-    }
+    { run(); }
 
     // Outcome of presolve itself: NotSolved (normal), Infeasible or
     // Unbounded (proven during presolve; no solve needed).
-    Status status() const { return status_; }
-    const LpProblem &reduced() const { return reduced_; }
-    size_t removed_rows() const { return orig_.rows() - reduced_.rows(); }
-    size_t removed_cols() const { return orig_.cols() - reduced_.cols(); }
+    Status
+    status() const
+    { return status_; }
+    const LpProblem &
+    reduced() const
+    { return reduced_; }
+    size_t
+    removed_rows() const
+    { return orig_.rows() - reduced_.rows(); }
+    size_t
+    removed_cols() const
+    { return orig_.cols() - reduced_.cols(); }
     // reduced column -> original column (MILP: integrality follows the columns)
-    const std::vector<int> &col_map() const { return col_map_; }
+    const std::vector<int> &
+    col_map() const
+    { return col_map_; }
 
     // Build the original-space solution from a reduced-space one. Also works
     // when the reduced problem is empty (pass an empty LpSolution with
@@ -82,18 +90,25 @@ class Presolve {
             const Op &op = *it;
             if (op.kind == Op::SingletonRow) {
                 double zj = orig_.c[op.j];
-                for (int k = At_.row_ptr()[op.j]; k < At_.row_ptr()[op.j + 1]; ++k)
+                for (int k = At_.row_ptr()[op.j]; k < At_.row_ptr()[op.j + 1];
+                    ++k)
                     zj -= At_.values()[k] * s.y[At_.col_ind()[k]];
                 if ((zj > 0 && op.tight_lb) || (zj < 0 && op.tight_ub))
                     s.y[op.i] = zj / op.a;
             } else if (op.kind == Op::DuplicateRow) {
                 const double y = s.y[op.i];
                 if (y > 0) {
-                    if (op.lb_i >= op.impl_lb_k) { /* row i binds */ }
-                    else { s.y[op.k] = y / op.alpha; s.y[op.i] = 0; }
+                    if (op.lb_i >= op.impl_lb_k) { /* row i binds */
+                    } else {
+                        s.y[op.k] = y / op.alpha;
+                        s.y[op.i] = 0;
+                    }
                 } else if (y < 0) {
-                    if (op.ub_i <= op.impl_ub_k) { /* row i binds */ }
-                    else { s.y[op.k] = y / op.alpha; s.y[op.i] = 0; }
+                    if (op.ub_i <= op.impl_ub_k) { /* row i binds */
+                    } else {
+                        s.y[op.k] = y / op.alpha;
+                        s.y[op.i] = 0;
+                    }
                 }
             }
         }
@@ -101,7 +116,8 @@ class Presolve {
         // z = c - A^T y on the original matrix.
         s.z = orig_.c;
         for (size_t i = 0; i < m; ++i)
-            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1]; ++k)
+            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1];
+                ++k)
                 s.z[orig_.A.col_ind()[k]] -= orig_.A.values()[k] * s.y[i];
         LpSolution e = evaluate_solution(orig_, s.x, s.y);
         e.status = s.status;
@@ -112,7 +128,13 @@ class Presolve {
 
   private:
     struct Op {
-        enum Kind { EmptyRow, EmptyCol, FixedCol, SingletonRow, DuplicateRow } kind;
+        enum Kind {
+            EmptyRow,
+            EmptyCol,
+            FixedCol,
+            SingletonRow,
+            DuplicateRow
+        } kind;
         int i = -1, j = -1, k = -1;
         double value = 0, a = 0, alpha = 0;
         bool tight_lb = false, tight_ub = false;
@@ -164,7 +186,9 @@ class Presolve {
         if (!row_on_[i]) return;
         if (opt_.empty_rows && rlb_[i] == -kInf && rub_[i] == kInf) {
             // a free row constrains nothing
-            Op op; op.kind = Op::EmptyRow; op.i = i;
+            Op op;
+            op.kind = Op::EmptyRow;
+            op.i = i;
             stack_.push_back(op);
             remove_row(i);
             return;
@@ -175,13 +199,16 @@ class Presolve {
                 status_ = Status::Infeasible;
                 return;
             }
-            Op op; op.kind = Op::EmptyRow; op.i = i;
+            Op op;
+            op.kind = Op::EmptyRow;
+            op.i = i;
             stack_.push_back(op);
             row_on_[i] = 0;
         } else if (row_cnt_[i] == 1 && opt_.singleton_rows) {
             int j = -1;
             double a = 0;
-            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1]; ++k)
+            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1];
+                ++k)
                 if (col_on_[orig_.A.col_ind()[k]]) {
                     j = orig_.A.col_ind()[k];
                     a = orig_.A.values()[k];
@@ -190,9 +217,19 @@ class Presolve {
             if (j < 0 || a == 0) return;
             double lo = a > 0 ? rlb_[i] / a : rub_[i] / a;
             double hi = a > 0 ? rub_[i] / a : rlb_[i] / a;
-            Op op; op.kind = Op::SingletonRow; op.i = i; op.j = j; op.a = a;
-            if (lo > clb_[j]) { clb_[j] = lo; op.tight_lb = true; }
-            if (hi < cub_[j]) { cub_[j] = hi; op.tight_ub = true; }
+            Op op;
+            op.kind = Op::SingletonRow;
+            op.i = i;
+            op.j = j;
+            op.a = a;
+            if (lo > clb_[j]) {
+                clb_[j] = lo;
+                op.tight_lb = true;
+            }
+            if (hi < cub_[j]) {
+                cub_[j] = hi;
+                op.tight_ub = true;
+            }
             if (clb_[j] > cub_[j]) {
                 if (clb_[j] - cub_[j] > tol_scale(cub_[j], opt_.feas_tol)) {
                     status_ = Status::Infeasible;
@@ -212,21 +249,33 @@ class Presolve {
         if (!col_on_[j]) return;
         if (col_cnt_[j] == 0 && opt_.empty_cols) {
             double v;
-            if (cost_[j] > 0) v = clb_[j];
-            else if (cost_[j] < 0) v = cub_[j];
-            else v = std::min(std::max(0.0, clb_[j]), cub_[j]);
+            if (cost_[j] > 0)
+                v = clb_[j];
+            else if (cost_[j] < 0)
+                v = cub_[j];
+            else
+                v = std::min(std::max(0.0, clb_[j]), cub_[j]);
             if (std::isinf(v)) {
-                if (cost_[j] != 0) { status_ = Status::Unbounded; return; }
+                if (cost_[j] != 0) {
+                    status_ = Status::Unbounded;
+                    return;
+                }
                 v = std::isinf(clb_[j]) ? cub_[j] : clb_[j];
                 if (std::isinf(v)) v = 0;
             }
-            Op op; op.kind = Op::EmptyCol; op.j = j; op.value = v;
+            Op op;
+            op.kind = Op::EmptyCol;
+            op.j = j;
+            op.value = v;
             stack_.push_back(op);
             offset_ += cost_[j] * v;
             col_on_[j] = 0;
         } else if (clb_[j] == cub_[j] && opt_.fixed_cols) {
             double v = clb_[j];
-            Op op; op.kind = Op::FixedCol; op.j = j; op.value = v;
+            Op op;
+            op.kind = Op::FixedCol;
+            op.j = j;
+            op.value = v;
             stack_.push_back(op);
             offset_ += cost_[j] * v;
             for (int k = At_.row_ptr()[j]; k < At_.row_ptr()[j + 1]; ++k) {
@@ -248,7 +297,8 @@ class Presolve {
         std::unordered_map<size_t, std::vector<int>> groups;
         auto norm_of = [&](int i, int &first_col, double &first_val) {
             first_col = -1;
-            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1]; ++k)
+            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1];
+                ++k)
                 if (col_on_[orig_.A.col_ind()[k]]) {
                     first_col = orig_.A.col_ind()[k];
                     first_val = orig_.A.values()[k];
@@ -257,10 +307,12 @@ class Presolve {
         };
         for (size_t i = 0; i < orig_.rows(); ++i) {
             if (!row_on_[i] || row_cnt_[i] < 2) continue;
-            int fc; double fv = 1;
+            int fc;
+            double fv = 1;
             norm_of(static_cast<int>(i), fc, fv);
             size_t h = 1469598103934665603ULL;
-            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1]; ++k) {
+            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1];
+                ++k) {
                 int j = orig_.A.col_ind()[k];
                 if (!col_on_[j]) continue;
                 double v = orig_.A.values()[k] / fv;
@@ -284,10 +336,17 @@ class Presolve {
                     // a_k = alpha * a_i  =>  a_i x in [lb_k/alpha, ub_k/alpha]
                     double ilo = alpha > 0 ? rlb_[k] / alpha : rub_[k] / alpha;
                     double ihi = alpha > 0 ? rub_[k] / alpha : rlb_[k] / alpha;
-                    Op op; op.kind = Op::DuplicateRow; op.i = i; op.k = k;
-                    op.alpha = alpha; op.lb_i = rlb_[i]; op.ub_i = rub_[i];
-                    op.impl_lb_k = ilo; op.impl_ub_k = ihi;
-                    double nlb = std::max(rlb_[i], ilo), nub = std::min(rub_[i], ihi);
+                    Op op;
+                    op.kind = Op::DuplicateRow;
+                    op.i = i;
+                    op.k = k;
+                    op.alpha = alpha;
+                    op.lb_i = rlb_[i];
+                    op.ub_i = rub_[i];
+                    op.impl_lb_k = ilo;
+                    op.impl_ub_k = ihi;
+                    double nlb = std::max(rlb_[i], ilo),
+                           nub = std::min(rub_[i], ihi);
                     if (nlb > nub) {
                         if (nlb - nub > tol_scale(nub, opt_.feas_tol)) {
                             status_ = Status::Infeasible;
@@ -315,17 +374,25 @@ class Presolve {
         int p = rp[i], q = rp[k];
         bool have = false;
         while (true) {
-            while (p < rp[i + 1] && !col_on_[ci[p]]) ++p;
-            while (q < rp[k + 1] && !col_on_[ci[q]]) ++q;
+            while (p < rp[i + 1] && !col_on_[ci[p]])
+                ++p;
+            while (q < rp[k + 1] && !col_on_[ci[q]])
+                ++q;
             if (p >= rp[i + 1] || q >= rp[k + 1]) break;
             if (ci[p] != ci[q]) return false;
             double r = v[q] / v[p];
-            if (!have) { alpha = r; have = true; }
-            else if (std::abs(r - alpha) > 1e-12 * std::abs(alpha)) return false;
-            ++p; ++q;
+            if (!have) {
+                alpha = r;
+                have = true;
+            } else if (std::abs(r - alpha) > 1e-12 * std::abs(alpha))
+                return false;
+            ++p;
+            ++q;
         }
-        while (p < rp[i + 1] && !col_on_[ci[p]]) ++p;
-        while (q < rp[k + 1] && !col_on_[ci[q]]) ++q;
+        while (p < rp[i + 1] && !col_on_[ci[p]])
+            ++p;
+        while (q < rp[k + 1] && !col_on_[ci[q]])
+            ++q;
         return have && p >= rp[i + 1] && q >= rp[k + 1];
     }
 
@@ -334,8 +401,10 @@ class Presolve {
     {
         const size_t m = orig_.rows(), n = orig_.cols();
         At_ = orig_.A.transpose();
-        rlb_ = orig_.row_lb; rub_ = orig_.row_ub;
-        clb_ = orig_.col_lb; cub_ = orig_.col_ub;
+        rlb_ = orig_.row_lb;
+        rub_ = orig_.row_ub;
+        clb_ = orig_.col_lb;
+        cub_ = orig_.col_ub;
         cost_ = orig_.c;
         offset_ = orig_.offset;
         row_on_.assign(m, 1);
@@ -346,16 +415,21 @@ class Presolve {
             row_cnt_[i] = orig_.A.row_ptr()[i + 1] - orig_.A.row_ptr()[i];
         for (size_t j = 0; j < n; ++j)
             col_cnt_[j] = At_.row_ptr()[j + 1] - At_.row_ptr()[j];
-        for (size_t i = 0; i < m; ++i) rq_.push_back(static_cast<int>(i));
-        for (size_t j = 0; j < n; ++j) cq_.push_back(static_cast<int>(j));
+        for (size_t i = 0; i < m; ++i)
+            rq_.push_back(static_cast<int>(i));
+        for (size_t j = 0; j < n; ++j)
+            cq_.push_back(static_cast<int>(j));
 
         while (status_ == Status::NotSolved) {
-            while (status_ == Status::NotSolved && (!rq_.empty() || !cq_.empty())) {
+            while (status_ == Status::NotSolved &&
+                   (!rq_.empty() || !cq_.empty())) {
                 if (!rq_.empty()) {
-                    int i = rq_.back(); rq_.pop_back();
+                    int i = rq_.back();
+                    rq_.pop_back();
                     do_row(i);
                 } else {
-                    int j = cq_.back(); cq_.pop_back();
+                    int j = cq_.back();
+                    cq_.pop_back();
                     do_col(j);
                 }
             }
@@ -363,7 +437,8 @@ class Presolve {
             if (!(opt_.duplicate_rows && merge_duplicates())) break;
             // merged rows / new bounds may enable more reductions
             for (size_t i = 0; i < m; ++i)
-                if (row_on_[i] && row_cnt_[i] <= 1) rq_.push_back(static_cast<int>(i));
+                if (row_on_[i] && row_cnt_[i] <= 1)
+                    rq_.push_back(static_cast<int>(i));
         }
         build_reduced();
     }
@@ -374,19 +449,30 @@ class Presolve {
         const size_t m = orig_.rows(), n = orig_.cols();
         std::vector<int> new_row(m, -1), new_col(n, -1);
         for (size_t i = 0; i < m; ++i)
-            if (row_on_[i]) { new_row[i] = (int)row_map_.size(); row_map_.push_back((int)i); }
+            if (row_on_[i]) {
+                new_row[i] = (int)row_map_.size();
+                row_map_.push_back((int)i);
+            }
         for (size_t j = 0; j < n; ++j)
-            if (col_on_[j]) { new_col[j] = (int)col_map_.size(); col_map_.push_back((int)j); }
+            if (col_on_[j]) {
+                new_col[j] = (int)col_map_.size();
+                col_map_.push_back((int)j);
+            }
         Sparse::CooBuilder<double> b(row_map_.size(), col_map_.size());
         for (size_t i = 0; i < m; ++i) {
             if (!row_on_[i]) continue;
-            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1]; ++k)
+            for (int k = orig_.A.row_ptr()[i]; k < orig_.A.row_ptr()[i + 1];
+                ++k)
                 if (col_on_[orig_.A.col_ind()[k]])
-                    b.add(new_row[i], new_col[orig_.A.col_ind()[k]], orig_.A.values()[k]);
+                    b.add(new_row[i], new_col[orig_.A.col_ind()[k]],
+                        orig_.A.values()[k]);
         }
         reduced_.name = orig_.name + "_presolved";
         reduced_.A = b.build();
-        for (int i : row_map_) { reduced_.row_lb.push_back(rlb_[i]); reduced_.row_ub.push_back(rub_[i]); }
+        for (int i : row_map_) {
+            reduced_.row_lb.push_back(rlb_[i]);
+            reduced_.row_ub.push_back(rub_[i]);
+        }
         for (int j : col_map_) {
             reduced_.c.push_back(cost_[j]);
             reduced_.col_lb.push_back(clb_[j]);

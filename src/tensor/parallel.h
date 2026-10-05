@@ -113,7 +113,8 @@ parallel_sum(size_t n, size_t grain, F &&f, size_t align = 16)
         if (b < e) part[size_t(k)] = f(b, e);
     }
     R s(0);
-    for (const R &v : part) s += v;
+    for (const R &v : part)
+        s += v;
     return s;
 #else
     return f(size_t(0), n);
@@ -134,7 +135,8 @@ copy_bytes(void *dst, const void *src, size_t bytes)
     }
     char *d = static_cast<char *>(dst);
     const char *s = static_cast<const char *>(src);
-    parallel_for(bytes, kCopyGrain,
+    parallel_for(
+        bytes, kCopyGrain,
         [=](size_t b, size_t e) { std::memcpy(d + b, s + b, e - b); }, 4096);
 }
 
@@ -167,12 +169,16 @@ fill_elems(T *p, size_t n, const T &x)
             std::fill_n(p, n, x);
         return;
     }
-    parallel_for(n, grain, [=](size_t b, size_t e) {
-        if (bytes)
-            std::memset(static_cast<void *>(p + b), byte, (e - b) * sizeof(T));
-        else
-            std::fill(p + b, p + e, x);
-    }, std::max<size_t>(1, 4096 / sizeof(T)));
+    parallel_for(
+        n, grain,
+        [=](size_t b, size_t e) {
+            if (bytes)
+                std::memset(
+                    static_cast<void *>(p + b), byte, (e - b) * sizeof(T));
+            else
+                std::fill(p + b, p + e, x);
+        },
+        std::max<size_t>(1, 4096 / sizeof(T)));
 }
 
 } // namespace detail

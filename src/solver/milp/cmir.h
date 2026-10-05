@@ -49,7 +49,8 @@ class CmirSeparator {
         vlb_.assign(n, VB());
         vub_.assign(n, VB());
         isint_.assign(n, 0);
-        for (size_t j = 0; j < n; ++j) isint_[j] = is_int(p, j) ? 1 : 0;
+        for (size_t j = 0; j < n; ++j)
+            isint_[j] = is_int(p, j) ? 1 : 0;
         // variable bounds from rows  a x_j + e y_k  {<=, >=, =}  r
         const int32_t *rp = p.A.row_ptr(), *ci = p.A.col_ind();
         const double *va = p.A.values();
@@ -63,17 +64,22 @@ class CmirSeparator {
                 std::swap(a, e);
             }
             if (isint_[j] || !isint_[k] || a == 0) continue;
-            // a x_j + e y_k <= u  ->  x_j <= (-e/a) y_k + u/a  (a > 0), >= when a < 0
+            // a x_j + e y_k <= u  ->  x_j <= (-e/a) y_k + u/a  (a > 0), >= when
+            // a < 0
             const double c = -e / a;
             if (std::abs(p.row_ub[i]) < 1e20) {
                 const double d = p.row_ub[i] / a;
-                if (a > 0) set_vb(vub_[j], k, c, d);
-                else set_vb(vlb_[j], k, c, d);
+                if (a > 0)
+                    set_vb(vub_[j], k, c, d);
+                else
+                    set_vb(vlb_[j], k, c, d);
             }
             if (std::abs(p.row_lb[i]) < 1e20) {
                 const double d = p.row_lb[i] / a;
-                if (a > 0) set_vb(vlb_[j], k, c, d);
-                else set_vb(vub_[j], k, c, d);
+                if (a > 0)
+                    set_vb(vlb_[j], k, c, d);
+                else
+                    set_vb(vub_[j], k, c, d);
             }
         }
         dense_.assign(n, 0.0);
@@ -87,9 +93,10 @@ class CmirSeparator {
     // domain lb/ub, from the model rows; appends at most max_cuts cuts with
     // efficacy >= min_eff to out. Stops at the deadline (steady clock).
     int
-    separate(const std::vector<double> &x, const std::vector<double> &lb, const std::vector<double> &ub,
-        std::vector<Cut> &out, int max_cuts, std::chrono::steady_clock::time_point deadline,
-        int max_aggr = 5, double min_eff = 1e-4)
+    separate(const std::vector<double> &x, const std::vector<double> &lb,
+        const std::vector<double> &ub, std::vector<Cut> &out, int max_cuts,
+        std::chrono::steady_clock::time_point deadline, int max_aggr = 5,
+        double min_eff = 1e-4)
     {
         const size_t m = p_.rows();
         const int32_t *rp = p_.A.row_ptr(), *ci = p_.A.col_ind();
@@ -105,17 +112,23 @@ class CmirSeparator {
             }
             if (!has_int && !(rp[i + 1] - rp[i] > 2)) continue;
             double slack = 1e300;
-            if (std::abs(p_.row_ub[i]) < 1e20) slack = std::min(slack, p_.row_ub[i] - act);
-            if (std::abs(p_.row_lb[i]) < 1e20) slack = std::min(slack, act - p_.row_lb[i]);
+            if (std::abs(p_.row_ub[i]) < 1e20)
+                slack = std::min(slack, p_.row_ub[i] - act);
+            if (std::abs(p_.row_lb[i]) < 1e20)
+                slack = std::min(slack, act - p_.row_lb[i]);
             const double rel = slack / (1.0 + std::abs(act));
             if (rel > 0.1) continue;
-            start.emplace_back(rel + 1e-3 * (rp[i + 1] - rp[i]) / (1.0 + n_cols()), static_cast<int>(i));
+            start.emplace_back(
+                rel + 1e-3 * (rp[i + 1] - rp[i]) / (1.0 + n_cols()),
+                static_cast<int>(i));
         }
         std::sort(start.begin(), start.end());
         int found = 0;
         Cut cut;
         for (const auto &sr : start) {
-            if (found >= max_cuts || std::chrono::steady_clock::now() > deadline) break;
+            if (found >= max_cuts ||
+                std::chrono::steady_clock::now() > deadline)
+                break;
             const int r = sr.second;
             for (int side = 0; side < 2 && found < max_cuts; ++side) {
                 // side 0: a x <= u; side 1: -a x <= -l
@@ -138,7 +151,8 @@ class CmirSeparator {
                     }
                     if (aggr == max_aggr || !aggregate(x, lb, ub)) break;
                 }
-                for (int u : used_list_) used_[u] = 0;
+                for (int u : used_list_)
+                    used_[u] = 0;
             }
         }
         clear_row();
@@ -147,14 +161,14 @@ class CmirSeparator {
 
   private:
     struct VB {
-        int k = -1;      // integer column y_k
+        int k = -1;          // integer column y_k
         double c = 0, d = 0; // x_j <= c y_k + d (vub) or >= (vlb)
     };
     // one continuous term of the base inequality after substitution
     struct Sub {
         int j;
-        int type;       // 0 lb, 1 ub, 2 vlb, 3 vub
-        double coef;    // coefficient of x' (x' >= 0)
+        int type;    // 0 lb, 1 ub, 2 vlb, 3 vub
+        double coef; // coefficient of x' (x' >= 0)
     };
 
     const LpProblem &p_;
@@ -165,7 +179,9 @@ class CmirSeparator {
     std::vector<int> nz_, gnz_, cnz_, used_list_;
     double rhs_ = 0;
 
-    size_t n_cols() const { return p_.cols(); }
+    size_t
+    n_cols() const
+    { return p_.cols(); }
 
     static void
     set_vb(VB &v, int k, double c, double d)
@@ -206,16 +222,20 @@ class CmirSeparator {
     // Eliminates the continuous column of the base inequality farthest from
     // its (variable) bounds with an unused row; false if none applies.
     bool
-    aggregate(const std::vector<double> &x, const std::vector<double> &lb, const std::vector<double> &ub)
+    aggregate(const std::vector<double> &x, const std::vector<double> &lb,
+        const std::vector<double> &ub)
     {
         int best_j = -1;
         double best_d = 1e-6;
         for (int j : nz_) {
             if (isint_[j] || std::abs(dense_[j]) < 1e-12) continue;
             double lo = lb[j], hi = ub[j];
-            if (vlb_[j].k >= 0) lo = std::max(lo, vlb_[j].c * x[vlb_[j].k] + vlb_[j].d);
-            if (vub_[j].k >= 0) hi = std::min(hi, vub_[j].c * x[vub_[j].k] + vub_[j].d);
-            const double d = std::min(std::abs(lo) < 1e20 ? x[j] - lo : 1e20, std::abs(hi) < 1e20 ? hi - x[j] : 1e20);
+            if (vlb_[j].k >= 0)
+                lo = std::max(lo, vlb_[j].c * x[vlb_[j].k] + vlb_[j].d);
+            if (vub_[j].k >= 0)
+                hi = std::min(hi, vub_[j].c * x[vub_[j].k] + vub_[j].d);
+            const double d = std::min(std::abs(lo) < 1e20 ? x[j] - lo : 1e20,
+                std::abs(hi) < 1e20 ? hi - x[j] : 1e20);
             if (d > best_d) {
                 best_d = d;
                 best_j = j;
@@ -236,10 +256,14 @@ class CmirSeparator {
             const double lam = -cj / a;
             const bool eq = p_.row_lb[r] == p_.row_ub[r];
             double side;
-            if (eq) side = p_.row_ub[r];
-            else if (lam > 0 && std::abs(p_.row_ub[r]) < 1e20) side = p_.row_ub[r];
-            else if (lam < 0 && std::abs(p_.row_lb[r]) < 1e20) side = p_.row_lb[r];
-            else continue;
+            if (eq)
+                side = p_.row_ub[r];
+            else if (lam > 0 && std::abs(p_.row_ub[r]) < 1e20)
+                side = p_.row_ub[r];
+            else if (lam < 0 && std::abs(p_.row_lb[r]) < 1e20)
+                side = p_.row_lb[r];
+            else
+                continue;
             const double score = (eq ? 0 : 1) * 1e6 + (rp[r + 1] - rp[r]);
             if (score < best_score) {
                 best_score = score;
@@ -249,8 +273,10 @@ class CmirSeparator {
             (void)side;
         }
         if (best_r < 0) return false;
-        const double side = (p_.row_lb[best_r] == p_.row_ub[best_r] || best_mult > 0) ? p_.row_ub[best_r]
-                                                                                       : p_.row_lb[best_r];
+        const double side =
+            (p_.row_lb[best_r] == p_.row_ub[best_r] || best_mult > 0)
+                ? p_.row_ub[best_r]
+                : p_.row_lb[best_r];
         add_row(best_r, best_mult);
         rhs_ += best_mult * side;
         dense_[best_j] = 0; // eliminated exactly
@@ -261,11 +287,13 @@ class CmirSeparator {
 
     // c-MIR cut from the base inequality sum dense_ x <= rhs_.
     bool
-    mir(const std::vector<double> &x, const std::vector<double> &lb, const std::vector<double> &ub, Cut &cut)
+    mir(const std::vector<double> &x, const std::vector<double> &lb,
+        const std::vector<double> &ub, Cut &cut)
     {
         // ---- substitute the continuous columns, collect integer coefficients
         double beta = rhs_;
-        for (int j : gnz_) g_[j] = 0;
+        for (int j : gnz_)
+            g_[j] = 0;
         gnz_.clear();
         auto addg = [&](int k, double v) {
             if (g_[k] == 0) gnz_.push_back(k);
@@ -286,8 +314,10 @@ class CmirSeparator {
             double dist[4] = {1e300, 1e300, 1e300, 1e300};
             if (std::abs(lb[j]) < 1e20) dist[0] = x[j] - lb[j];
             if (std::abs(ub[j]) < 1e20) dist[1] = ub[j] - x[j];
-            if (vlb_[j].k >= 0) dist[2] = x[j] - (vlb_[j].c * x[vlb_[j].k] + vlb_[j].d);
-            if (vub_[j].k >= 0) dist[3] = vub_[j].c * x[vub_[j].k] + vub_[j].d - x[j];
+            if (vlb_[j].k >= 0)
+                dist[2] = x[j] - (vlb_[j].c * x[vlb_[j].k] + vlb_[j].d);
+            if (vub_[j].k >= 0)
+                dist[3] = vub_[j].c * x[vub_[j].k] + vub_[j].d - x[j];
             // prefer the bound that keeps the term (negative x' coefficient)
             // when it is about as close; variable bounds win ties
             int type = -1;
@@ -303,10 +333,24 @@ class CmirSeparator {
             if (type < 0) return false; // free continuous column
             double coef;
             switch (type) {
-            case 0: beta -= a * lb[j]; coef = a; break;
-            case 1: beta -= a * ub[j]; coef = -a; break;
-            case 2: beta -= a * vlb_[j].d; addg(vlb_[j].k, a * vlb_[j].c); coef = a; break;
-            default: beta -= a * vub_[j].d; addg(vub_[j].k, a * vub_[j].c); coef = -a; break;
+            case 0:
+                beta -= a * lb[j];
+                coef = a;
+                break;
+            case 1:
+                beta -= a * ub[j];
+                coef = -a;
+                break;
+            case 2:
+                beta -= a * vlb_[j].d;
+                addg(vlb_[j].k, a * vlb_[j].c);
+                coef = a;
+                break;
+            default:
+                beta -= a * vub_[j].d;
+                addg(vub_[j].k, a * vub_[j].c);
+                coef = -a;
+                break;
             }
             if (coef < 0) {
                 subs.push_back({j, type, coef});
@@ -316,7 +360,7 @@ class CmirSeparator {
         // ---- complement the integer columns
         struct Z {
             int j;
-            bool comp;   // z = u - x (else x - l)
+            bool comp; // z = u - x (else x - l)
             double g, zs, range;
         };
         std::vector<Z> zs;
@@ -350,25 +394,33 @@ class CmirSeparator {
             const double bd = beta / delta;
             const double f0 = bd - std::floor(bd);
             f0out = f0;
-            if (f0 < 0.05 || f0 > 0.95) return -1e300; // 0.999 (as SCIP) gave stronger bounds but slower trees here
+            if (f0 < 0.05 || f0 > 0.95)
+                return -1e300; // 0.999 (as SCIP) gave stronger bounds but
+                               // slower trees here
             double lhs = 0, nrm = 0;
             for (const Z &z : zs) {
-                const double gd = z.g / delta, fl = std::floor(gd), fj = gd - fl;
+                const double gd = z.g / delta, fl = std::floor(gd),
+                             fj = gd - fl;
                 const double pi = fl + std::max(0.0, fj - f0) / (1 - f0);
                 lhs += pi * z.zs;
                 nrm += pi * pi;
             }
             const double sc = 1.0 / (delta * (1 - f0));
             lhs -= sc * sstar;
-            for (const Sub &sb : subs) nrm += (sb.coef * sc) * (sb.coef * sc);
+            for (const Sub &sb : subs)
+                nrm += (sb.coef * sc) * (sb.coef * sc);
             return (lhs - std::floor(bd)) / std::sqrt(std::max(nrm, 1e-300));
         };
         std::vector<double> deltas;
         for (const Z &z : zs)
-            if (z.zs > 1e-6 && z.zs < z.range - 1e-6 && std::abs(z.g) > 1e-6) deltas.push_back(std::abs(z.g));
+            if (z.zs > 1e-6 && z.zs < z.range - 1e-6 && std::abs(z.g) > 1e-6)
+                deltas.push_back(std::abs(z.g));
         std::sort(deltas.begin(), deltas.end());
         deltas.erase(std::unique(deltas.begin(), deltas.end(),
-                         [](double a, double b) { return std::abs(a - b) <= 1e-9 * std::max(1.0, std::abs(a)); }),
+                         [](double a, double b) {
+                             return std::abs(a - b) <=
+                                    1e-9 * std::max(1.0, std::abs(a));
+                         }),
             deltas.end());
         if (deltas.size() > 8) deltas.erase(deltas.begin(), deltas.end() - 8);
         deltas.push_back(1.0);
@@ -397,7 +449,8 @@ class CmirSeparator {
         f0 = bd - std::floor(bd);
         const double sc = 1.0 / (delta * (1 - f0));
         double rhs = std::floor(bd);
-        for (int j : cnz_) cutv_[j] = 0;
+        for (int j : cnz_)
+            cutv_[j] = 0;
         cnz_.clear();
         auto addc = [&](int j, double v) {
             if (cutv_[j] == 0) cnz_.push_back(j);
@@ -418,18 +471,35 @@ class CmirSeparator {
         }
         for (const Sub &sb : subs) {
             // term  -sc * |coef| * x'  with x' >= 0
-            const double k = -sc * (-sb.coef); // coefficient of x' in the cut (negative)
+            const double k =
+                -sc * (-sb.coef); // coefficient of x' in the cut (negative)
             const int j = sb.j;
             switch (sb.type) {
-            case 0: addc(j, k); rhs += k * lb[j]; break;                       // x' = x - l
-            case 1: addc(j, -k); rhs -= k * ub[j]; break;                      // x' = u - x
-            case 2: addc(j, k); addc(vlb_[j].k, -k * vlb_[j].c); rhs += k * vlb_[j].d; break; // x' = x - c y - d
-            default: addc(j, -k); addc(vub_[j].k, k * vub_[j].c); rhs -= k * vub_[j].d; break; // x' = c y + d - x
+            case 0:
+                addc(j, k);
+                rhs += k * lb[j];
+                break; // x' = x - l
+            case 1:
+                addc(j, -k);
+                rhs -= k * ub[j];
+                break; // x' = u - x
+            case 2:
+                addc(j, k);
+                addc(vlb_[j].k, -k * vlb_[j].c);
+                rhs += k * vlb_[j].d;
+                break; // x' = x - c y - d
+            default:
+                addc(j, -k);
+                addc(vub_[j].k, k * vub_[j].c);
+                rhs -= k * vub_[j].d;
+                break; // x' = c y + d - x
             }
         }
-        // ---- cleanup: tiny coefficients relaxed through the bounds, then checks
+        // ---- cleanup: tiny coefficients relaxed through the bounds, then
+        // checks
         double cmax = 0;
-        for (int j : cnz_) cmax = std::max(cmax, std::abs(cutv_[j]));
+        for (int j : cnz_)
+            cmax = std::max(cmax, std::abs(cutv_[j]));
         if (cmax < 1e-9) return false;
         double act = 0, nrm = 0, cmin = 1e300;
         cut.idx.clear();
@@ -437,7 +507,8 @@ class CmirSeparator {
         for (int j : cnz_) {
             double v = cutv_[j];
             if (std::abs(v) < 1e-9 * cmax) {
-                // v x_j <= ... : drop the term using the bound that keeps validity
+                // v x_j <= ... : drop the term using the bound that keeps
+                // validity
                 if (v > 0) {
                     if (!(std::abs(lb[j]) < 1e20)) return false;
                     rhs -= v * lb[j];
@@ -461,7 +532,8 @@ class CmirSeparator {
         if (!(cut.efficacy > 0) || !std::isfinite(cut.rhs)) return false;
         // scale to a largest coefficient of 1
         const double s = 1.0 / cmax;
-        for (double &v : cut.coef) v *= s;
+        for (double &v : cut.coef)
+            v *= s;
         cut.rhs *= s;
         return true;
     }
@@ -470,12 +542,14 @@ class CmirSeparator {
     static bool
     duplicate(const Cut &c, const std::vector<Cut> &out)
     {
-        for (size_t t = out.size() > 50 ? out.size() - 50 : 0; t < out.size(); ++t) {
+        for (size_t t = out.size() > 50 ? out.size() - 50 : 0; t < out.size();
+            ++t) {
             const Cut &o = out[t];
             if (o.idx.size() != c.idx.size()) continue;
             bool same = true;
             for (size_t k = 0; k < c.idx.size() && same; ++k)
-                same = o.idx[k] == c.idx[k] && std::abs(o.coef[k] - c.coef[k]) <= 1e-9;
+                same = o.idx[k] == c.idx[k] &&
+                       std::abs(o.coef[k] - c.coef[k]) <= 1e-9;
             if (same && std::abs(o.rhs - c.rhs) <= 1e-9) return true;
         }
         return false;
