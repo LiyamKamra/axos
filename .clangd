@@ -1,0 +1,21 @@
+Diagnostics:
+  Suppress: pp_including_mainfile_in_preamble
+CompileFlags:
+  Add: [
+    "-Isrc",
+    "-Isrc/shaders",
+    "-Isrc/tensorml",
+    "-Isrc/tensorcuda",
+    "-Iinclude",
+    "-I/usr/include/eigen3",
+    "-xcuda",
+    "--cuda-path=/opt/cuda", 
+    "--cuda-gpu-arch=sm_86",
+    "-I/opt/cuda/include",
+    "-I/opt/cuda/include/cccl"
+  ]
+#  Add: 
+#    - -Isrc
+#    - -Iinclude
+#    - -I/usr/include/eigen3
+
