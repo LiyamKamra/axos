@@ -95,6 +95,8 @@ struct QpSolution {
 // (ipm_auto_flops), else or when it fails HPR-QP (GPU for large problems).
 enum class QpMethod { HprQp, Pdhcg, Ipm, Auto };
 
+class QpComm; // MPI ranks of a distributed solve (qp_dist.h)
+
 struct QpOptions {
     QpMethod method = QpMethod::HprQp;
     bool use_gpu = false;
@@ -129,6 +131,10 @@ struct QpOptions {
     int hpr_free_variant = 1;
     bool profile = false; // HPR-QP: time each step of an iteration after the setup,
                           // print the table and stop (the iterates are not a solve)
+    // HPR-QP over MPI ranks (qp_dist.h): every rank calls solve_qp with the
+    // same problem and options, holds a block of the constraint rows and
+    // gets the whole solution. nullptr or one rank: a single process.
+    const QpComm *comm = nullptr;
 };
 
 // Relative KKT residuals of (x, y) for p (see the header comment); fills a

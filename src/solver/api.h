@@ -33,6 +33,12 @@
 // maximum). Every returned solution is checked against the model:
 // Result::max_violation is its largest bound / row violation (relative to
 // 1 + |side|), integrality included for a MILP.
+//
+// MPI (build with -DAXOS_ENABLE_MPI): with Options::comm over several ranks,
+// every rank calls solve() with the same model and options; LPs and QPs are
+// solved by HPR (the "auto", "hpr" and "hprqp" methods) with the constraint
+// rows split over the ranks, one GPU per rank (qp_dist.h), and every rank
+// gets the whole solution. MILPs run on one process.
 #pragma once
 
 #include "solver/io/mps.h"
@@ -123,6 +129,7 @@ struct Options {
     bool presolve = true;     // MILP switches
     bool cuts = true;
     bool heuristics = true;
+    const QpComm *comm = nullptr; // MPI ranks of a distributed LP / QP solve (qp_dist.h)
 };
 
 struct Result {
@@ -210,8 +217,15 @@ solve_lp_model(const Model &m, const Options &o)
         qo.tol = o.tol;
         qo.time_limit = tl;
         qo.verbose = o.verbose;
+        qo.comm = o.comm;
         from_qp(solve_qp(q, qo), sense, r);
     };
+    if (o.comm && o.comm->distributed()) { // over MPI ranks: HPR only
+        if (meth != "auto" && meth != "hpr")
+            throw std::invalid_argument("over MPI ranks an LP is solved by HPR (method auto or hpr)");
+        hpr(o.time_limit);
+        return r;
+    }
     LpProblem q = p;
     q.is_integer.clear();
     SolverOptions so;
@@ -273,6 +287,9 @@ solve_qp_model(const Model &m, const Options &o)
     qo.tol = o.tol;
     qo.time_limit = o.time_limit;
     qo.verbose = o.verbose;
+    qo.comm = o.comm;
+    if (o.comm && o.comm->distributed() && qo.method != QpMethod::Auto && qo.method != QpMethod::HprQp)
+        throw std::invalid_argument("over MPI ranks a QP is solved by HPR-QP (method auto or hprqp)");
     from_qp(solve_qp(q, qo), sense, r);
     return r;
 }
@@ -323,6 +340,9 @@ solve(const Model &m, const Options &o = Options())
     if (t == ProblemType::LP && m.qp.has_quadratic()) t = ProblemType::QP; // an LP of a QP is not defined
     if (t == ProblemType::MILP && m.qp.has_quadratic())
         throw std::invalid_argument("mixed-integer QP is not supported");
+    const bool dist = o.comm && o.comm->distributed();
+    if (t == ProblemType::MILP && dist)
+        throw std::invalid_argument("a MILP runs on one process (start it without mpiexec)");
     Result r;
     try {
         if (t == ProblemType::MILP) r = api_detail::solve_milp_model(m, o);
@@ -331,6 +351,7 @@ solve(const Model &m, const Options &o = Options())
     } catch (const std::invalid_argument &) {
         throw;
     } catch (const std::exception &e) {
+        if (dist) throw; // the other ranks may be waiting in a collective: the caller aborts
         r = Result();
         r.status = Status::NumericalError;
         r.message = e.what();

@@ -165,6 +165,16 @@ benchmark_qp_large: run_qp
 	    benchmarks/qp/results/large
 	python benchmarks/qp/report.py benchmarks/qp/results/large --time-limit 120
 
+# HPR-QP over MPI ranks, one GPU each (src/solver/qp/qp_dist.h; needs mpicxx / MS-MPI):
+# run_qp_mpi builds build/run_qp_mpi; test_qp_mpi checks 2 and 4 ranks against the
+# single-GPU results of the large problems (benchmarks/qp/run_mpi.sh).
+run_qp_mpi:
+	bash benchmarks/qp/build.sh mpi
+
+test_qp_mpi: run_qp_mpi
+	bash benchmarks/qp/run_mpi.sh 2
+	bash benchmarks/qp/run_mpi.sh 4
+
 # ── MILP: branch and cut (CPU tree; GPU probing, feasibility jump, batched LP bounds)
 # run_milp: bash benchmarks/milp/build.sh [gpu|cpu]; benchmark_milp: the 50 MIPLIB 2017
 # instances of benchmarks/milp/data/set50.txt against HiGHS, SCIP and CBC (one at a time).
@@ -179,6 +189,10 @@ benchmark_milp: run_milp
 # ── axos: the command-line solver (LP, QP, MILP); apps/axos.py wraps it for Python
 axos:
 	bash apps/build.sh
+
+# mpiexec -n K build/axos_mpi model --device gpu: LP / QP by HPR over K ranks
+axos_mpi:
+	bash apps/build.sh mpi axos_mpi
 
 test_cli: axos
 	python tests/test_cli.py
@@ -199,4 +213,5 @@ clean:
 
 .PHONY: configure reconfigure clean test_sparse test_sparse_cpu test_solver test_solver_cpu \
         test_tensor test_tensor_cpu benchmark_lp benchmark_sparse benchmark_dense \
-        reference_benchmarks run_qp benchmark_qp benchmark_qp_large run_milp benchmark_milp axos test_cli
+        reference_benchmarks run_qp benchmark_qp benchmark_qp_large run_qp_mpi test_qp_mpi \
+        run_milp benchmark_milp axos axos_mpi test_cli

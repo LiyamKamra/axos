@@ -335,6 +335,13 @@ HPR-QP.jl, PDHCG.jl, OSQP, Clarabel, HiGHS, PIQP and SCS:
 - Done, first version: the IPM extended to QP (`qp_ipm.h`, CPU, augmented
   system on the multifrontal LDLᵀ), and `QpMethod::Auto` (IPM when the
   factorization is cheap, else HPR-QP, GPU for large problems).
+- Done (2026-10-05): HPR-QP over MPI ranks, one GPU each (`qp_dist.h`). The
+  constraint rows are split, and one Allreduce of Aᵀy runs per iteration.
+  On one shared GPU, 2 and 4 ranks give the same answers as one GPU: the
+  same iterations on all large problems and on 103 of 114 Maros–Meszaros
+  problems. The rest differ only by rounding (benchmarks/qp/README.md).
+  Next: a 2-D partition that also splits Q and the n-sized vectors, as in
+  D-PDLP and PDHCG-CQP, and NCCL or CUDA-aware MPI on multi-GPU servers.
 - Next: proximal (decreasing) regularization in the QP IPM, as in PIQP.
   The static 1e-8 regularization fails on the degenerate LISWET family. Then
   the GPU IPM on cuDSS, and a convexity check that rejects non-PSD Q with a

@@ -3,10 +3,12 @@
 // Entry point of the QP solvers: solve_qp(problem, options) runs the chosen
 // first-order method (QpOptions::method) on the CPU or, when the build has
 // CUDA (-DAXOS_ENABLE_CUDA) and opt.use_gpu is set (or opt.auto_device finds
-// the problem large enough), on the GPU.
+// the problem large enough), on the GPU. With opt.comm (several MPI ranks,
+// -DAXOS_ENABLE_MPI) HPR-QP runs distributed, one GPU or CPU per rank.
 #pragma once
 
 #include "solver/qp/hpr_qp.h"
+#include "solver/qp/qp_dist.h"
 #include "solver/qp/pdhcg.h"
 #include "solver/qp/qp_ipm.h"
 #include "solver/qp/qp_backend_cpu.h"
@@ -52,6 +54,21 @@ qp_use_gpu(const QpProblem &p, const QpOptions &opt)
 inline QpSolution
 solve_qp(const QpProblem &p, const QpOptions &opt)
 {
+    if (opt.comm && opt.comm->distributed()) {
+        // over MPI ranks: HPR-QP (Auto included), on every rank's GPU or CPU
+        if (opt.method == QpMethod::Pdhcg || opt.method == QpMethod::Ipm)
+            throw std::invalid_argument("solve_qp: only HPR-QP runs over several MPI ranks");
+        QpOptions o = opt;
+        o.method = QpMethod::HprQp;
+        if (qp_use_gpu(p, o)) {
+#if defined(AXOS_ENABLE_CUDA)
+            return solve_qp_on<qp::CudaBackend>(p, o);
+#else
+            throw std::runtime_error("solve_qp: this build has no CUDA (-DAXOS_ENABLE_CUDA)");
+#endif
+        }
+        return solve_qp_on<qp::CpuBackend>(p, o);
+    }
     if (opt.method == QpMethod::Ipm) return qp::QpIpm().solve(p, opt); // CPU only
     if (opt.method == QpMethod::Auto) {
         QpOptions o = opt;

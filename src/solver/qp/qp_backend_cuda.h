@@ -268,8 +268,10 @@ class CudaBackend {
         out_ = Vec({size_t(kSlots)}, 0.0);
         cuda_rt::check(cudaMallocHost(reinterpret_cast<void **>(&host_), kSlots * sizeof(double)),
             "cudaMallocHost");
+        int dev = 0;
+        cuda_rt::check(cudaGetDevice(&dev), "cudaGetDevice");
         cudaDeviceProp prop;
-        cuda_rt::check(cudaGetDeviceProperties(&prop, 0), "cudaGetDeviceProperties");
+        cuda_rt::check(cudaGetDeviceProperties(&prop, dev), "cudaGetDeviceProperties");
         name_ = std::string("gpu ") + prop.name;
     }
 
@@ -279,6 +281,7 @@ class CudaBackend {
         for (auto &g : graphs_) cuGraphExecDestroy(g.second);
         if (stream_) cuStreamDestroy(stream_);
         if (host_) cudaFreeHost(host_);
+        if (stage_) cudaFreeHost(stage_);
     }
     CudaBackend(const CudaBackend &) = delete;
     CudaBackend &operator=(const CudaBackend &) = delete;
@@ -378,6 +381,19 @@ class CudaBackend {
         spmv_epi("k_store", M, x, axos_qp::Store{y}, 0);
     }
 
+    // f(i, s[i], a) for i < n: the epilogue of a product whose row sums s
+    // were formed elsewhere (summed over MPI ranks); kernel "<name>_vec"
+    template <class Args, class F>
+    void
+    epi(const char *name, size_t n, const double *s, const Args &a, F)
+    {
+        if (n == 0) return;
+        axos_qp::idx rows = static_cast<axos_qp::idx>(n);
+        Args copy = a;
+        void *args[] = {&rows, &s, &copy};
+        launch(mod_.fn((std::string(name) + "_vec").c_str()), grid(n, 16384), args);
+    }
+
     template <class Args, class F>
     void
     map(const char *name, size_t n, const Args &a, F)
@@ -443,6 +459,10 @@ class CudaBackend {
     void
     run_block(long key, F &&fn)
     {
+        if (!graphs_on_) { // work with host steps in between (MPI)
+            fn();
+            return;
+        }
         auto it = graphs_.find(key);
         if (it == graphs_.end()) {
             cuda_rt::check(cuStreamBeginCapture(stream_, CU_STREAM_CAPTURE_MODE_THREAD_LOCAL),
@@ -476,6 +496,36 @@ class CudaBackend {
     }
 
     void sync() const { cuda_rt::check(cuStreamSynchronize(stream_), "sync"); }
+
+    // run_block() captures graphs (default) or just runs its work
+    void use_graphs(bool on) { graphs_on_ = on; }
+
+    // fn(h) on a host copy h of the n doubles at v, copied back to v after:
+    // ordered with the queued work, through pinned memory (a host-side
+    // exchange of a device vector, such as an MPI reduction)
+    template <class F>
+    void
+    through_host(double *v, size_t n, F &&fn)
+    {
+        if (n == 0) return;
+        if (n > stage_n_) {
+            sync();
+            if (stage_) cudaFreeHost(stage_);
+            stage_ = nullptr;
+            stage_n_ = 0;
+            cuda_rt::check(cudaMallocHost(reinterpret_cast<void **>(&stage_), n * sizeof(double)),
+                "cudaMallocHost");
+            stage_n_ = n;
+        }
+        cuda_rt::check(cuMemcpyDtoHAsync(stage_, reinterpret_cast<CUdeviceptr>(v),
+                           n * sizeof(double), stream_), "through_host (to host)");
+        sync();
+        fn(stage_);
+        // stage_ is reused only after a later copy on the same stream, so
+        // this one has finished by then
+        cuda_rt::check(cuMemcpyHtoDAsync(reinterpret_cast<CUdeviceptr>(v), stage_,
+                           n * sizeof(double), stream_), "through_host (to device)");
+    }
 
     // Microseconds per call of fn() (which queues work), over reps calls
     // timed with events on the backend stream.
@@ -547,6 +597,9 @@ class CudaBackend {
     CUstream stream_ = nullptr;
     Vec part_, out_;
     double *host_ = nullptr;
+    double *stage_ = nullptr; // pinned staging of through_host
+    size_t stage_n_ = 0;
+    bool graphs_on_ = true;
     std::string name_;
     std::map<long, CUgraphExec> graphs_;
 };

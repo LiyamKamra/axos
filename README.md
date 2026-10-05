@@ -38,6 +38,12 @@ CUDA backends.
   it uses HPR-QP, on the GPU for large problems. Benchmarks against
   HPR-QP.jl, PDHCG.jl, OSQP, Clarabel, HiGHS, PIQP and SCS are in
   [benchmarks/qp/README.md](benchmarks/qp/README.md).
+
+  HPR-QP (and HPR for LPs) also runs over several MPI processes, one GPU
+  each (`qp_dist.h`, build with `-DAXOS_ENABLE_MPI`). The constraint rows
+  are split across the ranks. Each iteration then needs one
+  `MPI_Allreduce` of n doubles, which sums the ranks' partial Aᵀy products
+  before the fused update runs on every GPU.
 * **MILP solver** (`src/solver/milp/`): branch and cut with the tree on the
   CPU and the arithmetic-heavy parts on the GPU:
   * Presolve: LP reductions, MIP coefficient tightening, domain propagation
@@ -113,6 +119,17 @@ r = axos.solve("model.mps", time_limit=60, device="gpu")
 print(r["status"], r["objective"], r["x"])
 ```
 
+Several GPUs (or machines) through MPI: build `build/axos_mpi` with `make
+axos_mpi` or `bash apps/build.sh mpi axos_mpi` (MS-MPI SDK on Windows,
+mpicxx on Linux) and start it under `mpiexec`. Rank r uses GPU r mod (GPUs
+per machine), and rank 0 prints and writes the files. LPs and QPs are
+solved by HPR with the constraint rows split over the ranks; a MILP needs a
+single process. From Python: `axos.solve(path, ranks=4, device="gpu")`.
+
+```sh
+mpiexec -n 4 build/axos_mpi model.qps --device gpu --time-limit 600
+```
+
 ## Documentation
 
 * [ref-manual.txt](ref-manual.txt): API of the sparse and LP layers.
@@ -149,7 +166,7 @@ src/tensorcuda/    GPUMemoryPool (pooled device memory, library handles)
 src/sparse/        Csr, CPU/CUDA kernels, AMD, LDLᵀ (multifrontal, cuDSS)
 src/shaders/       sparse.cu (CUDA kernels for the sparse layer)
 src/solver/        LP model, MPS I/O, presolve, scaling, PDLP, IPM, simplex; api.h (LP/QP/MILP entry point)
-src/solver/qp/     HPR-QP, PDHCG, QP interior point; GPU kernels (NVRTC)
+src/solver/qp/     HPR-QP, PDHCG, QP interior point; GPU kernels (NVRTC); MPI (qp_dist.h)
 src/solver/milp/   branch and cut, cuts, propagation, probing, heuristics; GPU kernels (NVRTC)
 apps/              axos (command-line solver), axos.py (Python wrapper)
 benchmarks/        drivers and results (qp/, milp/, solver/, sparse/, dense/)

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Regression test of the AXOS command-line solver and its Python wrapper
 (apps/axos.py): LP, QP and MILP models with known answers, statuses and exit
-codes, solution and JSON output.
+codes, solution and JSON output; with the MPI build (build/axos_mpi) also an
+LP and a QP over several ranks.
 
   python tests/test_cli.py            (after apps/build.sh; AXOS_EXE overrides)
 """
@@ -57,6 +58,25 @@ if os.path.exists(os.path.join(MM, "QSHARE1B.mps")):
     for m in ("ipm", "hprqp"):
         r = axos.solve(os.path.join(MM, "QSHARE1B.mps"), method=m, time_limit=60)
         check("QP QSHARE1B " + m, r["status"] == "optimal" and close(r["objective"], 720078.32, 2e-5), str(r))
+
+# MPI build (if present): the same QP and LP over 2 ranks give the
+# single-process answer and iteration count
+try:
+    axos._exe(mpi=True)
+    have_mpi = True
+except axos.AxosError:
+    have_mpi = False
+if have_mpi and os.path.exists(os.path.join(MM, "QSHARE1B.mps")):
+    one = axos.solve(os.path.join(MM, "QSHARE1B.mps"), method="hprqp", time_limit=60)
+    two = axos.solve(os.path.join(MM, "QSHARE1B.mps"), method="hprqp", time_limit=60, ranks=2)
+    check("QP QSHARE1B hprqp, 2 MPI ranks", two["status"] == "optimal" and "mpi" in two["method"]
+          and two["iterations"] == one["iterations"] and close(two["objective"], one["objective"], 1e-9), str(two))
+if have_mpi:
+    r = axos.solve(os.path.join(DATA, "adlittle.mps"), method="hpr", time_limit=30, tol=1e-8, ranks=3)
+    check("LP adlittle hpr, 3 MPI ranks", r["status"] == "optimal" and close(r["objective"], 225494.96316, 1e-6), str(r))
+    p = subprocess.run([axos._mpiexec(), "-n", "2", axos._exe(mpi=True), os.path.join(DATA, "tinymax_milp.mps")],
+                       capture_output=True)
+    check("MILP over 2 MPI ranks -> 64", p.returncode == 64)
 
 # files and usage errors
 exe = axos._exe()

@@ -11,7 +11,9 @@
 //            f(row, s, a) (CSR, T = 1..32 threads per row, a power of two
 //            chosen from the mean row length, combined with warp shuffles);
 //            k_f_fin(rows, rcp, part, a) is the same epilogue for matrices
-//            whose long rows are split into chunks (k_chunks_<T>).
+//            whose long rows are split into chunks (k_chunks_<T>), and
+//            k_f_vec(rows, s, a) for row sums s formed elsewhere (summed
+//            over MPI ranks, qp_dist.h).
 // A plain product y = A x is the epilogue k_store.
 #include "solver/qp/qp_ops.h"
 
@@ -149,6 +151,7 @@ group_dot(int b, int e, int lane, const int *ci, const double *v, const double *
 
 // k_<f>_fin: rows split into chunks (see k_chunks_<T>): s = sum of the row's
 // chunk partials part[rcp[row] .. rcp[row+1]), then f(row, s, a).
+// k_<f>_vec: f(row, s[row], a) for given row sums.
 #define QP_SPMV_EPI_KERNEL(f, Args)                                            \
     QP_SPMV_EPI_T(f, Args, 1)                                                  \
     QP_SPMV_EPI_T(f, Args, 2)                                                  \
@@ -166,6 +169,13 @@ group_dot(int b, int e, int lane, const int *ci, const double *v, const double *
             for (int c = rcp[r]; c < rcp[r + 1]; ++c) s += part[c];            \
             f(r, s, a);                                                        \
         }                                                                      \
+    }                                                                          \
+    extern "C" __global__ void k_##f##_vec(idx rows, const double *s, Args a) \
+    {                                                                          \
+        const idx stride = (idx)gridDim.x * blockDim.x;                        \
+        for (idx r = (idx)blockIdx.x * blockDim.x + threadIdx.x; r < rows;    \
+             r += stride)                                                      \
+            f(r, s[r], a);                                                     \
     }
 
 // Partial products of the chunks of a row-split matrix: chunk c covers the
